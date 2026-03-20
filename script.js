@@ -1139,7 +1139,7 @@ function imprimirReportesHandler() {
             <h1>⚡ ALPHA DB - REPORTE COMPLETO</h1>
             <p>Fecha de impresión: ${new Date().toLocaleString()}</p>
             <p>Total de registros: ${registrosFiltrados.length}</p>
-             <table>
+            <table>
                 <thead>
                     <tr>
                         <th>PO</th>
@@ -1372,8 +1372,21 @@ function imprimirRegistroSeleccionado() {
 // ==================== ONEDRIVE FUNCTIONS ====================
 
 function initOnedriveConnection() {
-    if (!window.msal || !window.ONEDRIVE_CONFIG) {
-        console.warn('MSAL no disponible o configuración faltante');
+    // Verificar que las librerías existen
+    if (!window.msal) {
+        console.log('📌 MSAL.js no cargado, OneDrive no disponible');
+        return;
+    }
+    
+    // Verificar que existe la configuración
+    if (!window.ONEDRIVE_CONFIG) {
+        console.log('📌 onedrive-config.js no cargado, OneDrive no disponible');
+        return;
+    }
+    
+    // Verificar que el clientId no sea el placeholder
+    if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI") {
+        console.log('📌 Configura OneDrive: Reemplaza TU_CLIENT_ID_AQUI en onedrive-config.js');
         return;
     }
     
@@ -1392,16 +1405,17 @@ function initOnedriveConnection() {
         
         checkOnedriveSession();
         
-        const hasConfig = ONEDRIVE_CONFIG.clientId !== "TU_CLIENT_ID_AQUI";
         const syncBtn = document.getElementById('syncOnedriveBtn');
         const uploadBtn = document.getElementById('uploadToOnedriveBtn');
         const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
         
-        if (hasConfig && syncBtn) {
+        if (syncBtn) {
             syncBtn.style.display = 'inline-flex';
             uploadBtn.style.display = 'inline-flex';
             downloadBtn.style.display = 'inline-flex';
         }
+        
+        console.log('✅ OneDrive configurado correctamente');
         
     } catch (error) {
         console.error('Error inicializando MSAL:', error);
