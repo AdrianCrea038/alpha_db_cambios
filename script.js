@@ -1372,9 +1372,38 @@ function imprimirRegistroSeleccionado() {
 // ==================== ONEDRIVE FUNCTIONS ====================
 
 function initOnedriveConnection() {
-    // Verificar que las librerías existen
-    if (!window.msal) {
-        console.log('📌 MSAL.js no cargado, OneDrive no disponible');
+    // Detectar MSAL de diferentes formas posibles
+    let MsalClass = null;
+    
+    // Opción 1: window.msal (versión antigua)
+    if (window.msal && window.msal.PublicClientApplication) {
+        MsalClass = window.msal.PublicClientApplication;
+        console.log('✅ MSAL detectado vía window.msal');
+    }
+    // Opción 2: window.PublicClientApplication (versión nueva)
+    else if (window.PublicClientApplication) {
+        MsalClass = window.PublicClientApplication;
+        console.log('✅ MSAL detectado vía window.PublicClientApplication');
+    }
+    // Opción 3: msal global
+    else if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
+        MsalClass = msal.PublicClientApplication;
+        console.log('✅ MSAL detectado vía msal global');
+    }
+    // Opción 4: buscar en window cualquier objeto con PublicClientApplication
+    else {
+        for (let key in window) {
+            if (window[key] && window[key].PublicClientApplication) {
+                MsalClass = window[key].PublicClientApplication;
+                console.log(`✅ MSAL detectado vía window.${key}`);
+                break;
+            }
+        }
+    }
+    
+    if (!MsalClass) {
+        console.error('❌ MSAL no detectado. Verifica que la librería se cargó correctamente.');
+        console.log('🔍 Objetos disponibles en window:', Object.keys(window).filter(k => k.toLowerCase().includes('msal')));
         return;
     }
     
@@ -1385,13 +1414,23 @@ function initOnedriveConnection() {
     }
     
     // Verificar que el clientId no sea el placeholder
-    if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI") {
+    if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI" || ONEDRIVE_CONFIG.clientId === "demo_mode") {
         console.log('📌 Configura OneDrive: Reemplaza TU_CLIENT_ID_AQUI en onedrive-config.js');
+        // En modo demo, mostrar botones pero no funcionarán
+        const syncBtn = document.getElementById('syncOnedriveBtn');
+        const uploadBtn = document.getElementById('uploadToOnedriveBtn');
+        const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
+        if (syncBtn) {
+            syncBtn.style.display = 'inline-flex';
+            uploadBtn.style.display = 'inline-flex';
+            downloadBtn.style.display = 'inline-flex';
+        }
         return;
     }
     
     try {
-        msalInstance = new msal.PublicClientApplication({
+        // Crear instancia de MSAL
+        msalInstance = new MsalClass({
             auth: {
                 clientId: ONEDRIVE_CONFIG.clientId,
                 authority: ONEDRIVE_CONFIG.authority,
@@ -1420,42 +1459,6 @@ function initOnedriveConnection() {
     } catch (error) {
         console.error('Error inicializando MSAL:', error);
     }
-}
-
-async function checkOnedriveSession() {
-    if (!msalInstance) return;
-    
-    try {
-        const accounts = msalInstance.getAllAccounts();
-        if (accounts.length > 0) {
-            await acquireTokenSilent(accounts[0]);
-            updateOnedriveStatus(true);
-        } else {
-            updateOnedriveStatus(false);
-        }
-    } catch (error) {
-        console.error('Error verificando sesión:', error);
-        updateOnedriveStatus(false);
-    }
-}
-
-async function acquireTokenSilent(account) {
-    if (!msalInstance) throw new Error('MSAL no inicializado');
-    
-    const request = {
-        scopes: ONEDRIVE_CONFIG.scopes,
-        account: account
-    };
-    
-    try {
-        const response = await msalInstance.acquireTokenSilent(request);
-        initializeGraphClient(response.accessToken);
-        return response;
-    } catch (error) {
-        console.error('Error obteniendo token silencioso:', error);
-        throw error;
-    }
-}
 
 function initializeGraphClient(accessToken) {
     graphClient = MicrosoftGraph.Client.init({
