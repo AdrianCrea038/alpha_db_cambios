@@ -87,3 +87,4 @@ const ColoresModule = {
 };
 
 window.ColoresModule = ColoresModule;
+console.log('✅ ColoresModule cargado');
