@@ -83,41 +83,17 @@ function agregarGrupoColor(nombreColor = '', cyan = 0, magenta = 0, yellow = 0, 
             <input type="text" id="color_nombre_${nuevoId}" placeholder="NOMBRE DEL COLOR" value="${nombreColor}" class="input-bonito">
         </div>
         <div class="color-valores-grid">
-            <div class="color-valor-item">
-                <label>CYAN (C)</label>
-                <input type="number" id="color_cyan_${nuevoId}" step="0.1" min="0" max="100" value="${cyan}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label>MAGENTA (M)</label>
-                <input type="number" id="color_magenta_${nuevoId}" step="0.1" min="0" max="100" value="${magenta}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label>YELLOW (Y)</label>
-                <input type="number" id="color_yellow_${nuevoId}" step="0.1" min="0" max="100" value="${yellow}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label>BLACK (K)</label>
-                <input type="number" id="color_black_${nuevoId}" step="0.1" min="0" max="100" value="${black}" class="input-color">
-            </div>
+            <div class="color-valor-item"><label>CYAN (C)</label><input type="number" id="color_cyan_${nuevoId}" step="0.1" min="0" max="100" value="${cyan}" class="input-color"></div>
+            <div class="color-valor-item"><label>MAGENTA (M)</label><input type="number" id="color_magenta_${nuevoId}" step="0.1" min="0" max="100" value="${magenta}" class="input-color"></div>
+            <div class="color-valor-item"><label>YELLOW (Y)</label><input type="number" id="color_yellow_${nuevoId}" step="0.1" min="0" max="100" value="${yellow}" class="input-color"></div>
+            <div class="color-valor-item"><label>BLACK (K)</label><input type="number" id="color_black_${nuevoId}" step="0.1" min="0" max="100" value="${black}" class="input-color"></div>
         </div>
         <div style="margin-top: 0.8rem; font-size: 0.8rem; color: #ffd93d; text-align: center;">COLORES EXTRAS</div>
         <div class="color-valores-grid" style="margin-top: 0.5rem;">
-            <div class="color-valor-item">
-                <label style="color: #40e0d0;">TURQUESA</label>
-                <input type="number" id="color_turquesa_${nuevoId}" step="0.1" min="0" max="100" value="${turquesa}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label style="color: #ffa500;">NARANJA</label>
-                <input type="number" id="color_naranja_${nuevoId}" step="0.1" min="0" max="100" value="${naranja}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label style="color: #ffff00;">FLUOR YELLOW</label>
-                <input type="number" id="color_fluoryellow_${nuevoId}" step="0.1" min="0" max="100" value="${fluorYellow}" class="input-color">
-            </div>
-            <div class="color-valor-item">
-                <label style="color: #ff69b4;">FLUOR PINK</label>
-                <input type="number" id="color_fluorpink_${nuevoId}" step="0.1" min="0" max="100" value="${fluorPink}" class="input-color">
-            </div>
+            <div class="color-valor-item"><label style="color: #40e0d0;">TURQUESA</label><input type="number" id="color_turquesa_${nuevoId}" step="0.1" min="0" max="100" value="${turquesa}" class="input-color"></div>
+            <div class="color-valor-item"><label style="color: #ffa500;">NARANJA</label><input type="number" id="color_naranja_${nuevoId}" step="0.1" min="0" max="100" value="${naranja}" class="input-color"></div>
+            <div class="color-valor-item"><label style="color: #ffff00;">FLUOR YELLOW</label><input type="number" id="color_fluoryellow_${nuevoId}" step="0.1" min="0" max="100" value="${fluorYellow}" class="input-color"></div>
+            <div class="color-valor-item"><label style="color: #ff69b4;">FLUOR PINK</label><input type="number" id="color_fluorpink_${nuevoId}" step="0.1" min="0" max="100" value="${fluorPink}" class="input-color"></div>
         </div>
     `;
     container.appendChild(colorGroup);
@@ -256,8 +232,6 @@ function getProcesoColor(proceso) {
     return colores[proceso] || '#6b5bff';
 }
 
-// ==================== CALENDARIO MENSUAL ====================
-
 function actualizarCalendarioMensual() {
     const container = document.getElementById('calendarioMensualContainer');
     if (!container) return;
@@ -311,8 +285,6 @@ window.filtrarPorSemana = (semana) => {
     actualizarUI();
     actualizarEstadisticas();
 };
-
-// ==================== FUNCIONES DE HISTORIAL ====================
 
 function verHistorial(id) {
     const registro = registros.find(r => r.id === id);
@@ -551,8 +523,57 @@ function configurarEventos() {
     if (downloadBtn) downloadBtn.addEventListener('click', () => { if (!isOnedriveConnected) loginToOnedrive(); else window.downloadFromOnedriveFile(); });
 }
 
-// ==================== MANEJO DE REGISTROS ====================
+// ==================== EXPORTAR A EXCEL ====================
+function exportarAExcel() {
+    if (typeof XLSX === 'undefined') {
+        mostrarNotificacion('❌ Error: Librería XLSX no cargada', 'error');
+        return;
+    }
+    const registrosFiltrados = filtrarRegistrosArray();
+    if (registrosFiltrados.length === 0) {
+        mostrarNotificacion('❌ No hay registros para exportar', 'error');
+        return;
+    }
+    try {
+        const datosExcel = registrosFiltrados.map(reg => {
+            const fila = {
+                'PO': reg.po || '', 'Versión': reg.version || 1, 'Proceso': reg.proceso || '',
+                'Reemplazo': reg.esReemplazo ? 'Sí' : 'No', 'Semana': reg.semana, 'Fecha': reg.fecha,
+                'Estilo/Deporte': reg.estilo, 'Tela': reg.tela, 'N° Plotter': reg.numero_plotter || 0,
+                'Plotter Temp': reg.plotter_temp || 0, 'Plotter Humedad': reg.plotter_humedad || 0,
+                'Plotter Perfil': reg.plotter_perfil || '', 'N° Monti': reg.monti_numero || 0,
+                'Temp Monti °C': reg.temperatura_monti, 'Vel Monti m/min': reg.velocidad_monti,
+                'Temp Flat °C': reg.temperatura_flat, 'Tiempo Flat s': reg.tiempo_flat,
+                'Adhesivo': reg.adhesivo, 'Observación': reg.observacion || ''
+            };
+            if (reg.colores && reg.colores.length > 0) {
+                reg.colores.forEach((color, idx) => {
+                    fila[`Color ${idx+1} Nombre`] = color.nombre || '';
+                    fila[`Color ${idx+1} Cyan`] = color.cyan || 0;
+                    fila[`Color ${idx+1} Magenta`] = color.magenta || 0;
+                    fila[`Color ${idx+1} Yellow`] = color.yellow || 0;
+                    fila[`Color ${idx+1} Black`] = color.black || 0;
+                    fila[`Color ${idx+1} Turquesa`] = color.turquesa || 0;
+                    fila[`Color ${idx+1} Naranja`] = color.naranja || 0;
+                    fila[`Color ${idx+1} Fluor Yellow`] = color.fluorYellow || 0;
+                    fila[`Color ${idx+1} Fluor Pink`] = color.fluorPink || 0;
+                });
+            }
+            return fila;
+        });
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(datosExcel);
+        XLSX.utils.book_append_sheet(wb, ws, 'Registros ALPHA DB');
+        const fecha = new Date().toISOString().split('T')[0];
+        XLSX.writeFile(wb, `ALPHA_DB_${fecha}.xlsx`);
+        mostrarNotificacion('📊 Archivo Excel generado', 'success');
+    } catch (error) {
+        console.error('Error en exportarAExcel:', error);
+        mostrarNotificacion('❌ Error al generar Excel', 'error');
+    }
+}
 
+// ==================== MANEJO DE REGISTROS ====================
 async function guardarRegistro(e) {
     e.preventDefault();
     const fechaStr = document.getElementById('fecha')?.value;
@@ -719,6 +740,7 @@ function cargarRegistrosLocal() {
         registros = generarDatosEjemplo();
         guardarRegistrosLocal();
     }
+    actualizarUI();
 }
 
 function generarDatosEjemplo() {
@@ -819,15 +841,13 @@ function importarBaseDatos(event) {
     event.target.value = '';
 }
 
-// ==================== FUNCIONES DE IMPRESIÓN ====================
-
 function imprimirReportesHandler() {
     const registrosFiltrados = filtrarRegistrosArray();
     if (registrosFiltrados.length === 0) { mostrarNotificacion('❌ No hay registros', 'error'); return; }
     const ventanaImpresion = window.open('', '_blank');
-    let htmlContenido = `<!DOCTYPE html><html><head><title>ALPHA DB - Reporte</title><style>body{font-family:Arial;margin:0.5in;background:white;color:black;}h1{color:#000;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:9px;}th{background:#000;color:white;padding:4px;text-align:left;}td{padding:3px;border-bottom:1px solid #000;}.total{margin-top:20px;font-weight:bold;text-align:right;}</style></head><body><h1>⚡ ALPHA DB - REPORTE COMPLETO</h1><p>Fecha de impresión: ${new Date().toLocaleString()}</p><p>Total de registros: ${registrosFiltrados.length}</p><p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p>能<table><thead><tr><th>PO</th><th>V</th><th>Proceso</th><th>Reemp</th><th>Sem</th><th>Fecha</th><th>Estilo</th><th>Tela</th><th>N°Monti</th><th>T°M</th><th>Vel</th><th>T°F</th><th>T/F</th></tr></thead><tbody>`;
+    let htmlContenido = `<!DOCTYPE html><html><head><title>ALPHA DB - Reporte</title><style>body{font-family:Arial;margin:0.5in;background:white;color:black;}h1{color:#000;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:9px;}th{background:#000;color:white;padding:4px;text-align:left;}td{padding:3px;border-bottom:1px solid #000;}.total{margin-top:20px;font-weight:bold;text-align:right;}</style></head><body><h1>⚡ ALPHA DB - REPORTE COMPLETO</h1><p>Fecha de impresión: ${new Date().toLocaleString()}</p><p>Total de registros: ${registrosFiltrados.length}</p><p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p>能能<thead>碑<th>PO</th><th>V</th><th>Proceso</th><th>Reemp</th><th>Sem</th><th>Fecha</th><th>Estilo</th><th>Tela</th><th>N°Monti</th><th>T°M</th><th>Vel</th><th>T°F</th><th>T/F</th>;</thead><tbody>`;
     registrosFiltrados.forEach(reg => {
-        htmlContenido += `<tr><td>${reg.po || '-'}</td><td>v${reg.version || 1}</td><td>${reg.proceso || '-'}</td><td>${reg.esReemplazo ? 'Sí' : 'No'}</td><td>${reg.semana}</td><td>${formatearFecha(reg.fecha)}</td><td>${reg.estilo}</td><td>${reg.tela}</td><td>${reg.monti_numero || 0}</td><td>${(reg.temperatura_monti || 0).toFixed(1)}°</td><td>${(reg.velocidad_monti || 0).toFixed(1)}</td><td>${(reg.temperatura_flat || 0).toFixed(1)}°</td><td>${(reg.tiempo_flat || 0).toFixed(1)}s</td></tr>`;
+        htmlContenido += `发展<td>${reg.po || '-'}</td><td>v${reg.version || 1}</td><td>${reg.proceso || '-'}</td><td>${reg.esReemplazo ? 'Sí' : 'No'}</td><td>${reg.semana}</td><td>${formatearFecha(reg.fecha)}</td><td>${reg.estilo}</td><td>${reg.tela}</td><td>${reg.monti_numero || 0}</td><td>${(reg.temperatura_monti || 0).toFixed(1)}°</td><td>${(reg.velocidad_monti || 0).toFixed(1)}</td><td>${(reg.temperatura_flat || 0).toFixed(1)}°</td><td>${(reg.tiempo_flat || 0).toFixed(1)}s</td>发展`;
     });
     htmlContenido += `</tbody></table><div class="total">Total: ${registrosFiltrados.length} registros</div><script>window.onload = () => window.print();<\/script></body></html>`;
     ventanaImpresion.document.write(htmlContenido);
