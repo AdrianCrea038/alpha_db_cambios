@@ -19,6 +19,17 @@
     
     <!-- Script de configuración de OneDrive -->
     <script src="onedrive-config.js"></script>
+    <!-- MSAL.js - Múltiples fuentes de respaldo -->
+<script src="https://alcdn.msftauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script>
+    // Fallback si la primera no carga
+    if (typeof msal === 'undefined' && typeof window.msal === 'undefined') {
+        console.log('⚠️ MSAL no cargó, intentando con CDN alternativo...');
+        var script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/dist/msal-browser.min.js';
+        document.head.appendChild(script);
+    }
+</script>
 </head>
 <body>
     <div class="container">
