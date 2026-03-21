@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -8,54 +7,40 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-  <!-- Librerías base -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<!-- MSAL.js - Usando jsdelivr que funciona mejor en GitHub Pages -->
-<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/dist/msal-browser.min.js"></script>
-
-<!-- Microsoft Graph API SDK -->
-<script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
-
-<!-- Script de configuración de OneDrive -->
-<script src="onedrive-config.js"></script>
+    <!-- Librerías base -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+    <!-- MSAL.js - CDN que funciona en GitHub Pages -->
+    <script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/dist/msal-browser.min.js"></script>
+    
+    <!-- Verificador de carga de MSAL -->
     <script>
-        // Verificar carga de MSAL
-        window.addEventListener('load', function() {
-            console.log('🔍 Verificando MSAL...');
-            console.log('  - window.PublicClientApplication:', typeof window.PublicClientApplication);
+        (function verificarMSAL() {
             if (typeof window.PublicClientApplication !== 'undefined') {
-                console.log('✅ MSAL cargado correctamente');
+                console.log('✅ MSAL cargado correctamente desde CDN principal');
+            } else if (window.msal && window.msal.PublicClientApplication) {
+                console.log('✅ MSAL cargado como window.msal');
             } else {
-                console.error('❌ MSAL no cargó correctamente');
+                console.warn('⚠️ MSAL no cargó, intentando CDN alternativo...');
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/@azure/msal-browser@2.38.3/dist/msal-browser.min.js';
+                script.onload = function() {
+                    console.log('✅ MSAL cargado desde CDN alternativo');
+                };
+                script.onerror = function() {
+                    console.error('❌ No se pudo cargar MSAL. Verifica tu conexión a internet.');
+                };
+                document.head.appendChild(script);
             }
-        });
+        })();
     </script>
-    <script>
-    // Verificar carga de MSAL
-    setTimeout(function() {
-        console.log('🔍 Verificando MSAL después de 2 segundos...');
-        console.log('  - window.PublicClientApplication:', typeof window.PublicClientApplication);
-        console.log('  - window.msal:', typeof window.msal);
-        
-        if (typeof window.PublicClientApplication !== 'undefined' || (window.msal && window.msal.PublicClientApplication)) {
-            console.log('✅ MSAL cargado correctamente');
-        } else {
-            console.error('❌ MSAL no cargó');
-            console.log('💡 Intentando cargar MSAL manualmente...');
-            
-            // Cargar manualmente como último recurso
-            var script = document.createElement('script');
-            script.src = 'https://alcdn.msftauth.net/browser/2.38.3/js/msal-browser.min.js';
-            script.onload = function() {
-                console.log('✅ MSAL cargado manualmente');
-            };
-            document.head.appendChild(script);
-        }
-    }, 2000);
-</script>
+    
+    <!-- Microsoft Graph API SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
+    
+    <!-- Script de configuración de OneDrive -->
+    <script src="onedrive-config.js"></script>
 </head>
 <body>
     <div class="container">
@@ -65,17 +50,17 @@
                 <div class="logo-container">
                     <img src="logo-Alpha.png" alt="Alpha DB Logo" class="logo-img" onerror="this.style.display='none'">
                     <h1>⚡ ALPHA DB</h1>
-                    <span class="version">v8.4</span>
+                    <span class="version">v9.0</span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
                     <button id="syncOnedriveBtn" class="btn-secondary btn-onedrive" style="display: none;">
-                        <span>☁️</span> Sincronizar
+                        <span>☁️</span> Conectar SharePoint
                     </button>
                     <button id="uploadToOnedriveBtn" class="btn-secondary" style="display: none;">
-                        <span>⬆️</span> Subir a OneDrive
+                        <span>⬆️</span> Subir Backup
                     </button>
                     <button id="downloadFromOnedriveBtn" class="btn-secondary" style="display: none;">
-                        <span>⬇️</span> Cargar desde OneDrive
+                        <span>⬇️</span> Restaurar Backup
                     </button>
                     <button id="exportarDBBtn" class="btn-secondary">
                         <span>💾</span> Guardar Local
@@ -86,7 +71,7 @@
                     </label>
                 </div>
                 <div id="onedriveStatus" class="sync-status disconnected" style="display: inline-flex; margin-left: 1rem;">
-                    <span>☁️</span> OneDrive: Desconectado
+                    <span>☁️</span> SharePoint: Desconectado
                 </div>
             </div>
             <p class="subtitle">Alpha Data Base - Trazabilidad Textil en Tiempo Real</p>
@@ -454,7 +439,6 @@
         </div>
     </div>
 
-    <!-- Script principal - Cargar al final -->
     <script src="script.js"></script>
 </body>
 </html>
