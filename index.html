@@ -8,18 +8,18 @@
     <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
-    <!-- Librerías base -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    
-    <!-- MSAL.js - Versión que funciona en GitHub Pages -->
-    <script src="https://unpkg.com/@azure/msal-browser@2.38.3/dist/msal-browser.min.js"></script>
-    
-    <!-- Microsoft Graph API SDK -->
-    <script src="https://unpkg.com/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
-    
-    <!-- Script de configuración de OneDrive -->
-    <script src="onedrive-config.js"></script>
+  <!-- Librerías base -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+<!-- MSAL.js - Usando jsdelivr que funciona mejor en GitHub Pages -->
+<script src="https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/dist/msal-browser.min.js"></script>
+
+<!-- Microsoft Graph API SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
+
+<!-- Script de configuración de OneDrive -->
+<script src="onedrive-config.js"></script>
     
     <script>
         // Verificar carga de MSAL
@@ -33,6 +33,29 @@
             }
         });
     </script>
+    <script>
+    // Verificar carga de MSAL
+    setTimeout(function() {
+        console.log('🔍 Verificando MSAL después de 2 segundos...');
+        console.log('  - window.PublicClientApplication:', typeof window.PublicClientApplication);
+        console.log('  - window.msal:', typeof window.msal);
+        
+        if (typeof window.PublicClientApplication !== 'undefined' || (window.msal && window.msal.PublicClientApplication)) {
+            console.log('✅ MSAL cargado correctamente');
+        } else {
+            console.error('❌ MSAL no cargó');
+            console.log('💡 Intentando cargar MSAL manualmente...');
+            
+            // Cargar manualmente como último recurso
+            var script = document.createElement('script');
+            script.src = 'https://alcdn.msftauth.net/browser/2.38.3/js/msal-browser.min.js';
+            script.onload = function() {
+                console.log('✅ MSAL cargado manualmente');
+            };
+            document.head.appendChild(script);
+        }
+    }, 2000);
+</script>
 </head>
 <body>
     <div class="container">
