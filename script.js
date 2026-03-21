@@ -715,81 +715,130 @@ document.addEventListener('DOMContentLoaded', () => {
     configurarEventos();
     
     // Inicializar conexión a OneDrive y SharePoint
-    initOnedriveConnection();
-});
-
-function verificarFechaObservacion() {
-    const fechaInput = document.getElementById('fecha');
-    const observacionContainer = document.getElementById('observacionContainer');
-    const observacionField = document.getElementById('observacion');
+    function initOnedriveConnection() {
+    console.log('🔄 Iniciando conexión con SharePoint...');
     
-    if (!fechaInput || !observacionContainer || !observacionField) return;
-    
-    const fechaSeleccionada = fechaInput.value;
-    const hoy = new Date().toISOString().split('T')[0];
-    
-    if (fechaSeleccionada < hoy) {
-        observacionContainer.style.display = 'block';
-        observacionField.required = true;
-    } else {
-        observacionContainer.style.display = 'none';
-        observacionField.required = false;
-        observacionField.value = '';
+    // Función para detectar MSAL en cualquier lugar
+    function detectarMSAL() {
+        // Opción 1: window.PublicClientApplication (más común)
+        if (typeof window.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.PublicClientApplication');
+            return window.PublicClientApplication;
+        }
+        // Opción 2: window.msal.PublicClientApplication
+        if (window.msal && typeof window.msal.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.msal.PublicClientApplication');
+            return window.msal.PublicClientApplication;
+        }
+        return null;
     }
+    
+    // Función para esperar a que MSAL cargue
+    function esperarMSAL(intentos = 0) {
+        const MsalClass = detectarMSAL();
+        
+        if (MsalClass) {
+            console.log('✅ MSAL detectado correctamente después de', intentos + 1, 'intentos');
+            iniciarConexion(MsalClass);
+        } else if (intentos < 30) {
+            console.log(`⏳ Esperando MSAL... intento ${intentos + 1}/30`);
+            setTimeout(() => esperarMSAL(intentos + 1), 500);
+        } else {
+            console.error('❌ MSAL no detectado después de 30 intentos.');
+            console.log('💾 Usando modo local (solo localStorage)');
+            console.log('🔧 Verifica que las librerías se cargaron correctamente en la red (pestaña Network)');
+            cargarRegistrosLocal();
+            actualizarUI();
+            mostrarNotificacion('⚠️ Modo local: No se pudo conectar a SharePoint. Verifica la conexión a internet.', 'info');
+        }
+    }
+    
+    function iniciarConexion(MsalClass) {
+        // Verificar configuración
+        if (!window.ONEDRIVE_CONFIG) {
+            console.log('📌 onedrive-config.js no cargado, usando modo local');
+            cargarRegistrosLocal();
+            actualizarUI();
+            return;
+        }
+        
+        // Verificar que la URL de SharePoint esté configurada correctamente
+        if (ONEDRIVE_CONFIG.sharepoint.siteUrl.includes("TUEMPRESA") || ONEDRIVE_CONFIG.sharepoint.siteUrl === "https://artfxinc-my.sharepoint.com/personal/carlos_milla_tegraglobal_com/") {
+            console.log('✅ URL de SharePoint configurada:', ONEDRIVE_CONFIG.sharepoint.siteUrl);
+        } else {
+            console.warn('⚠️ Verifica que la URL de SharePoint sea correcta');
+        }
+        
+        // Verificar que el clientId no sea el placeholder
+        if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI") {
+            console.log('📌 Configuración pendiente: Reemplaza TU_CLIENT_ID_AQUI');
+            cargarRegistrosLocal();
+            actualizarUI();
+            mostrarBotones();
+            mostrarNotificacion('⚠️ Configura OneDrive: Agrega tu Client ID en onedrive-config.js', 'info');
+            return;
+        }
+        
+        try {
+            console.log('📌 Creando instancia de MSAL con Client ID:', ONEDRIVE_CONFIG.clientId.substring(0, 8) + '...');
+            console.log('📌 SharePoint URL:', ONEDRIVE_CONFIG.sharepoint.siteUrl);
+            
+            // Crear instancia de MSAL
+            msalInstance = new MsalClass({
+                auth: {
+                    clientId: ONEDRIVE_CONFIG.clientId,
+                    authority: ONEDRIVE_CONFIG.authority,
+                    redirectUri: window.location.origin + window.location.pathname
+                },
+                cache: {
+                    cacheLocation: "localStorage",
+                    storeAuthStateInCookie: true
+                }
+            });
+            
+            console.log('✅ MSAL instanciado correctamente');
+            
+            // Verificar sesión existente
+            checkOnedriveSession().then(async () => {
+                if (isOnedriveConnected) {
+                    console.log('✅ Sesión existente encontrada, cargando datos de SharePoint...');
+                    await cargarRegistrosDesdeSharePoint();
+                } else {
+                    console.log('📌 Sin sesión activa, usando datos locales');
+                    cargarRegistrosLocal();
+                    actualizarUI();
+                }
+            }).catch((error) => {
+                console.log('⚠️ Error verificando sesión:', error);
+                cargarRegistrosLocal();
+                actualizarUI();
+            });
+            
+            mostrarBotones();
+            
+        } catch (error) {
+            console.error('❌ Error inicializando MSAL:', error);
+            cargarRegistrosLocal();
+            actualizarUI();
+        }
+    }
+    
+    function mostrarBotones() {
+        const syncBtn = document.getElementById('syncOnedriveBtn');
+        const uploadBtn = document.getElementById('uploadToOnedriveBtn');
+        const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
+        
+        if (syncBtn) {
+            syncBtn.style.display = 'inline-flex';
+            uploadBtn.style.display = 'inline-flex';
+            downloadBtn.style.display = 'inline-flex';
+            console.log('✅ Botones de SharePoint mostrados');
+        }
+    }
+    
+    // Iniciar espera por MSAL
+    esperarMSAL();
 }
-
-function configurarEventos() {
-    const registroForm = document.getElementById('registroForm');
-    if (registroForm) {
-        registroForm.addEventListener('submit', guardarRegistro);
-    }
-    
-    const cancelEdit = document.getElementById('cancelEditBtn');
-    if (cancelEdit) {
-        cancelEdit.addEventListener('click', cancelarEdicion);
-    }
-    
-    const exportarDB = document.getElementById('exportarDBBtn');
-    if (exportarDB) {
-        exportarDB.addEventListener('click', exportarBaseDatos);
-    }
-    
-    const importarDB = document.getElementById('importarDB');
-    if (importarDB) {
-        importarDB.addEventListener('change', importarBaseDatos);
-    }
-    
-    const imprimirReportes = document.getElementById('imprimirReportesBtn');
-    if (imprimirReportes) {
-        imprimirReportes.addEventListener('click', imprimirReportesHandler);
-    }
-    
-    const exportarExcel = document.getElementById('exportarExcelBtn');
-    if (exportarExcel) {
-        exportarExcel.addEventListener('click', exportarAExcel);
-    }
-    
-    const imprimirIndividual = document.getElementById('imprimirIndividualBtn');
-    if (imprimirIndividual) {
-        imprimirIndividual.addEventListener('click', () => {
-            abrirModalSeleccionRegistro();
-        });
-    }
-    
-    const modals = document.querySelectorAll('.modal');
-    document.querySelectorAll('.close-modal, .modal-close, .modal-btn, .cancel-btn, .close-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            modals.forEach(modal => modal.classList.remove('show'));
-        });
-    });
-    
-    window.addEventListener('click', (e) => {
-        modals.forEach(modal => {
-            if (e.target === modal) {
-                modal.classList.remove('show');
-            }
-        });
-    });
     
     // Eventos para OneDrive/SharePoint
     const syncBtn = document.getElementById('syncOnedriveBtn');
