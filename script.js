@@ -1,9 +1,9 @@
 // ALPHA DB - Sistema de Gestión Premium
-// Versión 8.7 - CON ONEDRIVE INTEGRADO
+// Versión 9.0 - CON SHAREPOINT INTEGRADO
 
 // ==================== CONFIGURACIÓN ====================
 const SISTEMA_NOMBRE = 'ALPHA DB';
-const DB_VERSION = '8.7';
+const DB_VERSION = '9.0';
 const DB_EXTENSION = '.adb';
 
 // Estado de la aplicación
@@ -13,6 +13,7 @@ let currentSemana = '';
 let editandoId = null;
 let historialEdiciones = {};
 let contadorColores = 1;
+let usandoSharePoint = false;
 
 // ==================== ONEDRIVE CONNECTION MODULE ====================
 let msalInstance = null;
@@ -235,7 +236,7 @@ function mostrarTabla(registrosMostrar) {
     if (!tbody) return;
     
     if (registrosMostrar.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="17" class="loading">📭 Sin resultados</td></tr>';
+        tbody.innerHTML = '发展<td colspan="17" class="loading">📭 Sin resultados</td></tr>';
         return;
     }
     
@@ -448,6 +449,213 @@ function verHistorial(id) {
     modal.classList.add('show');
 }
 
+// ==================== SHAREPOINT FUNCTIONS ====================
+
+// Obtener token de SharePoint
+async function getSharePointToken() {
+    if (!msalInstance) {
+        await loginToOnedrive();
+    }
+    
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length === 0) {
+        await loginToOnedrive();
+    }
+    
+    const request = {
+        scopes: [`${ONEDRIVE_CONFIG.sharepoint.siteUrl}/.default`],
+        account: msalInstance.getAllAccounts()[0]
+    };
+    
+    try {
+        const response = await msalInstance.acquireTokenSilent(request);
+        return response.accessToken;
+    } catch (error) {
+        const response = await msalInstance.acquireTokenPopup(request);
+        return response.accessToken;
+    }
+}
+
+// Obtener todos los registros desde SharePoint
+async function cargarRegistrosDesdeSharePoint() {
+    try {
+        if (!isOnedriveConnected) {
+            await loginToOnedrive();
+            if (!isOnedriveConnected) return false;
+        }
+        
+        const token = await getSharePointToken();
+        
+        const response = await fetch(
+            `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items?$top=5000&$orderby=Id desc`,
+            {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json;odata=verbose'
+                }
+            }
+        );
+        
+        if (!response.ok) throw new Error('Error al cargar datos');
+        
+        const data = await response.json();
+        
+        // Convertir datos de SharePoint al formato de tu app
+        registros = data.d.results.map(item => {
+            let colores = [];
+            try {
+                colores = JSON.parse(item.ColoresJSON || '[]');
+            } catch(e) {
+                colores = [];
+            }
+            
+            return {
+                id: item.Id.toString(),
+                po: item.PO || '',
+                proceso: item.Proceso || '',
+                esReemplazo: item.EsReemplazo || false,
+                semana: item.Semana || 0,
+                fecha: item.Fecha ? item.Fecha.split('T')[0] : '',
+                estilo: item.Estilo || '',
+                tela: item.Tela || '',
+                colores: colores,
+                numero_plotter: item.NumeroPlotter || 0,
+                plotter_temp: item.PlotterTemp || 0,
+                plotter_humedad: item.PlotterHumedad || 0,
+                plotter_perfil: item.PlotterPerfil || '',
+                monti_numero: item.MontiNumero || 0,
+                temperatura_monti: item.TempMonti || 0,
+                velocidad_monti: item.VelMonti || 0,
+                monti_presion: item.MontiPresion || 0,
+                temperatura_flat: item.TempFlat || 0,
+                tiempo_flat: item.TiempoFlat || 0,
+                adhesivo: item.Adhesivo || '',
+                version: item.Version || 1,
+                observacion: item.Observacion || '',
+                descripcion_edicion: item.DescripcionEdicion || '',
+                creado: item.Created,
+                actualizado: item.Modified
+            };
+        });
+        
+        usarSharePoint = true;
+        actualizarUI();
+        mostrarNotificacion(`📊 Cargados ${registros.length} registros desde SharePoint`, 'success');
+        return true;
+        
+    } catch (error) {
+        console.error('Error cargando desde SharePoint:', error);
+        mostrarNotificacion('⚠️ No se pudo conectar a SharePoint, usando datos locales', 'info');
+        cargarRegistrosLocal();
+        return false;
+    }
+}
+
+// Guardar registro en SharePoint
+async function guardarRegistroEnSharePoint(registroData) {
+    try {
+        if (!isOnedriveConnected) {
+            await loginToOnedrive();
+            if (!isOnedriveConnected) return false;
+        }
+        
+        const token = await getSharePointToken();
+        
+        const itemData = {
+            '__metadata': { 'type': `SP.Data.${ONEDRIVE_CONFIG.sharepoint.listName}ListItem` },
+            'PO': registroData.po,
+            'Proceso': registroData.proceso,
+            'EsReemplazo': registroData.esReemplazo,
+            'Semana': registroData.semana,
+            'Fecha': registroData.fecha,
+            'Estilo': registroData.estilo,
+            'Tela': registroData.tela,
+            'ColoresJSON': JSON.stringify(registroData.colores),
+            'NumeroPlotter': registroData.numero_plotter || 0,
+            'PlotterTemp': registroData.plotter_temp || 0,
+            'PlotterHumedad': registroData.plotter_humedad || 0,
+            'PlotterPerfil': registroData.plotter_perfil || '',
+            'MontiNumero': registroData.monti_numero || 0,
+            'TempMonti': registroData.temperatura_monti || 0,
+            'VelMonti': registroData.velocidad_monti || 0,
+            'MontiPresion': registroData.monti_presion || 0,
+            'TempFlat': registroData.temperatura_flat || 0,
+            'TiempoFlat': registroData.tiempo_flat || 0,
+            'Adhesivo': registroData.adhesivo || '',
+            'Version': registroData.version || 1,
+            'Observacion': registroData.observacion || '',
+            'DescripcionEdicion': registroData.descripcion_edicion || ''
+        };
+        
+        let url, method;
+        const isNew = !registroData.id || registroData.id.toString().includes('ADB-');
+        
+        if (!isNew && !isNaN(registroData.id)) {
+            // Actualizar registro existente
+            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${registroData.id})`;
+            method = 'MERGE';
+        } else {
+            // Crear nuevo registro
+            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items`;
+            method = 'POST';
+        }
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/json;odata=verbose',
+                'Content-Type': 'application/json;odata=verbose',
+                'IF-MATCH': method === 'MERGE' ? '*' : undefined,
+                'X-HTTP-Method': method === 'MERGE' ? 'MERGE' : undefined
+            },
+            body: JSON.stringify(itemData)
+        });
+        
+        if (!response.ok) throw new Error('Error guardando en SharePoint');
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Error guardando en SharePoint:', error);
+        return false;
+    }
+}
+
+// Eliminar registro de SharePoint
+async function eliminarRegistroEnSharePoint(id) {
+    try {
+        if (!isOnedriveConnected) {
+            await loginToOnedrive();
+            if (!isOnedriveConnected) return false;
+        }
+        
+        if (isNaN(id)) return true; // ID local, no eliminar en SharePoint
+        
+        const token = await getSharePointToken();
+        
+        const response = await fetch(
+            `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${id})`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json;odata=verbose',
+                    'IF-MATCH': '*'
+                }
+            }
+        );
+        
+        if (!response.ok) throw new Error('Error eliminando en SharePoint');
+        
+        return true;
+        
+    } catch (error) {
+        console.error('Error eliminando en SharePoint:', error);
+        return false;
+    }
+}
+
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
     const hoy = new Date().toISOString().split('T')[0];
@@ -504,12 +712,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    cargarRegistrosLocal();
     configurarEventos();
-    actualizarUI();
-    actualizarEstadisticas();
     
-    // Inicializar conexión a OneDrive
+    // Inicializar conexión a OneDrive y SharePoint
     initOnedriveConnection();
 });
 
@@ -586,7 +791,7 @@ function configurarEventos() {
         });
     });
     
-    // Eventos para OneDrive
+    // Eventos para OneDrive/SharePoint
     const syncBtn = document.getElementById('syncOnedriveBtn');
     if (syncBtn) {
         syncBtn.addEventListener('click', () => {
@@ -691,7 +896,7 @@ function exportarAExcel() {
 }
 
 // ==================== MANEJO DE REGISTROS ====================
-function guardarRegistro(e) {
+async function guardarRegistro(e) {
     e.preventDefault();
     
     const fechaStr = document.getElementById('fecha')?.value;
@@ -746,6 +951,7 @@ function guardarRegistro(e) {
         
         temperatura_monti: parseFloat(document.getElementById('temp_monti')?.value) || 0,
         velocidad_monti: parseFloat(document.getElementById('vel_monti')?.value) || 0,
+        monti_presion: parseFloat(document.getElementById('monti_presion')?.value) || 0,
         temperatura_flat: parseFloat(document.getElementById('temp_flat')?.value) || 0,
         tiempo_flat: parseFloat(document.getElementById('tiempo_flat')?.value) || 0,
         
@@ -756,6 +962,8 @@ function guardarRegistro(e) {
         observacion: observacion || null,
         descripcion_edicion: descripcionEdicion || null
     };
+    
+    let esEdicion = false;
     
     if (editId) {
         const index = registros.findIndex(r => r.id === editId);
@@ -786,18 +994,37 @@ function guardarRegistro(e) {
             registroData.actualizado = ahora;
             
             registros[index] = registroData;
-            mostrarNotificacion(`✅ Registro editado (versión ${registroData.version})`, 'success');
+            esEdicion = true;
         }
     } else {
-        if (observacion) {
-            registroData.observacion = observacion;
-            mostrarNotificacion('📝 Registro con observación guardado', 'info');
-        }
         registros.unshift(registroData);
+    }
+    
+    // Guardar en SharePoint si está conectado
+    let sharePointSuccess = false;
+    if (isOnedriveConnected && !registroData.id.toString().includes('ADB-')) {
+        sharePointSuccess = await guardarRegistroEnSharePoint(registroData);
+    } else if (isOnedriveConnected && registroData.id.toString().includes('ADB-')) {
+        // Es un ID local, primero creamos en SharePoint para obtener ID real
+        sharePointSuccess = await guardarRegistroEnSharePoint(registroData);
+        if (sharePointSuccess) {
+            await cargarRegistrosDesdeSharePoint(); // Recargar para obtener IDs reales
+        }
+    }
+    
+    // Siempre guardar en localStorage como respaldo
+    guardarRegistrosLocal();
+    
+    if (esEdicion) {
+        mostrarNotificacion(`✅ Registro editado (versión ${registroData.version})`, 'success');
+    } else {
         mostrarNotificacion('✅ Registro guardado en ALPHA DB', 'success');
     }
     
-    guardarRegistrosLocal();
+    if (sharePointSuccess && usandoSharePoint) {
+        mostrarNotificacion('📡 Sincronizado con SharePoint', 'info');
+    }
+    
     resetFormulario();
     actualizarUI();
     actualizarEstadisticas();
@@ -851,6 +1078,7 @@ function editarRegistro(id) {
     
     setValueIfExists('temp_monti', registro.temperatura_monti);
     setValueIfExists('vel_monti', registro.velocidad_monti);
+    setValueIfExists('monti_presion', registro.monti_presion);
     setValueIfExists('temp_flat', registro.temperatura_flat);
     setValueIfExists('tiempo_flat', registro.tiempo_flat);
     
@@ -918,10 +1146,18 @@ function resetFormulario() {
     if (formSection) formSection.classList.remove('edit-mode');
 }
 
-function eliminarRegistro(id) {
+async function eliminarRegistro(id) {
     if (confirm('¿Eliminar este registro de ALPHA DB?')) {
+        const registroEliminado = registros.find(r => r.id === id);
+        
         registros = registros.filter(r => r.id !== id);
         delete historialEdiciones[id];
+        
+        // Eliminar de SharePoint si está conectado y es un ID numérico
+        if (isOnedriveConnected && registroEliminado && !isNaN(id)) {
+            await eliminarRegistroEnSharePoint(id);
+        }
+        
         guardarRegistrosLocal();
         
         if (editandoId === id) {
@@ -934,10 +1170,10 @@ function eliminarRegistro(id) {
     }
 }
 
-// ==================== ALMACENAMIENTO ====================
+// ==================== ALMACENAMIENTO LOCAL ====================
 
 function cargarRegistrosLocal() {
-    const datosGuardados = localStorage.getItem('alpha_db_registros_v8');
+    const datosGuardados = localStorage.getItem('alpha_db_registros_v9');
     if (datosGuardados) {
         try {
             const data = JSON.parse(datosGuardados);
@@ -1005,6 +1241,7 @@ function generarDatosEjemplo() {
             monti_numero: Math.floor(Math.random() * 10) + 1,
             temperatura_monti: parseFloat((170 + Math.random() * 20).toFixed(1)),
             velocidad_monti: parseFloat((2 + Math.random() * 2).toFixed(1)),
+            monti_presion: parseFloat((3 + Math.random() * 2).toFixed(1)),
             temperatura_flat: parseFloat((150 + Math.random() * 20).toFixed(1)),
             tiempo_flat: parseFloat((10 + Math.random() * 10).toFixed(1)),
             adhesivo: 'TIPO A',
@@ -1029,7 +1266,7 @@ function guardarRegistrosLocal() {
             registros: registrosParaGuardar,
             historial: historialEdiciones
         };
-        localStorage.setItem('alpha_db_registros_v8', JSON.stringify(dataToSave));
+        localStorage.setItem('alpha_db_registros_v9', JSON.stringify(dataToSave));
     } catch (error) {
         console.error('Error al guardar en localStorage:', error);
         mostrarNotificacion('❌ Error al guardar datos localmente', 'error');
@@ -1139,7 +1376,8 @@ function imprimirReportesHandler() {
             <h1>⚡ ALPHA DB - REPORTE COMPLETO</h1>
             <p>Fecha de impresión: ${new Date().toLocaleString()}</p>
             <p>Total de registros: ${registrosFiltrados.length}</p>
-            <table>
+            <p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p>
+             <table>
                 <thead>
                     <tr>
                         <th>PO</th>
@@ -1265,7 +1503,7 @@ function imprimirRegistroIndividual(id) {
                 </div>
                 
                 <div class="info-grid">
-                    <div><strong>FECHA DE REFORMULACIÓN:</strong> ${formatearFecha(registro.fecha)}</div>
+                    <div><strong>FECHA DE REGISTRO:</strong> ${formatearFecha(registro.fecha)}</div>
                     <div><strong>Semana:</strong> ${registro.semana}</div>
                     <div><strong>Estilo:</strong> ${registro.estilo}</div>
                     <div><strong>Tela:</strong> ${registro.tela}</div>
@@ -1375,23 +1613,16 @@ function initOnedriveConnection() {
     // Detectar MSAL de diferentes formas posibles
     let MsalClass = null;
     
-    // Opción 1: window.msal (versión antigua)
     if (window.msal && window.msal.PublicClientApplication) {
         MsalClass = window.msal.PublicClientApplication;
         console.log('✅ MSAL detectado vía window.msal');
-    }
-    // Opción 2: window.PublicClientApplication (versión nueva)
-    else if (window.PublicClientApplication) {
+    } else if (window.PublicClientApplication) {
         MsalClass = window.PublicClientApplication;
         console.log('✅ MSAL detectado vía window.PublicClientApplication');
-    }
-    // Opción 3: msal global
-    else if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
+    } else if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
         MsalClass = msal.PublicClientApplication;
         console.log('✅ MSAL detectado vía msal global');
-    }
-    // Opción 4: buscar en window cualquier objeto con PublicClientApplication
-    else {
+    } else {
         for (let key in window) {
             if (window[key] && window[key].PublicClientApplication) {
                 MsalClass = window[key].PublicClientApplication;
@@ -1402,21 +1633,24 @@ function initOnedriveConnection() {
     }
     
     if (!MsalClass) {
-        console.error('❌ MSAL no detectado. Verifica que la librería se cargó correctamente.');
-        console.log('🔍 Objetos disponibles en window:', Object.keys(window).filter(k => k.toLowerCase().includes('msal')));
+        console.error('❌ MSAL no detectado. Usando modo local solamente.');
+        // Cargar datos locales como fallback
+        cargarRegistrosLocal();
+        actualizarUI();
         return;
     }
     
-    // Verificar que existe la configuración
     if (!window.ONEDRIVE_CONFIG) {
-        console.log('📌 onedrive-config.js no cargado, OneDrive no disponible');
+        console.log('📌 onedrive-config.js no cargado, usando modo local');
+        cargarRegistrosLocal();
+        actualizarUI();
         return;
     }
     
-    // Verificar que el clientId no sea el placeholder
     if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI" || ONEDRIVE_CONFIG.clientId === "demo_mode") {
         console.log('📌 Configura OneDrive: Reemplaza TU_CLIENT_ID_AQUI en onedrive-config.js');
-        // En modo demo, mostrar botones pero no funcionarán
+        cargarRegistrosLocal();
+        actualizarUI();
         const syncBtn = document.getElementById('syncOnedriveBtn');
         const uploadBtn = document.getElementById('uploadToOnedriveBtn');
         const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
@@ -1429,7 +1663,6 @@ function initOnedriveConnection() {
     }
     
     try {
-        // Crear instancia de MSAL
         msalInstance = new MsalClass({
             auth: {
                 clientId: ONEDRIVE_CONFIG.clientId,
@@ -1442,7 +1675,17 @@ function initOnedriveConnection() {
             }
         });
         
-        checkOnedriveSession();
+        checkOnedriveSession().then(async () => {
+            if (isOnedriveConnected) {
+                await cargarRegistrosDesdeSharePoint();
+            } else {
+                cargarRegistrosLocal();
+                actualizarUI();
+            }
+        }).catch(() => {
+            cargarRegistrosLocal();
+            actualizarUI();
+        });
         
         const syncBtn = document.getElementById('syncOnedriveBtn');
         const uploadBtn = document.getElementById('uploadToOnedriveBtn');
@@ -1458,7 +1701,45 @@ function initOnedriveConnection() {
         
     } catch (error) {
         console.error('Error inicializando MSAL:', error);
+        cargarRegistrosLocal();
+        actualizarUI();
     }
+}
+
+async function checkOnedriveSession() {
+    if (!msalInstance) return;
+    
+    try {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+            await acquireTokenSilent(accounts[0]);
+            updateOnedriveStatus(true);
+        } else {
+            updateOnedriveStatus(false);
+        }
+    } catch (error) {
+        console.error('Error verificando sesión:', error);
+        updateOnedriveStatus(false);
+    }
+}
+
+async function acquireTokenSilent(account) {
+    if (!msalInstance) throw new Error('MSAL no inicializado');
+    
+    const request = {
+        scopes: ONEDRIVE_CONFIG.scopes,
+        account: account
+    };
+    
+    try {
+        const response = await msalInstance.acquireTokenSilent(request);
+        initializeGraphClient(response.accessToken);
+        return response;
+    } catch (error) {
+        console.error('Error obteniendo token silencioso:', error);
+        throw error;
+    }
+}
 
 function initializeGraphClient(accessToken) {
     graphClient = MicrosoftGraph.Client.init({
@@ -1477,11 +1758,11 @@ function updateOnedriveStatus(connected) {
     if (statusDiv) {
         if (connected) {
             statusDiv.className = 'sync-status connected';
-            statusDiv.innerHTML = '<span>☁️✅</span> OneDrive: Conectado';
-            if (syncBtn) syncBtn.innerHTML = '<span>🔄</span> Sincronizar Ahora';
+            statusDiv.innerHTML = '<span>☁️✅</span> SharePoint: Conectado';
+            if (syncBtn) syncBtn.innerHTML = '<span>🔄</span> Sincronizar';
         } else {
             statusDiv.className = 'sync-status disconnected';
-            statusDiv.innerHTML = '<span>☁️🔌</span> OneDrive: Conectarse';
+            statusDiv.innerHTML = '<span>☁️🔌</span> SharePoint: Desconectado';
         }
     }
 }
@@ -1502,12 +1783,13 @@ async function loginToOnedrive() {
         if (response.account) {
             await acquireTokenSilent(response.account);
             updateOnedriveStatus(true);
-            mostrarNotificacion('✅ Conectado a OneDrive exitosamente', 'success');
+            mostrarNotificacion('✅ Conectado a SharePoint exitosamente', 'success');
             await ensureBackupFolder();
+            await cargarRegistrosDesdeSharePoint();
         }
     } catch (error) {
         console.error('Error en login:', error);
-        mostrarNotificacion('❌ Error al conectar con OneDrive', 'error');
+        mostrarNotificacion('❌ Error al conectar con SharePoint', 'error');
         updateOnedriveStatus(false);
     }
 }
@@ -1624,6 +1906,7 @@ async function syncWithOnedrive() {
     
     const jsonString = JSON.stringify(dataToSync, null, 2);
     await uploadToOnedrive(filename, jsonString);
+    await cargarRegistrosDesdeSharePoint();
 }
 
 async function loadFromOnedrive() {
@@ -1756,7 +2039,7 @@ function hideSyncProgress() {
     }
 }
 
-// Funciones globales para OneDrive
+// Funciones globales para OneDrive/SharePoint
 window.loginToOnedrive = loginToOnedrive;
 window.syncWithOnedrive = syncWithOnedrive;
 window.loadFromOnedrive = loadFromOnedrive;
