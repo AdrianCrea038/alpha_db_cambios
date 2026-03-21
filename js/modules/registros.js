@@ -18,39 +18,60 @@ const RegistrosModule = {
         });
     },
     
-    obtenerFormulario: function() {
-    const fechaStr = document.getElementById('fecha').value;
-    const fecha = new Date(fechaStr);
-    return {
-        po: document.getElementById('po').value.toUpperCase(),
-        proceso: document.getElementById('proceso').value,
-        esReemplazo: document.getElementById('esReemplazo').checked,
-        fecha: fechaStr,
-        estilo: document.getElementById('estilo').value.toUpperCase(),
-        tela: document.getElementById('tela').value.toUpperCase(),
-        colores: ColoresModule.obtenerColoresDeFormulario(),  // ← Esta línea corregida
-        numero_plotter: parseInt(document.getElementById('numero_plotter').value) || 0,
-        plotter_temp: parseFloat(document.getElementById('plotter_temp').value) || 0,
-        plotter_humedad: parseFloat(document.getElementById('plotter_humedad').value) || 0,
-        plotter_perfil: document.getElementById('plotter_perfil').value.toUpperCase(),
-        monti_numero: parseInt(document.getElementById('monti_numero').value) || 0,
-        temperatura_monti: parseFloat(document.getElementById('temp_monti').value) || 0,
-        velocidad_monti: parseFloat(document.getElementById('vel_monti').value) || 0,
-        monti_presion: parseFloat(document.getElementById('monti_presion').value) || 0,
-        temperatura_flat: parseFloat(document.getElementById('temp_flat').value) || 0,
-        tiempo_flat: parseFloat(document.getElementById('tiempo_flat').value) || 0,
-        adhesivo: document.getElementById('adhesivo').value.toUpperCase(),
-        observacion: document.getElementById('observacion').value || null,
-        semana: Utils.obtenerSemana(fecha)
-    };
-},
+    guardar: async function(datos) {
+        const editId = document.getElementById('editId').value;
+        const ahora = new Date().toISOString();
+        const registroData = { ...datos, actualizado: ahora, version: 1 };
+        
+        if (editId) {
+            const index = AppState.registros.findIndex(r => r.id === editId);
+            if (index !== -1) {
+                const original = AppState.registros[index];
+                if (!AppState.historialEdiciones[editId]) AppState.historialEdiciones[editId] = [];
+                AppState.historialEdiciones[editId].push({
+                    fecha: ahora, descripcion: datos.descripcionEdicion || 'Edición',
+                    anterior: { po: original.po, proceso: original.proceso, version: original.version },
+                    nuevo: { po: registroData.po, proceso: registroData.proceso, version: registroData.version }
+                });
+                registroData.creado = original.creado;
+                registroData.version = (original.version || 1) + 1;
+                AppState.updateRegistro(editId, registroData);
+                
+                if(window.SupabaseClient && window.SupabaseClient.client) {
+                    await window.SupabaseClient.guardarRegistro(registroData);
+                    await window.SupabaseClient.guardarHistorial({
+                        registro_id: editId,
+                        descripcion: datos.descripcionEdicion || 'Edición',
+                        anterior_po: original.po,
+                        anterior_proceso: original.proceso,
+                        anterior_version: original.version,
+                        nuevo_po: registroData.po,
+                        nuevo_proceso: registroData.proceso,
+                        nuevo_version: registroData.version
+                    });
+                }
+                Notifications.success(`✅ Editado v${registroData.version}`);
+                return true;
+            }
+        } else {
+            registroData.id = Utils.generarIdUnico();
+            registroData.creado = ahora;
+            AppState.addRegistro(registroData);
+            if(window.SupabaseClient && window.SupabaseClient.client) {
+                await window.SupabaseClient.guardarRegistro(registroData);
+            }
+            Notifications.success('✅ Registro guardado');
+            return true;
+        }
+        return false;
+    },
     
     eliminar: async function(id) {
         if (confirm('¿Eliminar este registro?')) {
             AppState.registros = AppState.registros.filter(r => r.id !== id);
             delete AppState.historialEdiciones[id];
             if(window.SupabaseClient && window.SupabaseClient.client) {
-                await SupabaseClient.eliminarRegistro(id);
+                await window.SupabaseClient.eliminarRegistro(id);
             }
             Notifications.success('🗑️ Eliminado');
             return true;
@@ -105,7 +126,7 @@ const RegistrosModule = {
         set('tiempo_flat', reg.tiempo_flat);
         set('adhesivo', reg.adhesivo);
         if(reg.observacion) set('observacion', reg.observacion);
-        ColoresModule.cargar(reg.colores);
+        ColoresModule.cargarEnFormulario(reg.colores);
     }
 };
 
