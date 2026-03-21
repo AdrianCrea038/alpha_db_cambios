@@ -80,90 +80,81 @@ const RegistrosModule = {
     },
     
     obtenerFormulario: function() {
-        // Función auxiliar para obtener valor de un elemento de forma segura
-        const getValue = (id, defaultValue = '') => {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`⚠️ Elemento no encontrado: ${id}`);
-                return defaultValue;
-            }
-            return element.value;
+        const getValor = (id, defaultValue = '') => {
+            const el = document.getElementById(id);
+            if (!el) return defaultValue;
+            return el.value;
         };
         
-        // Función auxiliar para obtener valor numérico de forma segura
-        const getNumber = (id, defaultValue = 0) => {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`⚠️ Elemento no encontrado: ${id}`);
-                return defaultValue;
-            }
-            const value = parseFloat(element.value);
-            return isNaN(value) ? defaultValue : value;
+        const getNumero = (id, defaultValue = 0) => {
+            const el = document.getElementById(id);
+            if (!el) return defaultValue;
+            const val = parseFloat(el.value);
+            return isNaN(val) ? defaultValue : val;
         };
         
-        // Función auxiliar para obtener checkbox de forma segura
-        const getCheckbox = (id, defaultValue = false) => {
-            const element = document.getElementById(id);
-            if (!element) {
-                console.warn(`⚠️ Elemento no encontrado: ${id}`);
-                return defaultValue;
-            }
-            return element.checked;
+        const getCheck = (id, defaultValue = false) => {
+            const el = document.getElementById(id);
+            if (!el) return defaultValue;
+            return el.checked;
         };
         
-        const fechaStr = getValue('fecha', new Date().toISOString().split('T')[0]);
+        const fechaStr = getValor('fecha', new Date().toISOString().split('T')[0]);
         const fecha = new Date(fechaStr);
         
         return {
-            po: getValue('po', '').toUpperCase(),
-            proceso: getValue('proceso', ''),
-            esReemplazo: getCheckbox('esReemplazo', false),
+            po: getValor('po', '').toUpperCase(),
+            proceso: getValor('proceso', ''),
+            es_reemplazo: getCheck('esReemplazo', false),
             fecha: fechaStr,
-            estilo: getValue('estilo', '').toUpperCase(),
-            tela: getValue('tela', '').toUpperCase(),
+            estilo: getValor('estilo', '').toUpperCase(),
+            tela: getValor('tela', '').toUpperCase(),
             colores: ColoresModule.obtenerDelFormulario(),
-            numero_plotter: getNumber('numero_plotter', 0),
-            plotter_temp: getNumber('plotter_temp', 0),
-            plotter_humedad: getNumber('plotter_humedad', 0),
-            plotter_perfil: getValue('plotter_perfil', '').toUpperCase(),
-            monti_numero: getNumber('monti_numero', 0),
-            temperatura_monti: getNumber('temp_monti', 0),
-            velocidad_monti: getNumber('vel_monti', 0),
-            monti_presion: getNumber('monti_presion', 0),
-            temperatura_flat: getNumber('temp_flat', 0),
-            tiempo_flat: getNumber('tiempo_flat', 0),
-            adhesivo: getValue('adhesivo', '').toUpperCase(),
-            observacion: getValue('observacion', null),
+            numero_plotter: getNumero('numero_plotter', 0),
+            plotter_temp: getNumero('plotter_temp', 0),
+            plotter_humedad: getNumero('plotter_humedad', 0),
+            plotter_perfil: getValor('plotter_perfil', '').toUpperCase(),
+            monti_numero: getNumero('monti_numero', 0),
+            temperatura_monti: getNumero('temp_monti', 0),
+            velocidad_monti: getNumero('vel_monti', 0),
+            monti_presion: getNumero('monti_presion', 0),
+            temperatura_flat: getNumero('temp_flat', 0),
+            tiempo_flat: getNumero('tiempo_flat', 0),
+            adhesivo: getValor('adhesivo', '').toUpperCase(),
+            observacion: getValor('observacion', null),
             semana: Utils.obtenerSemana(fecha)
         };
     },
     
     cargarFormulario: function(reg) {
-        const set = (id, v) => { 
-            const el = document.getElementById(id); 
-            if(el) el.value = v !== undefined && v !== null ? v : ''; 
-            else console.warn(`⚠️ Elemento no encontrado: ${id}`);
+        const setValor = (id, valor) => {
+            const el = document.getElementById(id);
+            if (el) el.value = valor !== undefined && valor !== null ? valor : '';
         };
         
-        set('po', reg.po);
-        set('proceso', reg.proceso);
-        const esReemplazo = document.getElementById('esReemplazo');
-        if(esReemplazo) esReemplazo.checked = reg.esReemplazo;
-        set('fecha', reg.fecha);
-        set('estilo', reg.estilo);
-        set('tela', reg.tela);
-        set('numero_plotter', reg.numero_plotter);
-        set('plotter_temp', reg.plotter_temp);
-        set('plotter_humedad', reg.plotter_humedad);
-        set('plotter_perfil', reg.plotter_perfil);
-        set('monti_numero', reg.monti_numero);
-        set('temp_monti', reg.temperatura_monti);
-        set('vel_monti', reg.velocidad_monti);
-        set('monti_presion', reg.monti_presion);
-        set('temp_flat', reg.temperatura_flat);
-        set('tiempo_flat', reg.tiempo_flat);
-        set('adhesivo', reg.adhesivo);
-        if(reg.observacion) set('observacion', reg.observacion);
+        const setCheck = (id, valor) => {
+            const el = document.getElementById(id);
+            if (el) el.checked = valor || false;
+        };
+        
+        setValor('po', reg.po);
+        setValor('proceso', reg.proceso);
+        setCheck('esReemplazo', reg.es_reemplazo);
+        setValor('fecha', reg.fecha);
+        setValor('estilo', reg.estilo);
+        setValor('tela', reg.tela);
+        setValor('numero_plotter', reg.numero_plotter);
+        setValor('plotter_temp', reg.plotter_temp);
+        setValor('plotter_humedad', reg.plotter_humedad);
+        setValor('plotter_perfil', reg.plotter_perfil);
+        setValor('monti_numero', reg.monti_numero);
+        setValor('temp_monti', reg.temperatura_monti);
+        setValor('vel_monti', reg.velocidad_monti);
+        setValor('monti_presion', reg.monti_presion);
+        setValor('temp_flat', reg.temperatura_flat);
+        setValor('tiempo_flat', reg.tiempo_flat);
+        setValor('adhesivo', reg.adhesivo);
+        if(reg.observacion) setValor('observacion', reg.observacion);
         ColoresModule.cargarEnFormulario(reg.colores);
     }
 };
