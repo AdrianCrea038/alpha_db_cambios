@@ -21,7 +21,7 @@ const ONEDRIVE_CONFIG = {
     // CONFIGURACIÓN DE SHAREPOINT
     sharepoint: {
         // Tu sitio de SharePoint - REEMPLAZA TUEMPRESA Y TUSITIO
-        siteUrl: "https://TUEMPRESA.sharepoint.com/sites/TUSITIO",
+        siteUrl: "https://artfxinc-my.sharepoint.com/personal/carlos_milla_tegraglobal_com/",
         listName: "AlphaDB_Registros"
     }
 };
