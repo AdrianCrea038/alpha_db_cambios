@@ -1,6 +1,6 @@
 // js/config/supabase-config.js
 const SUPABASE_CONFIG = {
-    url: "https://zgcjsqsxrpzdazdymvtw.supabase.co",
+    url: "https://ofhkwhrelrdbqiaffkna.supabase.co",
     anonKey: "sb_publishable_-ohMnlFIugkBUxP1M2hGsQ_cbYhDpt6",
     tabla: "registros",
     tablaHistorial: "historial"
