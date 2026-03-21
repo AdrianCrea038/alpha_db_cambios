@@ -89,7 +89,7 @@ const RegistrosModule = {
             fecha: fechaStr,
             estilo: document.getElementById('estilo').value.toUpperCase(),
             tela: document.getElementById('tela').value.toUpperCase(),
-            colores: ColoresModule.obtenerColoresDeFormulario(),
+            colores: ColoresModule.obtenerDelFormulario(),
             numero_plotter: parseInt(document.getElementById('numero_plotter').value) || 0,
             plotter_temp: parseFloat(document.getElementById('plotter_temp').value) || 0,
             plotter_humedad: parseFloat(document.getElementById('plotter_humedad').value) || 0,
