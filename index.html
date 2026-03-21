@@ -4,38 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpha DB - Sistema de Gestión Textil</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Librerías base -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-   
-    <!-- MSAL.js -->
-    <script src="https://alcdn.msftauth.net/browser/2.32.0/js/msal-browser.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config/supabase-config.js"></script>
+    <script src="js/supabase/client.js"></script>
     
-       <!-- Supabase -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="js/config/supabase-config.js"></script>
-<script src="js/supabase/client.js"></script>
-
-    <!-- Archivos del sistema (orden IMPORTANTE) -->
-<!-- Archivos del sistema (orden IMPORTANTE) -->
-<script src="js/config/onedrive-config.js"></script>
-<script src="js/core/utils.js"></script>
-<script src="js/core/notifications.js"></script>
-<script src="js/core/app-state.js"></script>
-<script src="js/modules/colores.js"></script>
-<script src="js/modules/registros.js"></script>
-<script src="js/ui/calendario.js"></script>
-<script src="js/ui/tabla.js"></script>
-<script src="js/ui/formulario.js"></script>
-<script src="js/sharepoint/auth.js"></script>
-<script src="js/sharepoint/api.js"></script>
-<script src="js/sharepoint/sync.js"></script>
-<script src="js/main.js"></script>
+    <!-- Tus módulos (sin SharePoint) -->
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/notifications.js"></script>
+    <script src="js/core/app-state.js"></script>
+    <script src="js/modules/colores.js"></script>
+    <script src="js/modules/registros.js"></script>
+    <script src="js/ui/calendario.js"></script>
+    <script src="js/ui/tabla.js"></script>
+    <script src="js/ui/formulario.js"></script>
+    <script src="js/main.js"></script>
 </head>
 <body>
     <!-- TODO EL CONTENIDO HTML PERMANECE IGUAL -->
