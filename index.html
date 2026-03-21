@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -11,25 +12,27 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- MSAL.js para autenticación con Azure AD - Versión estable -->
-    <script src="https://alcdn.msftauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+    <!-- MSAL.js - Versión que funciona en GitHub Pages -->
+    <script src="https://unpkg.com/@azure/msal-browser@2.38.3/dist/msal-browser.min.js"></script>
     
     <!-- Microsoft Graph API SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
+    <script src="https://unpkg.com/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
     
     <!-- Script de configuración de OneDrive -->
     <script src="onedrive-config.js"></script>
-    <!-- MSAL.js - Múltiples fuentes de respaldo -->
-<script src="https://alcdn.msftauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
-<script>
-    // Fallback si la primera no carga
-    if (typeof msal === 'undefined' && typeof window.msal === 'undefined') {
-        console.log('⚠️ MSAL no cargó, intentando con CDN alternativo...');
-        var script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@azure/msal-browser@2.38.3/dist/msal-browser.min.js';
-        document.head.appendChild(script);
-    }
-</script>
+    
+    <script>
+        // Verificar carga de MSAL
+        window.addEventListener('load', function() {
+            console.log('🔍 Verificando MSAL...');
+            console.log('  - window.PublicClientApplication:', typeof window.PublicClientApplication);
+            if (typeof window.PublicClientApplication !== 'undefined') {
+                console.log('✅ MSAL cargado correctamente');
+            } else {
+                console.error('❌ MSAL no cargó correctamente');
+            }
+        });
+    </script>
 </head>
 <body>
     <div class="container">
