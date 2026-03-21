@@ -205,7 +205,7 @@ function mostrarTabla(registrosMostrar) {
     const tbody = document.getElementById('tableBody');
     if (!tbody) return;
     if (registrosMostrar.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="17" class="loading">📭 Sin resultados</td></tr>';
+        tbody.innerHTML = '发展<td colspan="17" class="loading">📭 Sin resultados</td>发展';
         return;
     }
     tbody.innerHTML = registrosMostrar.map(reg => {
@@ -423,6 +423,65 @@ async function cargarRegistrosDesdeSharePoint() {
     }
 }
 
+async function guardarRegistroEnSharePoint(registroData) {
+    try {
+        if (!isOnedriveConnected) { await loginToOnedrive(); if (!isOnedriveConnected) return false; }
+        const token = await getSharePointToken();
+        const itemData = {
+            '__metadata': { 'type': `SP.Data.${ONEDRIVE_CONFIG.sharepoint.listName}ListItem` },
+            'PO': registroData.po, 'Proceso': registroData.proceso, 'EsReemplazo': registroData.esReemplazo,
+            'Semana': registroData.semana, 'Fecha': registroData.fecha, 'Estilo': registroData.estilo,
+            'Tela': registroData.tela, 'ColoresJSON': JSON.stringify(registroData.colores),
+            'NumeroPlotter': registroData.numero_plotter || 0, 'PlotterTemp': registroData.plotter_temp || 0,
+            'PlotterHumedad': registroData.plotter_humedad || 0, 'PlotterPerfil': registroData.plotter_perfil || '',
+            'MontiNumero': registroData.monti_numero || 0, 'TempMonti': registroData.temperatura_monti || 0,
+            'VelMonti': registroData.velocidad_monti || 0, 'MontiPresion': registroData.monti_presion || 0,
+            'TempFlat': registroData.temperatura_flat || 0, 'TiempoFlat': registroData.tiempo_flat || 0,
+            'Adhesivo': registroData.adhesivo || '', 'Version': registroData.version || 1,
+            'Observacion': registroData.observacion || '', 'DescripcionEdicion': registroData.descripcion_edicion || ''
+        };
+        let url, method;
+        const isNew = !registroData.id || registroData.id.toString().includes('ADB-');
+        if (!isNew && !isNaN(registroData.id)) {
+            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${registroData.id})`;
+            method = 'MERGE';
+        } else {
+            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items`;
+            method = 'POST';
+        }
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Authorization': `Bearer ${token}`, 'Accept': 'application/json;odata=verbose',
+                'Content-Type': 'application/json;odata=verbose', 'IF-MATCH': method === 'MERGE' ? '*' : undefined,
+                'X-HTTP-Method': method === 'MERGE' ? 'MERGE' : undefined
+            },
+            body: JSON.stringify(itemData)
+        });
+        if (!response.ok) throw new Error('Error guardando en SharePoint');
+        return true;
+    } catch (error) {
+        console.error('Error guardando en SharePoint:', error);
+        return false;
+    }
+}
+
+async function eliminarRegistroEnSharePoint(id) {
+    try {
+        if (!isOnedriveConnected) { await loginToOnedrive(); if (!isOnedriveConnected) return false; }
+        if (isNaN(id)) return true;
+        const token = await getSharePointToken();
+        const response = await fetch(`${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${id})`, {
+            method: 'DELETE', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json;odata=verbose', 'IF-MATCH': '*' }
+        });
+        if (!response.ok) throw new Error('Error eliminando en SharePoint');
+        return true;
+    } catch (error) {
+        console.error('Error eliminando en SharePoint:', error);
+        return false;
+    }
+}
+
 // ==================== INICIALIZACIÓN ====================
 document.addEventListener('DOMContentLoaded', () => {
     const hoy = new Date().toISOString().split('T')[0];
@@ -559,62 +618,86 @@ async function guardarRegistro(e) {
     actualizarEstadisticas();
 }
 
-async function guardarRegistroEnSharePoint(registroData) {
-    try {
-        if (!isOnedriveConnected) { await loginToOnedrive(); if (!isOnedriveConnected) return false; }
-        const token = await getSharePointToken();
-        const itemData = {
-            '__metadata': { 'type': `SP.Data.${ONEDRIVE_CONFIG.sharepoint.listName}ListItem` },
-            'PO': registroData.po, 'Proceso': registroData.proceso, 'EsReemplazo': registroData.esReemplazo,
-            'Semana': registroData.semana, 'Fecha': registroData.fecha, 'Estilo': registroData.estilo,
-            'Tela': registroData.tela, 'ColoresJSON': JSON.stringify(registroData.colores),
-            'NumeroPlotter': registroData.numero_plotter || 0, 'PlotterTemp': registroData.plotter_temp || 0,
-            'PlotterHumedad': registroData.plotter_humedad || 0, 'PlotterPerfil': registroData.plotter_perfil || '',
-            'MontiNumero': registroData.monti_numero || 0, 'TempMonti': registroData.temperatura_monti || 0,
-            'VelMonti': registroData.velocidad_monti || 0, 'MontiPresion': registroData.monti_presion || 0,
-            'TempFlat': registroData.temperatura_flat || 0, 'TiempoFlat': registroData.tiempo_flat || 0,
-            'Adhesivo': registroData.adhesivo || '', 'Version': registroData.version || 1,
-            'Observacion': registroData.observacion || '', 'DescripcionEdicion': registroData.descripcion_edicion || ''
-        };
-        let url, method;
-        const isNew = !registroData.id || registroData.id.toString().includes('ADB-');
-        if (!isNew && !isNaN(registroData.id)) {
-            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${registroData.id})`;
-            method = 'MERGE';
-        } else {
-            url = `${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items`;
-            method = 'POST';
-        }
-        const response = await fetch(url, {
-            method: method,
-            headers: {
-                'Authorization': `Bearer ${token}`, 'Accept': 'application/json;odata=verbose',
-                'Content-Type': 'application/json;odata=verbose', 'IF-MATCH': method === 'MERGE' ? '*' : undefined,
-                'X-HTTP-Method': method === 'MERGE' ? 'MERGE' : undefined
-            },
-            body: JSON.stringify(itemData)
-        });
-        if (!response.ok) throw new Error('Error guardando en SharePoint');
-        return true;
-    } catch (error) {
-        console.error('Error guardando en SharePoint:', error);
-        return false;
-    }
+function editarRegistro(id) {
+    const registro = registros.find(r => r.id === id);
+    if (!registro) { mostrarNotificacion('❌ Registro no encontrado', 'error'); return; }
+    editandoId = id;
+    document.getElementById('editId').value = id;
+    const container = document.getElementById('coloresContainer');
+    container.innerHTML = '';
+    contadorColores = 1;
+    if (registro.colores && registro.colores.length > 0) {
+        registro.colores.forEach(color => { agregarGrupoColor(color.nombre, color.cyan, color.magenta, color.yellow, color.black, color.turquesa, color.naranja, color.fluorYellow, color.fluorPink); });
+    } else { agregarGrupoColor(); }
+    const setValueIfExists = (id, value) => { const el = document.getElementById(id); if (el) el.value = value !== undefined && value !== null ? value : ''; };
+    setValueIfExists('po', registro.po || '');
+    setValueIfExists('proceso', registro.proceso || '');
+    const esReemplazo = document.getElementById('esReemplazo');
+    if (esReemplazo) esReemplazo.checked = registro.esReemplazo || false;
+    setValueIfExists('fecha', registro.fecha);
+    setValueIfExists('estilo', registro.estilo);
+    setValueIfExists('tela', registro.tela);
+    setValueIfExists('numero_plotter', registro.numero_plotter);
+    setValueIfExists('plotter_temp', registro.plotter_temp);
+    setValueIfExists('plotter_humedad', registro.plotter_humedad);
+    setValueIfExists('plotter_perfil', registro.plotter_perfil);
+    setValueIfExists('monti_numero', registro.monti_numero);
+    setValueIfExists('temp_monti', registro.temperatura_monti);
+    setValueIfExists('vel_monti', registro.velocidad_monti);
+    setValueIfExists('monti_presion', registro.monti_presion);
+    setValueIfExists('temp_flat', registro.temperatura_flat);
+    setValueIfExists('tiempo_flat', registro.tiempo_flat);
+    setValueIfExists('adhesivo', registro.adhesivo);
+    verificarFechaObservacion();
+    if (registro.observacion) setValueIfExists('observacion', registro.observacion);
+    const formTitle = document.getElementById('formTitle');
+    if (formTitle) formTitle.innerHTML = '✏️ EDITANDO REGISTRO';
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.innerHTML = '<span>✏️</span> ACTUALIZAR';
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) cancelEditBtn.style.display = 'block';
+    const formSection = document.querySelector('.form-section');
+    if (formSection) { formSection.classList.add('edit-mode'); formSection.scrollIntoView({ behavior: 'smooth' }); }
 }
 
-async function eliminarRegistroEnSharePoint(id) {
-    try {
-        if (!isOnedriveConnected) { await loginToOnedrive(); if (!isOnedriveConnected) return false; }
-        if (isNaN(id)) return true;
-        const token = await getSharePointToken();
-        const response = await fetch(`${ONEDRIVE_CONFIG.sharepoint.siteUrl}/_api/web/lists/getbytitle('${ONEDRIVE_CONFIG.sharepoint.listName}')/items(${id})`, {
-            method: 'DELETE', headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/json;odata=verbose', 'IF-MATCH': '*' }
-        });
-        if (!response.ok) throw new Error('Error eliminando en SharePoint');
-        return true;
-    } catch (error) {
-        console.error('Error eliminando en SharePoint:', error);
-        return false;
+function cancelarEdicion() { resetFormulario(); mostrarNotificacion('✏️ Edición cancelada', 'info'); }
+
+function resetFormulario() {
+    editandoId = null;
+    document.getElementById('editId').value = '';
+    document.getElementById('registroForm').reset();
+    const container = document.getElementById('coloresContainer');
+    container.innerHTML = '';
+    contadorColores = 1;
+    agregarGrupoColor();
+    const hoy = new Date().toISOString().split('T')[0];
+    const fechaInput = document.getElementById('fecha');
+    if (fechaInput) fechaInput.value = hoy;
+    const observacionContainer = document.getElementById('observacionContainer');
+    if (observacionContainer) observacionContainer.style.display = 'none';
+    const observacionField = document.getElementById('observacion');
+    if (observacionField) { observacionField.required = false; observacionField.value = ''; }
+    const formTitle = document.getElementById('formTitle');
+    if (formTitle) formTitle.innerHTML = '➕ NUEVO REGISTRO';
+    const submitBtn = document.getElementById('submitBtn');
+    if (submitBtn) submitBtn.innerHTML = '<span>💾</span> GUARDAR';
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    if (cancelEditBtn) cancelEditBtn.style.display = 'none';
+    const formSection = document.querySelector('.form-section');
+    if (formSection) formSection.classList.remove('edit-mode');
+}
+
+async function eliminarRegistro(id) {
+    if (confirm('¿Eliminar este registro de ALPHA DB?')) {
+        const registroEliminado = registros.find(r => r.id === id);
+        registros = registros.filter(r => r.id !== id);
+        delete historialEdiciones[id];
+        if (isOnedriveConnected && registroEliminado && !isNaN(id)) await eliminarRegistroEnSharePoint(id);
+        guardarRegistrosLocal();
+        if (editandoId === id) cancelarEdicion();
+        actualizarUI();
+        actualizarEstadisticas();
+        mostrarNotificacion('🗑️ Registro eliminado', 'success');
     }
 }
 
@@ -742,7 +825,7 @@ function imprimirReportesHandler() {
     const registrosFiltrados = filtrarRegistrosArray();
     if (registrosFiltrados.length === 0) { mostrarNotificacion('❌ No hay registros', 'error'); return; }
     const ventanaImpresion = window.open('', '_blank');
-    let htmlContenido = `<!DOCTYPE html><html><head><title>ALPHA DB - Reporte</title><style>body{font-family:Arial;margin:0.5in;background:white;color:black;}h1{color:#000;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:9px;}th{background:#000;color:white;padding:4px;text-align:left;}td{padding:3px;border-bottom:1px solid #000;}.total{margin-top:20px;font-weight:bold;text-align:right;}</style></head><body><h1>⚡ ALPHA DB - REPORTE COMPLETO</h1><p>Fecha de impresión: ${new Date().toLocaleString()}</p><p>Total de registros: ${registrosFiltrados.length}</p><p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p><table><thead><tr><th>PO</th><th>V</th><th>Proceso</th><th>Reemp</th><th>Sem</th><th>Fecha</th><th>Estilo</th><th>Tela</th><th>N°Monti</th><th>T°M</th><th>Vel</th><th>T°F</th><th>T/F</th></tr></thead><tbody>`;
+    let htmlContenido = `<!DOCTYPE html><html><head><title>ALPHA DB - Reporte</title><style>body{font-family:Arial;margin:0.5in;background:white;color:black;}h1{color:#000;text-align:center;}table{width:100%;border-collapse:collapse;margin-top:20px;font-size:9px;}th{background:#000;color:white;padding:4px;text-align:left;}td{padding:3px;border-bottom:1px solid #000;}.total{margin-top:20px;font-weight:bold;text-align:right;}</style></head><body><h1>⚡ ALPHA DB - REPORTE COMPLETO</h1><p>Fecha de impresión: ${new Date().toLocaleString()}</p><p>Total de registros: ${registrosFiltrados.length}</p><p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p>能<table><thead><tr><th>PO</th><th>V</th><th>Proceso</th><th>Reemp</th><th>Sem</th><th>Fecha</th><th>Estilo</th><th>Tela</th><th>N°Monti</th><th>T°M</th><th>Vel</th><th>T°F</th><th>T/F</th></tr></thead><tbody>`;
     registrosFiltrados.forEach(reg => {
         htmlContenido += `<tr><td>${reg.po || '-'}</td><td>v${reg.version || 1}</td><td>${reg.proceso || '-'}</td><td>${reg.esReemplazo ? 'Sí' : 'No'}</td><td>${reg.semana}</td><td>${formatearFecha(reg.fecha)}</td><td>${reg.estilo}</td><td>${reg.tela}</td><td>${reg.monti_numero || 0}</td><td>${(reg.temperatura_monti || 0).toFixed(1)}°</td><td>${(reg.velocidad_monti || 0).toFixed(1)}</td><td>${(reg.temperatura_flat || 0).toFixed(1)}°</td><td>${(reg.tiempo_flat || 0).toFixed(1)}s</td></tr>`;
     });
@@ -786,138 +869,47 @@ function imprimirRegistroSeleccionado() {
     else mostrarNotificacion('❌ Selecciona un registro', 'error');
 }
 
-function editarRegistro(id) {
-    const registro = registros.find(r => r.id === id);
-    if (!registro) { mostrarNotificacion('❌ Registro no encontrado', 'error'); return; }
-    editandoId = id;
-    document.getElementById('editId').value = id;
-    const container = document.getElementById('coloresContainer');
-    container.innerHTML = '';
-    contadorColores = 1;
-    if (registro.colores && registro.colores.length > 0) {
-        registro.colores.forEach(color => { agregarGrupoColor(color.nombre, color.cyan, color.magenta, color.yellow, color.black, color.turquesa, color.naranja, color.fluorYellow, color.fluorPink); });
-    } else { agregarGrupoColor(); }
-    const setValueIfExists = (id, value) => { const el = document.getElementById(id); if (el) el.value = value !== undefined && value !== null ? value : ''; };
-    setValueIfExists('po', registro.po || '');
-    setValueIfExists('proceso', registro.proceso || '');
-    const esReemplazo = document.getElementById('esReemplazo');
-    if (esReemplazo) esReemplazo.checked = registro.esReemplazo || false;
-    setValueIfExists('fecha', registro.fecha);
-    setValueIfExists('estilo', registro.estilo);
-    setValueIfExists('tela', registro.tela);
-    setValueIfExists('numero_plotter', registro.numero_plotter);
-    setValueIfExists('plotter_temp', registro.plotter_temp);
-    setValueIfExists('plotter_humedad', registro.plotter_humedad);
-    setValueIfExists('plotter_perfil', registro.plotter_perfil);
-    setValueIfExists('monti_numero', registro.monti_numero);
-    setValueIfExists('temp_monti', registro.temperatura_monti);
-    setValueIfExists('vel_monti', registro.velocidad_monti);
-    setValueIfExists('monti_presion', registro.monti_presion);
-    setValueIfExists('temp_flat', registro.temperatura_flat);
-    setValueIfExists('tiempo_flat', registro.tiempo_flat);
-    setValueIfExists('adhesivo', registro.adhesivo);
-    verificarFechaObservacion();
-    if (registro.observacion) setValueIfExists('observacion', registro.observacion);
-    const formTitle = document.getElementById('formTitle');
-    if (formTitle) formTitle.innerHTML = '✏️ EDITANDO REGISTRO';
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) submitBtn.innerHTML = '<span>✏️</span> ACTUALIZAR';
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    if (cancelEditBtn) cancelEditBtn.style.display = 'block';
-    const formSection = document.querySelector('.form-section');
-    if (formSection) { formSection.classList.add('edit-mode'); formSection.scrollIntoView({ behavior: 'smooth' }); }
-}
-
-function cancelarEdicion() { resetFormulario(); mostrarNotificacion('✏️ Edición cancelada', 'info'); }
-
-function resetFormulario() {
-    editandoId = null;
-    document.getElementById('editId').value = '';
-    document.getElementById('registroForm').reset();
-    const container = document.getElementById('coloresContainer');
-    container.innerHTML = '';
-    contadorColores = 1;
-    agregarGrupoColor();
-    const hoy = new Date().toISOString().split('T')[0];
-    const fechaInput = document.getElementById('fecha');
-    if (fechaInput) fechaInput.value = hoy;
-    const observacionContainer = document.getElementById('observacionContainer');
-    if (observacionContainer) observacionContainer.style.display = 'none';
-    const observacionField = document.getElementById('observacion');
-    if (observacionField) { observacionField.required = false; observacionField.value = ''; }
-    const formTitle = document.getElementById('formTitle');
-    if (formTitle) formTitle.innerHTML = '➕ NUEVO REGISTRO';
-    const submitBtn = document.getElementById('submitBtn');
-    if (submitBtn) submitBtn.innerHTML = '<span>💾</span> GUARDAR';
-    const cancelEditBtn = document.getElementById('cancelEditBtn');
-    if (cancelEditBtn) cancelEditBtn.style.display = 'none';
-    const formSection = document.querySelector('.form-section');
-    if (formSection) formSection.classList.remove('edit-mode');
-}
-
-async function eliminarRegistro(id) {
-    if (confirm('¿Eliminar este registro de ALPHA DB?')) {
-        const registroEliminado = registros.find(r => r.id === id);
-        registros = registros.filter(r => r.id !== id);
-        delete historialEdiciones[id];
-        if (isOnedriveConnected && registroEliminado && !isNaN(id)) await eliminarRegistroEnSharePoint(id);
-        guardarRegistrosLocal();
-        if (editandoId === id) cancelarEdicion();
-        actualizarUI();
-        actualizarEstadisticas();
-        mostrarNotificacion('🗑️ Registro eliminado', 'success');
-    }
-}
-
-// ==================== EXPORTAR A EXCEL ====================
-function exportarAExcel() {
-    if (typeof XLSX === 'undefined') { mostrarNotificacion('❌ Error: Librería XLSX no cargada', 'error'); return; }
-    const registrosFiltrados = filtrarRegistrosArray();
-    if (registrosFiltrados.length === 0) { mostrarNotificacion('❌ No hay registros para exportar', 'error'); return; }
-    try {
-        const datosExcel = registrosFiltrados.map(reg => {
-            const fila = { 'PO': reg.po || '', 'Versión': reg.version || 1, 'Proceso': reg.proceso || '', 'Reemplazo': reg.esReemplazo ? 'Sí' : 'No', 'Semana': reg.semana, 'Fecha': reg.fecha, 'Estilo/Deporte': reg.estilo, 'Tela': reg.tela, 'N° Plotter': reg.numero_plotter || 0, 'Plotter Temp': reg.plotter_temp || 0, 'Plotter Humedad': reg.plotter_humedad || 0, 'Plotter Perfil': reg.plotter_perfil || '', 'N° Monti': reg.monti_numero || 0, 'Temp Monti °C': reg.temperatura_monti, 'Vel Monti m/min': reg.velocidad_monti, 'Temp Flat °C': reg.temperatura_flat, 'Tiempo Flat s': reg.tiempo_flat, 'Adhesivo': reg.adhesivo, 'Observación': reg.observacion || '' };
-            if (reg.colores && reg.colores.length > 0) {
-                reg.colores.forEach((color, idx) => {
-                    fila[`Color ${idx+1} Nombre`] = color.nombre || '';
-                    fila[`Color ${idx+1} Cyan`] = color.cyan || 0;
-                    fila[`Color ${idx+1} Magenta`] = color.magenta || 0;
-                    fila[`Color ${idx+1} Yellow`] = color.yellow || 0;
-                    fila[`Color ${idx+1} Black`] = color.black || 0;
-                    fila[`Color ${idx+1} Turquesa`] = color.turquesa || 0;
-                    fila[`Color ${idx+1} Naranja`] = color.naranja || 0;
-                    fila[`Color ${idx+1} Fluor Yellow`] = color.fluorYellow || 0;
-                    fila[`Color ${idx+1} Fluor Pink`] = color.fluorPink || 0;
-                });
-            }
-            return fila;
-        });
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(datosExcel);
-        XLSX.utils.book_append_sheet(wb, ws, 'Registros ALPHA DB');
-        const fecha = new Date().toISOString().split('T')[0];
-        XLSX.writeFile(wb, `ALPHA_DB_${fecha}.xlsx`);
-        mostrarNotificacion('📊 Archivo Excel generado', 'success');
-    } catch (error) { console.error('Error en exportarAExcel:', error); mostrarNotificacion('❌ Error al generar Excel', 'error'); }
-}
-
 // ==================== ONEDRIVE FUNCTIONS ====================
 
 function initOnedriveConnection() {
     console.log('🔄 Iniciando conexión con SharePoint...');
+    
     function detectarMSAL() {
-        if (typeof window.PublicClientApplication !== 'undefined') { console.log('✅ MSAL encontrado como window.PublicClientApplication'); return window.PublicClientApplication; }
-        if (window.msal && typeof window.msal.PublicClientApplication !== 'undefined') { console.log('✅ MSAL encontrado como window.msal.PublicClientApplication'); return window.msal.PublicClientApplication; }
-        if (typeof msal !== 'undefined' && msal.PublicClientApplication) { console.log('✅ MSAL encontrado como msal.PublicClientApplication'); return msal.PublicClientApplication; }
-        if (typeof PublicClientApplication !== 'undefined') { console.log('✅ MSAL encontrado como PublicClientApplication global'); return PublicClientApplication; }
+        if (typeof window.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.PublicClientApplication');
+            return window.PublicClientApplication;
+        }
+        if (window.msal && typeof window.msal.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.msal.PublicClientApplication');
+            return window.msal.PublicClientApplication;
+        }
+        if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
+            console.log('✅ MSAL encontrado como msal.PublicClientApplication');
+            return msal.PublicClientApplication;
+        }
+        if (typeof PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como PublicClientApplication global');
+            return PublicClientApplication;
+        }
         return null;
     }
+    
     function esperarMSAL(intentos = 0) {
         const MsalClass = detectarMSAL();
-        if (MsalClass) { console.log('✅ MSAL detectado después de', intentos + 1, 'intentos'); iniciarConexion(MsalClass); }
-        else if (intentos < 30) { console.log(`⏳ Esperando MSAL... intento ${intentos + 1}/30`); setTimeout(() => esperarMSAL(intentos + 1), 500); }
-        else { console.error('❌ MSAL no detectado. Usando modo local.'); cargarRegistrosLocal(); actualizarUI(); mostrarNotificacion('⚠️ Modo local: No se pudo conectar a SharePoint', 'info'); }
+        if (MsalClass) {
+            console.log('✅ MSAL detectado después de', intentos + 1, 'intentos');
+            iniciarConexion(MsalClass);
+        } else if (intentos < 30) {
+            console.log(`⏳ Esperando MSAL... intento ${intentos + 1}/30`);
+            setTimeout(() => esperarMSAL(intentos + 1), 500);
+        } else {
+            console.error('❌ MSAL no detectado. Usando modo local.');
+            cargarRegistrosLocal();
+            actualizarUI();
+            mostrarNotificacion('⚠️ Modo local: No se pudo conectar a SharePoint', 'info');
+        }
     }
+    
     function iniciarConexion(MsalClass) {
         if (!window.ONEDRIVE_CONFIG) { cargarRegistrosLocal(); actualizarUI(); return; }
         if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI") { cargarRegistrosLocal(); actualizarUI(); mostrarBotones(); mostrarNotificacion('⚠️ Configura tu Client ID en onedrive-config.js', 'info'); return; }
@@ -928,12 +920,14 @@ function initOnedriveConnection() {
             mostrarBotones();
         } catch (error) { console.error('❌ Error inicializando MSAL:', error); cargarRegistrosLocal(); actualizarUI(); }
     }
+    
     function mostrarBotones() {
         const syncBtn = document.getElementById('syncOnedriveBtn');
         const uploadBtn = document.getElementById('uploadToOnedriveBtn');
         const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
         if (syncBtn) { syncBtn.style.display = 'inline-flex'; uploadBtn.style.display = 'inline-flex'; downloadBtn.style.display = 'inline-flex'; console.log('✅ Botones de SharePoint mostrados'); }
     }
+    
     esperarMSAL();
 }
 
