@@ -1,19 +1,12 @@
-// js/main.js - Punto de entrada principal
+// js/main.js - Sin SharePoint, solo Supabase
 
 let datosCargados = false;
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 Iniciando Alpha DB v9.0...');
     
-    if (typeof APP_CONFIG === 'undefined') {
-        console.error('❌ ERROR: APP_CONFIG no definido');
-        return;
-    }
-    
     window.onStateChange = function() {
-        if (TablaUI && TablaUI.actualizar) {
-            TablaUI.actualizar();
-        }
+        if (TablaUI && TablaUI.actualizar) TablaUI.actualizar();
     };
     
     // Inicializar UI
@@ -23,9 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
         fechaInput.value = hoy;
         fechaInput.setAttribute('max', hoy);
         fechaInput.addEventListener('change', function() {
-            if (FormularioUI && FormularioUI.verificarFecha) {
-                FormularioUI.verificarFecha();
-            }
+            if (FormularioUI && FormularioUI.verificarFecha) FormularioUI.verificarFecha();
         });
     }
     
@@ -66,10 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarDatosIniciales();
     configurarEventos();
     
-    if (SharePointAuth && SharePointAuth.init) {
-        SharePointAuth.init();
-    }
-    
     setTimeout(() => {
         const container = document.getElementById('coloresContainer');
         if (container && ColoresModule && container.children.length === 0) {
@@ -79,24 +66,20 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function cargarDatosIniciales() {
-    if (!APP_CONFIG) return;
-    
-    // Intentar inicializar Supabase
-    if(SupabaseClient && SupabaseClient.init()) {
+    // Intentar cargar desde Supabase
+    if(window.SupabaseClient && window.SupabaseClient.init && window.SupabaseClient.init()) {
         console.log('📡 Conectando a Supabase...');
-        const data = await SupabaseClient.getRegistros();
+        const data = await window.SupabaseClient.getRegistros();
         if(data && data.length > 0) {
             if(AppState) AppState.setRegistros(data);
             console.log(`📦 Cargados ${data.length} registros desde Supabase`);
             if(TablaUI) TablaUI.actualizar();
             return;
-        } else {
-            console.log('📡 Supabase vacío, cargando respaldo local...');
         }
     }
     
     // Fallback a localStorage
-    const saved = localStorage.getItem(APP_CONFIG.sistema.localStorageKey);
+    const saved = localStorage.getItem('alpha_db_registros_v9');
     if(saved) {
         try {
             const data = JSON.parse(saved);
@@ -105,13 +88,6 @@ async function cargarDatosIniciales() {
                 AppState.historialEdiciones = data.historial || {};
             }
             console.log(`📦 Cargados ${AppState.registros.length} registros de localStorage`);
-            
-            if(SupabaseClient && SupabaseClient.client && AppState.registros.length > 0) {
-                for(const reg of AppState.registros) {
-                    await SupabaseClient.guardarRegistro(reg);
-                }
-                console.log('📡 Datos locales sincronizados con Supabase');
-            }
         } catch(e) { 
             console.error('Error cargando localStorage:', e);
             generarDatosEjemplo(); 
@@ -172,7 +148,7 @@ function generarDatosEjemplo() {
 }
 
 function guardarDatosLocal() {
-    if(!AppState || !APP_CONFIG) return;
+    if(!AppState) return;
     try {
         const registrosParaGuardar = AppState.registros.map(reg => {
             const { historial, ...regSinHistorial } = reg;
@@ -182,7 +158,7 @@ function guardarDatosLocal() {
             registros: registrosParaGuardar,
             historial: AppState.historialEdiciones
         };
-        localStorage.setItem(APP_CONFIG.sistema.localStorageKey, JSON.stringify(dataToSave));
+        localStorage.setItem('alpha_db_registros_v9', JSON.stringify(dataToSave));
     } catch(error) {
         console.error('Error al guardar:', error);
     }
@@ -216,8 +192,8 @@ function configurarEventos() {
     if (exportarDB) {
         exportarDB.addEventListener('click', () => {
             const dataToExport = {
-                sistema: APP_CONFIG.sistema.nombre,
-                version: APP_CONFIG.sistema.version,
+                sistema: "ALPHA DB",
+                version: "9.0",
                 registros: AppState.registros,
                 historial: AppState.historialEdiciones
             };
@@ -228,6 +204,37 @@ function configurarEventos() {
             a.click();
             URL.revokeObjectURL(a.href);
             Notifications.success('💾 Backup guardado');
+        });
+    }
+    
+    const importarDB = document.getElementById('importarDB');
+    if (importarDB) {
+        importarDB.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            if (!file.name.endsWith('.adb')) { Notifications.error('Debe ser archivo .adb'); return; }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (!importedData.registros) throw new Error('Estructura inválida');
+                    if (confirm(`¿Cargar ${importedData.registros.length} registros?`)) {
+                        AppState.setRegistros(importedData.registros);
+                        AppState.historialEdiciones = importedData.historial || {};
+                        guardarDatosLocal();
+                        if(window.SupabaseClient && window.SupabaseClient.client) {
+                            for(const reg of AppState.registros) {
+                                await window.SupabaseClient.guardarRegistro(reg);
+                            }
+                        }
+                        FormularioUI.reset();
+                        TablaUI.actualizar();
+                        Notifications.success(`📂 Cargados ${AppState.registros.length} registros`);
+                    }
+                } catch(error) { Notifications.error('Archivo inválido'); }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
         });
     }
     
@@ -244,16 +251,27 @@ function configurarEventos() {
         });
     }
     
-    const syncBtn = document.getElementById('syncOnedriveBtn');
-    if (syncBtn && SharePointAuth) {
-        syncBtn.addEventListener('click', async () => {
-            if(SharePointAuth.isConnected()) {
-                const data = { registros: AppState.registros, historial: AppState.historialEdiciones };
-                const filename = `ALPHA_DB_${new Date().toISOString().split('T')[0]}.adb`;
-                if(SharePointSync) await SharePointSync.uploadBackup(filename, JSON.stringify(data, null, 2));
-            } else {
-                await SharePointAuth.login();
-            }
+    const imprimirReportes = document.getElementById('imprimirReportesBtn');
+    if (imprimirReportes) {
+        imprimirReportes.addEventListener('click', () => {
+            const data = RegistrosModule.filtrar();
+            if(!data.length) { Notifications.error('No hay registros'); return; }
+            const win = window.open('', '_blank');
+            let html = `<!DOCTYPE html><html><head><title>Reporte</title><style>body{margin:0.5in;font-family:Arial}table{width:100%;border-collapse:collapse}th{background:#000;color:white;padding:4px}td{padding:3px;border-bottom:1px solid #000}</style></head><body><h1>ALPHA DB - REPORTE</h1><p>Fecha: ${new Date().toLocaleString()}</p><table><thead><tr><th>PO</th><th>V</th><th>Proceso</th><th>Fecha</th><th>Estilo</th><th>Tela</th></tr></thead><tbody>`;
+            data.forEach(r => { html += `<tr><td>${r.po}</td><td>v${r.version}</td><td>${r.proceso}</td><td>${Utils.formatearFecha(r.fecha)}</td><td>${r.estilo}</td><td>${r.tela}</td></tr>`; });
+            html += `</tbody></table><script>window.onload=()=>window.print()<\/script></body></html>`;
+            win.document.write(html);
+            win.document.close();
+        });
+    }
+    
+    const imprimirIndividual = document.getElementById('imprimirIndividualBtn');
+    if (imprimirIndividual) {
+        imprimirIndividual.addEventListener('click', () => {
+            const select = document.getElementById('selectRegistroImprimir');
+            const modal = document.getElementById('modalImpresion');
+            if(select) select.innerHTML = '<option value="">Seleccionar</option>' + AppState.registros.map(r => `<option value="${r.id}">${r.po} v${r.version}</option>`).join('');
+            if(modal) modal.classList.add('show');
         });
     }
 }
