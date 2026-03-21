@@ -236,7 +236,7 @@ function mostrarTabla(registrosMostrar) {
     if (!tbody) return;
     
     if (registrosMostrar.length === 0) {
-        tbody.innerHTML = '发展<td colspan="17" class="loading">📭 Sin resultados</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="17" class="loading">📭 Sin resultados</td></tr>';
         return;
     }
     
@@ -1377,7 +1377,7 @@ function imprimirReportesHandler() {
             <p>Fecha de impresión: ${new Date().toLocaleString()}</p>
             <p>Total de registros: ${registrosFiltrados.length}</p>
             <p>Base de datos: ${usandoSharePoint ? '📡 SharePoint (en línea)' : '💾 Local'}</p>
-             <table>
+             能
                 <thead>
                     <tr>
                         <th>PO</th>
@@ -1610,83 +1610,128 @@ function imprimirRegistroSeleccionado() {
 // ==================== ONEDRIVE FUNCTIONS ====================
 
 function initOnedriveConnection() {
-    // Detectar MSAL de diferentes formas posibles
-    let MsalClass = null;
+    console.log('🔄 Iniciando conexión con SharePoint...');
     
-    if (window.msal && window.msal.PublicClientApplication) {
-        MsalClass = window.msal.PublicClientApplication;
-        console.log('✅ MSAL detectado vía window.msal');
-    } else if (window.PublicClientApplication) {
-        MsalClass = window.PublicClientApplication;
-        console.log('✅ MSAL detectado vía window.PublicClientApplication');
-    } else if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
-        MsalClass = msal.PublicClientApplication;
-        console.log('✅ MSAL detectado vía msal global');
-    } else {
+    // Función para detectar MSAL en cualquier lugar
+    function detectarMSAL() {
+        // Opción 1: window.PublicClientApplication (más común en la nueva versión)
+        if (typeof window.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.PublicClientApplication');
+            return window.PublicClientApplication;
+        }
+        // Opción 2: window.msal
+        if (window.msal && typeof window.msal.PublicClientApplication !== 'undefined') {
+            console.log('✅ MSAL encontrado como window.msal.PublicClientApplication');
+            return window.msal.PublicClientApplication;
+        }
+        // Opción 3: variable global msal
+        if (typeof msal !== 'undefined' && msal.PublicClientApplication) {
+            console.log('✅ MSAL encontrado como msal.PublicClientApplication');
+            return msal.PublicClientApplication;
+        }
+        // Opción 4: buscar en window cualquier objeto con PublicClientApplication
         for (let key in window) {
-            if (window[key] && window[key].PublicClientApplication) {
-                MsalClass = window[key].PublicClientApplication;
-                console.log(`✅ MSAL detectado vía window.${key}`);
-                break;
+            if (window[key] && typeof window[key].PublicClientApplication !== 'undefined') {
+                console.log(`✅ MSAL encontrado en window.${key}`);
+                return window[key].PublicClientApplication;
             }
         }
+        return null;
     }
     
-    if (!MsalClass) {
-        console.error('❌ MSAL no detectado. Usando modo local solamente.');
-        // Cargar datos locales como fallback
-        cargarRegistrosLocal();
-        actualizarUI();
-        return;
-    }
-    
-    if (!window.ONEDRIVE_CONFIG) {
-        console.log('📌 onedrive-config.js no cargado, usando modo local');
-        cargarRegistrosLocal();
-        actualizarUI();
-        return;
-    }
-    
-    if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI" || ONEDRIVE_CONFIG.clientId === "demo_mode") {
-        console.log('📌 Configura OneDrive: Reemplaza TU_CLIENT_ID_AQUI en onedrive-config.js');
-        cargarRegistrosLocal();
-        actualizarUI();
-        const syncBtn = document.getElementById('syncOnedriveBtn');
-        const uploadBtn = document.getElementById('uploadToOnedriveBtn');
-        const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
-        if (syncBtn) {
-            syncBtn.style.display = 'inline-flex';
-            uploadBtn.style.display = 'inline-flex';
-            downloadBtn.style.display = 'inline-flex';
-        }
-        return;
-    }
-    
-    try {
-        msalInstance = new MsalClass({
-            auth: {
-                clientId: ONEDRIVE_CONFIG.clientId,
-                authority: ONEDRIVE_CONFIG.authority,
-                redirectUri: ONEDRIVE_CONFIG.redirectUri
-            },
-            cache: {
-                cacheLocation: "localStorage",
-                storeAuthStateInCookie: true
-            }
-        });
+    // Función para esperar a que MSAL cargue
+    function esperarMSAL(intentos = 0) {
+        const MsalClass = detectarMSAL();
         
-        checkOnedriveSession().then(async () => {
-            if (isOnedriveConnected) {
-                await cargarRegistrosDesdeSharePoint();
-            } else {
-                cargarRegistrosLocal();
-                actualizarUI();
-            }
-        }).catch(() => {
+        if (MsalClass) {
+            console.log('✅ MSAL detectado correctamente después de', intentos + 1, 'intentos');
+            iniciarConexion(MsalClass);
+        } else if (intentos < 20) {
+            console.log(`⏳ Esperando MSAL... intento ${intentos + 1}/20`);
+            setTimeout(() => esperarMSAL(intentos + 1), 500);
+        } else {
+            console.error('❌ MSAL no detectado después de 20 intentos.');
+            console.log('💾 Usando modo local (solo localStorage)');
             cargarRegistrosLocal();
             actualizarUI();
-        });
+            mostrarNotificacion('⚠️ Modo local: No se pudo conectar a SharePoint', 'info');
+        }
+    }
+    
+    function iniciarConexion(MsalClass) {
+        // Verificar configuración
+        if (!window.ONEDRIVE_CONFIG) {
+            console.log('📌 onedrive-config.js no cargado, usando modo local');
+            cargarRegistrosLocal();
+            actualizarUI();
+            return;
+        }
         
+        // Verificar que la URL de SharePoint esté configurada
+        if (ONEDRIVE_CONFIG.sharepoint.siteUrl.includes("TUEMPRESA")) {
+            console.warn('⚠️ URL de SharePoint no configurada correctamente');
+            mostrarNotificacion('⚠️ Configura la URL de SharePoint en onedrive-config.js', 'info');
+            cargarRegistrosLocal();
+            actualizarUI();
+            mostrarBotones();
+            return;
+        }
+        
+        // Verificar que el clientId no sea el placeholder
+        if (ONEDRIVE_CONFIG.clientId === "TU_CLIENT_ID_AQUI") {
+            console.log('📌 Configuración pendiente: Reemplaza TU_CLIENT_ID_AQUI');
+            cargarRegistrosLocal();
+            actualizarUI();
+            mostrarBotones();
+            mostrarNotificacion('⚠️ Configura OneDrive: Agrega tu Client ID en onedrive-config.js', 'info');
+            return;
+        }
+        
+        try {
+            console.log('📌 Creando instancia de MSAL con Client ID:', ONEDRIVE_CONFIG.clientId);
+            console.log('📌 SharePoint URL:', ONEDRIVE_CONFIG.sharepoint.siteUrl);
+            
+            // Crear instancia de MSAL
+            msalInstance = new MsalClass({
+                auth: {
+                    clientId: ONEDRIVE_CONFIG.clientId,
+                    authority: ONEDRIVE_CONFIG.authority,
+                    redirectUri: window.location.origin + window.location.pathname
+                },
+                cache: {
+                    cacheLocation: "localStorage",
+                    storeAuthStateInCookie: true
+                }
+            });
+            
+            console.log('✅ MSAL instanciado correctamente');
+            
+            // Verificar sesión existente
+            checkOnedriveSession().then(async () => {
+                if (isOnedriveConnected) {
+                    console.log('✅ Sesión existente encontrada, cargando datos de SharePoint...');
+                    await cargarRegistrosDesdeSharePoint();
+                } else {
+                    console.log('📌 Sin sesión activa, usando datos locales');
+                    cargarRegistrosLocal();
+                    actualizarUI();
+                }
+            }).catch((error) => {
+                console.log('⚠️ Error verificando sesión:', error);
+                cargarRegistrosLocal();
+                actualizarUI();
+            });
+            
+            mostrarBotones();
+            
+        } catch (error) {
+            console.error('❌ Error inicializando MSAL:', error);
+            cargarRegistrosLocal();
+            actualizarUI();
+        }
+    }
+    
+    function mostrarBotones() {
         const syncBtn = document.getElementById('syncOnedriveBtn');
         const uploadBtn = document.getElementById('uploadToOnedriveBtn');
         const downloadBtn = document.getElementById('downloadFromOnedriveBtn');
@@ -1695,15 +1740,12 @@ function initOnedriveConnection() {
             syncBtn.style.display = 'inline-flex';
             uploadBtn.style.display = 'inline-flex';
             downloadBtn.style.display = 'inline-flex';
+            console.log('✅ Botones de SharePoint mostrados');
         }
-        
-        console.log('✅ OneDrive configurado correctamente');
-        
-    } catch (error) {
-        console.error('Error inicializando MSAL:', error);
-        cargarRegistrosLocal();
-        actualizarUI();
     }
+    
+    // Iniciar espera por MSAL
+    esperarMSAL();
 }
 
 async function checkOnedriveSession() {
