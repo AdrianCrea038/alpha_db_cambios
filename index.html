@@ -11,13 +11,19 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
+   
     <!-- MSAL.js -->
     <script src="https://alcdn.msftauth.net/browser/2.32.0/js/msal-browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
     
+       <!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="js/config/supabase-config.js"></script>
+<script src="js/supabase/client.js"></script>
+
     <!-- Archivos del sistema (orden IMPORTANTE) -->
 <!-- Archivos del sistema (orden IMPORTANTE) -->
-<script src="js/config.js/onedrive-config.js"></script>
+<script src="js/config/onedrive-config.js"></script>
 <script src="js/core/utils.js"></script>
 <script src="js/core/notifications.js"></script>
 <script src="js/core/app-state.js"></script>
@@ -43,13 +49,13 @@
                     <span class="version">v9.0</span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                   <button id="syncOnedriveBtn" class="btn-secondary btn-onedrive" style="display: inline-flex;">
+                    <button id="syncOnedriveBtn" class="btn-secondary btn-onedrive" style="display: none;">
                         <span>☁️</span> Conectar SharePoint
                     </button>
-                    <button id="uploadToOnedriveBtn" class="btn-secondary" style="display: inline-flex;">
+                    <button id="uploadToOnedriveBtn" class="btn-secondary" style="display: none;">
                         <span>⬆️</span> Subir Backup
                     </button>
-                    <button id="downloadFromOnedriveBtn" class="btn-secondary" style="display: inline-flex;">
+                    <button id="downloadFromOnedriveBtn" class="btn-secondary" style="display: none;">
                         <span>⬇️</span> Restaurar Backup
                     </button>
                     <button id="exportarDBBtn" class="btn-secondary">
