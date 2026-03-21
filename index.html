@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,8 +9,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
-    <!-- MSAL.js - ARCHIVO LOCAL (descargado) -->
-    <script src="msal-browser.min.js"></script>
+    <!-- MSAL.js - Versión que SÍ funciona -->
+    <script src="https://alcdn.msftauth.net/browser/2.32.0/js/msal-browser.min.js"></script>
     
     <!-- Microsoft Graph API SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@microsoft/microsoft-graph-client@3.0.5/lib/graph-js-sdk.js"></script>
@@ -21,18 +19,17 @@
     <script src="onedrive-config.js"></script>
     
     <script>
-        // Verificar que MSAL se cargó correctamente
+        // Verificar MSAL
         setTimeout(function() {
             if (typeof window.PublicClientApplication !== 'undefined') {
-                console.log('✅ MSAL cargado correctamente desde archivo local');
+                console.log('✅ MSAL cargado correctamente');
             } else if (window.msal && window.msal.PublicClientApplication) {
-                console.log('✅ MSAL cargado correctamente (window.msal)');
+                console.log('✅ MSAL cargado correctamente');
                 window.PublicClientApplication = window.msal.PublicClientApplication;
             } else {
-                console.error('❌ ERROR CRÍTICO: MSAL no se cargó');
-                console.log('💡 Verifica que el archivo msal-browser.min.js existe en la carpeta');
+                console.error('❌ MSAL no se cargó');
             }
-        }, 1000);
+        }, 2000);
     </script>
 </head>
 <body>
