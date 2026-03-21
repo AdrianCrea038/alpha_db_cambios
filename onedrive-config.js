@@ -4,7 +4,7 @@
 
 const ONEDRIVE_CONFIG = {
     // Client ID de tu aplicación registrada en Azure AD
-    clientId: "TU_CLIENT_ID_AQUI",
+    clientId: "e5b49e4d-bcc0-4d68-84a2-6ce266488f8a",
     
     // Authority - Usa "common" para cuentas Microsoft personales y de trabajo
     authority: "https://login.microsoftonline.com/common",
