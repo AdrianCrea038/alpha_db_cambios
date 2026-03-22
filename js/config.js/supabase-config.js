@@ -8,3 +8,4 @@ const SUPABASE_CONFIG = {
 
 window.SUPABASE_CONFIG = SUPABASE_CONFIG;
 console.log('✅ Supabase configurado');
+console.log('📌 URL:', SUPABASE_CONFIG.url);
