@@ -5,7 +5,7 @@ const TablaUI = {
         if (!tbody) return;
         
         if (!registrosMostrar || registrosMostrar.length === 0) {
-            tbody.innerHTML = '发展<td colspan="18" class="loading">📭 Sin resultados发展发展';
+            tbody.innerHTML = '<tr><td colspan="18" class="loading">📭 Sin resultados</td></tr>';
             return;
         }
         
@@ -27,21 +27,21 @@ const TablaUI = {
             
             return `
                 <tr class="${rowClass}" data-id="${reg.id}">
-                    <td><span class="po-badge">${reg.po || '-'}</span> 发展
-                    <td><span style="background:#ff0000; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">v${reg.version || 1}</span>发展
-                    <td>${procesoBadge}发展
-                    <td>${reemplazoIcon}发展
-                    <td>${reg.semana}发展
-                    <td>${Utils.formatearFecha(reg.fecha)}发展
-                    <td>${reg.estilo || '-'}发展
-                    <td>${reg.tela || '-'}发展
-                    <td colspan="2">${coloresHtml}发展
-                    <td><span style="background:#9c27b0; color:white; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">${plotterText}</span>发展
-                    <td>${reg.adhesivo || '-'}发展
-                    <td>${(reg.temperatura_monti || 0).toFixed(1)}°发展
-                    <td>${(reg.velocidad_monti || 0).toFixed(1)}发展
-                    <td>${(reg.temperatura_flat || 0).toFixed(1)}°发展
-                    <td>${(reg.tiempo_flat || 0).toFixed(1)}s发展
+                    <td><span class="po-badge">${reg.po || '-'}</span></td>
+                    <td><span style="background:#ff0000; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">v${reg.version || 1}</span></td>
+                    <td>${procesoBadge}</td>
+                    <td>${reemplazoIcon}</td>
+                    <td>${reg.semana}</td>
+                    <td>${Utils.formatearFecha(reg.fecha)}</td>
+                    <td>${reg.estilo || '-'}</td>
+                    <td>${reg.tela || '-'}</td>
+                    <td colspan="2">${coloresHtml}</td>
+                    <td><span style="background:#9c27b0; color:white; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">${plotterText}</span></td>
+                    <td>${reg.adhesivo || '-'}</td>
+                    <td>${(reg.temperatura_monti || 0).toFixed(1)}°</td>
+                    <td>${(reg.velocidad_monti || 0).toFixed(1)}</td>
+                    <td>${(reg.temperatura_flat || 0).toFixed(1)}°</td>
+                    <td>${(reg.tiempo_flat || 0).toFixed(1)}s</td>
                     <td class="action-cell">
                         <div class="action-buttons">
                             <button class="btn-icon edit" onclick="window.editarRegistro('${reg.id}')" title="Editar">✏️</button>
