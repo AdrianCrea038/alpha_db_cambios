@@ -13,24 +13,30 @@
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js/supabase-config.js"></script>
+    <script src="js/config/supabase-config.js"></script>
     <script src="js/supabase/client.js"></script>
     
-    <!-- Tus módulos -->
+    <!-- Core -->
     <script src="js/core/utils.js"></script>
     <script src="js/core/notifications.js"></script>
     <script src="js/core/app-state.js"></script>
+    
+    <!-- Módulos -->
     <script src="js/modules/colores.js"></script>
     <script src="js/modules/registros.js"></script>
+    <script src="js/modules/impresion.js"></script>
+    <script src="js/modules/excel.js"></script>
+    
+    <!-- UI -->
     <script src="js/ui/calendario.js"></script>
     <script src="js/ui/tabla.js"></script>
     <script src="js/ui/formulario.js"></script>
+    
+    <!-- Main -->
     <script src="js/main.js"></script>
 </head>
 <body>
-    <!-- TODO EL CONTENIDO HTML PERMANECE IGUAL -->
     <div class="container">
-        <!-- Header -->
         <header class="header">
             <div class="header-top">
                 <div class="logo-container">
@@ -39,15 +45,6 @@
                     <span class="version">v9.0</span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                    <button id="syncOnedriveBtn" class="btn-secondary btn-onedrive" style="display: none;">
-                        <span>☁️</span> Conectar SharePoint
-                    </button>
-                    <button id="uploadToOnedriveBtn" class="btn-secondary" style="display: none;">
-                        <span>⬆️</span> Subir Backup
-                    </button>
-                    <button id="downloadFromOnedriveBtn" class="btn-secondary" style="display: none;">
-                        <span>⬇️</span> Restaurar Backup
-                    </button>
                     <button id="exportarDBBtn" class="btn-secondary">
                         <span>💾</span> Guardar Local
                     </button>
@@ -56,43 +53,33 @@
                         <input type="file" id="importarDB" accept=".adb" hidden>
                     </label>
                 </div>
-                <div id="onedriveStatus" class="sync-status disconnected" style="display: inline-flex; margin-left: 1rem;">
-                    <span>☁️</span> SharePoint: Desconectado
-                </div>
             </div>
             <p class="subtitle">Alpha Data Base - Trazabilidad Textil en Tiempo Real</p>
         </header>
 
-        <!-- Formulario -->
         <section class="form-section">
             <h2 id="formTitle">➕ NUEVO REGISTRO</h2>
             <form id="registroForm" class="registro-form">
                 <input type="hidden" id="editId" value="">
-                
-                <!-- Fila 1: Fecha y PO -->
                 <div class="form-row">
                     <div class="form-group card-group">
-                        <label for="fecha"><span class="label-icon">📅</span><span class="label-text">FECHA</span></label>
+                        <label for="fecha"><span>📅</span> FECHA</label>
                         <input type="date" id="fecha" required class="input-bonito">
                     </div>
                     <div class="form-group card-group">
-                        <label for="po"><span class="label-icon">📦</span><span class="label-text">PO</span></label>
+                        <label for="po"><span>📦</span> PO</label>
                         <input type="text" id="po" placeholder="Número de PO" required class="input-bonito">
                     </div>
                 </div>
-
-                <!-- Fila 2: Estilo/Deporte -->
                 <div class="form-row">
                     <div class="form-group card-group full-width">
-                        <label for="estilo"><span class="label-icon">🎯</span><span class="label-text">ESTILO / DEPORTE</span></label>
+                        <label for="estilo"><span>🎯</span> ESTILO / DEPORTE</label>
                         <input type="text" id="estilo" required placeholder="Nombre del estilo/deporte" class="input-bonito">
                     </div>
                 </div>
-
-                <!-- Fila 3: Proceso, Tela y Reemplazo -->
                 <div class="form-row three-col">
                     <div class="form-group card-group">
-                        <label for="proceso"><span class="label-icon">⚙️</span><span class="label-text">PROCESO</span></label>
+                        <label for="proceso"><span>⚙️</span> PROCESO</label>
                         <select id="proceso" class="select-bonito" required>
                             <option value="">Seleccionar...</option>
                             <option value="DISEÑO">🎨 Diseño</option>
@@ -104,22 +91,18 @@
                         </select>
                     </div>
                     <div class="form-group card-group">
-                        <label for="tela"><span class="label-icon">🧵</span><span class="label-text">TELA</span></label>
+                        <label for="tela"><span>🧵</span> TELA</label>
                         <input type="text" id="tela" required placeholder="Tipo de tela" class="input-bonito">
                     </div>
                     <div class="form-group card-group">
-                        <label for="esReemplazo"><span class="label-icon">🔄</span><span class="label-text">REEMPLAZO</span></label>
-                        <div class="checkbox-bonito">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="esReemplazo">
-                                <span class="checkbox-custom"></span>
-                                <span class="checkbox-text">Es reemplazo</span>
-                            </label>
-                        </div>
+                        <label for="esReemplazo"><span>🔄</span> REEMPLAZO</label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="esReemplazo">
+                            <span>Es reemplazo</span>
+                        </label>
                     </div>
                 </div>
 
-                <!-- SECCIÓN DE COLORES MÚLTIPLES -->
                 <div class="section-title-bonito">
                     <span class="title-icon">🎨</span>
                     <h3>ESPECIFICACIÓN DE COLORES</h3>
@@ -127,98 +110,54 @@
                 </div>
                 <div id="coloresContainer"></div>
                 <div class="add-color-btn-container">
-                    <button type="button" id="agregarColorBtn" class="btn-add-color">
-                        <span>➕</span> AGREGAR NUEVO COLOR
-                    </button>
+                    <button type="button" id="agregarColorBtn" class="btn-add-color">➕ AGREGAR NUEVO COLOR</button>
                 </div>
 
-                <!-- Título PLOTTER -->
                 <div class="section-title-bonito">
                     <span class="title-icon">🖨️</span>
                     <h3>PLOTTER</h3>
                     <span class="title-decoration"></span>
                 </div>
                 <div class="form-row cuatro-col">
-                    <div class="form-group card-group">
-                        <label for="numero_plotter"><span class="label-icon">🔢</span><span class="label-text">N° PLOTTER</span></label>
-                        <input type="number" id="numero_plotter" step="1" min="0" placeholder="#" class="input-bonito input-plotter">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="plotter_temp"><span class="label-icon">🌡️</span><span class="label-text">TEMP. AMBIENTE</span></label>
-                        <input type="number" id="plotter_temp" step="0.1" placeholder="°C" class="input-bonito input-plotter">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="plotter_humedad"><span class="label-icon">💧</span><span class="label-text">HUMEDAD</span></label>
-                        <input type="number" id="plotter_humedad" step="0.1" placeholder="%" class="input-bonito input-plotter">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="plotter_perfil"><span class="label-icon">📋</span><span class="label-text">PERFIL</span></label>
-                        <input type="text" id="plotter_perfil" placeholder="Perfil" class="input-bonito input-plotter">
-                    </div>
+                    <div class="card-group"><label>🔢 N° PLOTTER</label><input type="number" id="numero_plotter" class="input-bonito"></div>
+                    <div class="card-group"><label>🌡️ TEMP. AMBIENTE</label><input type="number" id="plotter_temp" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>💧 HUMEDAD</label><input type="number" id="plotter_humedad" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>📋 PERFIL</label><input type="text" id="plotter_perfil" class="input-bonito"></div>
                 </div>
 
-                <!-- Título SUBLIMADO -->
                 <div class="section-title-bonito">
                     <span class="title-icon">🔥</span>
                     <h3>SUBLIMADO</h3>
                     <span class="title-decoration"></span>
                 </div>
                 <div class="form-row cuatro-col">
-                    <div class="form-group card-group">
-                        <label for="monti_numero"><span class="label-icon">🔢</span><span class="label-text">N° MONTI</span></label>
-                        <input type="number" id="monti_numero" step="1" min="0" placeholder="#" class="input-bonito input-monti">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="temp_monti"><span class="label-icon">🌡️</span><span class="label-text">TEMP. MONTI</span></label>
-                        <input type="number" id="temp_monti" step="0.1" required placeholder="°C" class="input-bonito input-monti">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="vel_monti"><span class="label-icon">⚡</span><span class="label-text">VELOCIDAD</span></label>
-                        <input type="number" id="vel_monti" step="0.1" required placeholder="m/min" class="input-bonito input-monti">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="monti_presion"><span class="label-icon">🔄</span><span class="label-text">RODO PRESIÓN</span></label>
-                        <input type="number" id="monti_presion" step="0.1" placeholder="bar" class="input-bonito input-monti">
-                    </div>
+                    <div class="card-group"><label>🔢 N° MONTI</label><input type="number" id="monti_numero" class="input-bonito"></div>
+                    <div class="card-group"><label>🌡️ TEMP. MONTI</label><input type="number" id="temp_monti" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>⚡ VELOCIDAD</label><input type="number" id="vel_monti" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>🔄 RODO PRESIÓN</label><input type="number" id="monti_presion" step="0.1" class="input-bonito"></div>
                 </div>
 
-                <!-- Fila 8: Flat + Guardar -->
                 <div class="form-row flat-row">
-                    <div class="form-group card-group">
-                        <label for="temp_flat"><span class="label-icon">📏</span><span class="label-text">TEMP. FLAT</span></label>
-                        <input type="number" id="temp_flat" step="0.1" required placeholder="°C" class="input-bonito input-flat">
-                    </div>
-                    <div class="form-group card-group">
-                        <label for="tiempo_flat"><span class="label-icon">⏱️</span><span class="label-text">TIEMPO FLAT</span></label>
-                        <input type="number" id="tiempo_flat" step="0.1" required placeholder="seg" class="input-bonito input-flat">
-                    </div>
-                    <div class="form-group card-group button-group">
-                        <button type="submit" id="submitBtn" class="btn-primary btn-guardar-bonito">
-                            <span>💾</span> GUARDAR REGISTRO
-                        </button>
-                    </div>
+                    <div class="card-group"><label>📏 TEMP. FLAT</label><input type="number" id="temp_flat" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>⏱️ TIEMPO FLAT</label><input type="number" id="tiempo_flat" step="0.1" class="input-bonito"></div>
+                    <div class="card-group"><label>🏷️ ADHESIVO</label><input type="text" id="adhesivo" class="input-bonito"></div>
                 </div>
 
-                <!-- Botón Cancelar Edición -->
                 <div class="form-row">
-                    <button type="button" id="cancelEditBtn" class="btn-secondary" style="display: none;">
-                        <span>✕</span> CANCELAR EDICIÓN
-                    </button>
+                    <button type="submit" id="submitBtn" class="btn-guardar-bonito">💾 GUARDAR REGISTRO</button>
                 </div>
-
-                <!-- Observación (fecha anterior) -->
+                <div class="form-row">
+                    <button type="button" id="cancelEditBtn" class="btn-secondary" style="display: none;">✕ CANCELAR EDICIÓN</button>
+                </div>
                 <div id="observacionContainer" class="observacion-container" style="display: none;">
-                    <label for="observacion"><span class="label-icon">📝</span><span class="label-text">Observación (fecha anterior)</span></label>
+                    <label>📝 Observación (fecha anterior)</label>
                     <textarea id="observacion" rows="2" placeholder="Explica por qué se registra con fecha anterior..."></textarea>
                 </div>
             </form>
         </section>
 
-        <!-- Filtros y Calendario -->
         <section class="filters-section">
-            <div class="filters-header">
-                <h2>🔍 BÚSQUEDA Y FILTROS</h2>
-            </div>
+            <div class="filters-header"><h2>🔍 BÚSQUEDA Y FILTROS</h2></div>
             <div class="filters-grid">
                 <div class="calendario-mensual">
                     <div class="calendario-header">
@@ -235,33 +174,23 @@
                             <button id="clearSearch" class="btn-clear">✕</button>
                         </div>
                         <div class="search-hint">
-                            <span class="hint-chip"><i>📦</i> PO</span>
-                            <span class="hint-chip"><i>🎯</i> Estilo</span>
-                            <span class="hint-chip"><i>🧵</i> Tela</span>
-                            <span class="hint-chip"><i>🎨</i> Color</span>
-                            <span class="hint-chip"><i>⚙️</i> Proceso</span>
-                            <span class="hint-chip"><i>🔄</i> Reemplazo</span>
+                            <span class="hint-chip">📦 PO</span>
+                            <span class="hint-chip">🎯 Estilo</span>
+                            <span class="hint-chip">🧵 Tela</span>
+                            <span class="hint-chip">🎨 Color</span>
+                            <span class="hint-chip">⚙️ Proceso</span>
+                            <span class="hint-chip">🔄 Reemplazo</span>
                         </div>
                     </div>
                     <div class="filter-buttons three-buttons">
-                        <button id="imprimirReportesBtn" class="filter-btn print">
-                            <span class="btn-icon-large">🖨️</span>
-                            <span class="btn-text">REPORTE</span>
-                        </button>
-                        <button id="exportarExcelBtn" class="filter-btn excel">
-                            <span class="btn-icon-large">📊</span>
-                            <span class="btn-text">EXCEL</span>
-                        </button>
-                        <button id="imprimirIndividualBtn" class="filter-btn qr">
-                            <span class="btn-icon-large">📱</span>
-                            <span class="btn-text">QR</span>
-                        </button>
+                        <button id="imprimirReportesBtn" class="filter-btn print">🖨️ REPORTE</button>
+                        <button id="exportarExcelBtn" class="filter-btn excel">📊 EXCEL</button>
+                        <button id="imprimirIndividualBtn" class="filter-btn qr">📱 QR</button>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Tabla de registros -->
         <section class="table-section">
             <div class="table-header">
                 <h2>📊 REGISTROS</h2>
@@ -273,51 +202,32 @@
             <div class="table-container">
                 <table id="registrosTable">
                     <thead>
-                        <tr>
-                            <th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th>
-                            <th>FECHA</th><th>ESTILO</th><th>TELA</th><th colspan="2">COLORES</th>
-                            <th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody">
-                        <tr><td colspan="17" class="loading">Cargando registros...</td></tr>
-                    </tbody>
-                </table>
+                        <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th>TELA</th><th colspan="2">COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th></thead>
+                    <tbody id="tableBody">发展<td colspan="17" class="loading">Cargando registros...发展</tbody>
+                 </table>
             </div>
         </section>
     </div>
 
-   <div id="modalHistorial" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>HISTORIAL DE EDICIONES</h3>
-            <button class="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-            <div id="historialContainer"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="modal-btn close-btn">CERRAR</button>
+    <div id="modalHistorial" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>HISTORIAL DE EDICIONES</h3><button class="modal-close">✕</button></div>
+            <div class="modal-body"><div id="historialContainer"></div></div>
+            <div class="modal-footer"><button class="modal-btn close-btn">CERRAR</button></div>
         </div>
     </div>
-</div>
 
-<div id="modalImpresion" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>IMPRIMIR COMPROBANTE QR</h3>
-            <button class="modal-close">✕</button>
-        </div>
-        <div class="modal-body">
-            <select id="selectRegistroImprimir" class="modal-select">
-                <option value="">— Elige un registro —</option>
-            </select>
-            <button id="imprimirIndividualBtn" class="modal-action-btn">IMPRIMIR CON QR</button>
-        </div>
-        <div class="modal-footer">
-            <button class="modal-btn cancel-btn">CANCELAR</button>
+    <div id="modalImpresion" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>IMPRIMIR COMPROBANTE QR</h3><button class="modal-close">✕</button></div>
+            <div class="modal-body">
+                <select id="selectRegistroImprimir" style="width:100%; padding:0.8rem; background:#2a2a2a; border:2px solid #ff6b6b; border-radius:1rem; color:white; margin-bottom:1rem;">
+                    <option value="">— Elige un registro —</option>
+                </select>
+                <button id="imprimirIndividualBtnAction" class="modal-action-btn" style="width:100%; padding:1rem; background:linear-gradient(135deg,#ff6b6b,#ff8e8e); border:none; border-radius:1rem; color:white; font-weight:bold; cursor:pointer;">IMPRIMIR CON QR</button>
+            </div>
+            <div class="modal-footer"><button class="modal-btn cancel-btn">CANCELAR</button></div>
         </div>
     </div>
-</div>
 </body>
-</html>
+</html>x
