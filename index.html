@@ -287,37 +287,37 @@
         </section>
     </div>
 
-    <!-- Modales -->
-    <div id="modalHistorial" class="modal">
-        <div class="modal-content modal-historial">
-            <div class="modal-header">
-                <div class="modal-header-left"><span class="modal-icon">📋</span><h3>HISTORIAL DE EDICIONES</h3></div>
-                <button class="modal-close"><span>✕</span></button>
-            </div>
-            <div class="modal-body"><div id="historialContainer" class="historial-container"></div></div>
-            <div class="modal-footer"><button class="modal-btn close-btn">CERRAR</button></div>
+   <div id="modalHistorial" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>HISTORIAL DE EDICIONES</h3>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <div id="historialContainer"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn close-btn">CERRAR</button>
         </div>
     </div>
+</div>
 
-    <div id="modalImpresion" class="modal">
-        <div class="modal-content modal-impresion">
-            <div class="modal-header">
-                <div class="modal-header-left"><span class="modal-icon">🖨️</span><h3>IMPRIMIR COMPROBANTE QR</h3></div>
-                <button class="modal-close"><span>✕</span></button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-select-container">
-                    <label for="selectRegistroImprimir" class="modal-label"><span>📋</span> Seleccionar registro</label>
-                    <select id="selectRegistroImprimir" class="modal-select"><option value="">— Elige un registro —</option></select>
-                </div>
-                <button id="imprimirIndividualBtn" class="modal-action-btn">
-                    <span class="btn-icon">🖨️</span>
-                    <span class="btn-text">IMPRIMIR CON QR</span>
-                    <span class="btn-badge">1/4 CARTA</span>
-                </button>
-            </div>
-            <div class="modal-footer"><button class="modal-btn cancel-btn">CANCELAR</button></div>
+<div id="modalImpresion" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>IMPRIMIR COMPROBANTE QR</h3>
+            <button class="modal-close">✕</button>
+        </div>
+        <div class="modal-body">
+            <select id="selectRegistroImprimir" class="modal-select">
+                <option value="">— Elige un registro —</option>
+            </select>
+            <button id="imprimirIndividualBtn" class="modal-action-btn">IMPRIMIR CON QR</button>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn cancel-btn">CANCELAR</button>
         </div>
     </div>
+</div>
 </body>
 </html>
