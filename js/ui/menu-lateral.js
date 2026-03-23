@@ -68,11 +68,11 @@ const MenuLateral = {
                 color: white;
                 border: none;
                 border-radius: 0 30px 30px 0;
-                width: 36px;
+                width: 40px;
                 height: 48px;
                 cursor: pointer;
                 z-index: 1001;
-                font-size: 18px;
+                font-size: 20px;
                 transition: all 0.3s ease;
                 box-shadow: 2px 0 10px rgba(0,0,0,0.3);
                 display: flex;
@@ -81,17 +81,19 @@ const MenuLateral = {
             }
             .menu-toggle:hover {
                 background: #ff8e8e;
-                width: 42px;
+                width: 46px;
             }
             .menu-lateral.collapsed ~ .menu-toggle {
-                left: 20px;
+                left: 10px;
                 border-radius: 30px;
-                width: 40px;
-                height: 40px;
+                width: 44px;
+                height: 44px;
                 box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                top: 20px;
             }
             .menu-lateral.collapsed ~ .menu-toggle:hover {
-                width: 45px;
+                width: 50px;
+                background: #ff6b6b;
             }
             .container {
                 margin-left: 280px;
@@ -102,18 +104,6 @@ const MenuLateral = {
             .menu-lateral.collapsed ~ .container {
                 margin-left: 0;
                 max-width: 100%;
-            }
-            .form-section, .filters-section, .table-section {
-                margin-bottom: 1.5rem;
-            }
-            .logo-container {
-                margin-left: 0;
-            }
-            @media (max-width: 768px) {
-                .menu-lateral { width: 260px; }
-                .menu-toggle { left: 260px; }
-                .container { margin-left: 0; max-width: 100%; padding: 1rem; }
-                .menu-lateral.collapsed ~ .menu-toggle { left: 10px; }
             }
             .menu-header {
                 padding: 25px 20px;
@@ -237,6 +227,12 @@ const MenuLateral = {
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
+            }
+            @media (max-width: 768px) {
+                .menu-lateral { width: 260px; }
+                .menu-toggle { left: 260px; }
+                .container { margin-left: 0; max-width: 100%; padding: 1rem; }
+                .menu-lateral.collapsed ~ .menu-toggle { left: 8px; width: 40px; height: 40px; }
             }
         `;
         document.head.appendChild(style);
