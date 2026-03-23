@@ -68,7 +68,7 @@ const MenuLateral = {
                 color: white;
                 border: none;
                 border-radius: 0 30px 30px 0;
-                width: 32px;
+                width: 36px;
                 height: 48px;
                 cursor: pointer;
                 z-index: 1001;
@@ -81,11 +81,17 @@ const MenuLateral = {
             }
             .menu-toggle:hover {
                 background: #ff8e8e;
-                width: 38px;
+                width: 42px;
             }
             .menu-lateral.collapsed ~ .menu-toggle {
-                left: 0;
-                border-radius: 0 30px 30px 0;
+                left: 20px;
+                border-radius: 30px;
+                width: 40px;
+                height: 40px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            }
+            .menu-lateral.collapsed ~ .menu-toggle:hover {
+                width: 45px;
             }
             .container {
                 margin-left: 280px;
@@ -100,11 +106,14 @@ const MenuLateral = {
             .form-section, .filters-section, .table-section {
                 margin-bottom: 1.5rem;
             }
+            .logo-container {
+                margin-left: 0;
+            }
             @media (max-width: 768px) {
                 .menu-lateral { width: 260px; }
                 .menu-toggle { left: 260px; }
                 .container { margin-left: 0; max-width: 100%; padding: 1rem; }
-                .menu-lateral.collapsed ~ .menu-toggle { left: 0; }
+                .menu-lateral.collapsed ~ .menu-toggle { left: 10px; }
             }
             .menu-header {
                 padding: 25px 20px;
