@@ -265,7 +265,7 @@ const ImpresionModule = {
                 <h1>⚡ ALPHA DB - REPORTE COMPLETO</h1>
                 <p>Fecha de impresión: ${new Date().toLocaleString()}</p>
                 <p>Total de registros: ${registrosFiltrados.length}</p>
-                <table>
+                 <table>
                     <thead>
                         <tr>
                             <th>PO</th><th>V</th><th>Proceso</th><th>Reemp</th><th>Sem</th>
@@ -298,7 +298,7 @@ const ImpresionModule = {
         
         html += `
                     </tbody>
-                </table>
+                 </table>
                 <div class="total">Total: ${registrosFiltrados.length} registros</div>
                 <script>window.onload = () => window.print();<\/script>
             </body>
