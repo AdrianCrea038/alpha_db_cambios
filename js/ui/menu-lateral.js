@@ -37,8 +37,8 @@ const MenuLateral = {
             </div>
         `;
         
-        // Insertar el menú al final del body
-        document.body.insertAdjacentHTML('beforeend', menuHTML);
+        // Insertar el menú al inicio del body
+        document.body.insertAdjacentHTML('afterbegin', menuHTML);
         
         // Agregar estilos dinámicamente
         this.agregarEstilos();
@@ -47,16 +47,16 @@ const MenuLateral = {
     agregarEstilos: function() {
         const style = document.createElement('style');
         style.textContent = `
-            /* Menú Lateral */
+            /* Menú Lateral Izquierdo */
             .menu-lateral {
                 position: fixed;
-                right: 0;
+                left: 0;
                 top: 0;
                 width: 280px;
                 height: 100vh;
                 background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-                border-left: 2px solid #ff6b6b;
-                box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+                border-right: 2px solid #ff6b6b;
+                box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
                 z-index: 1000;
                 display: flex;
                 flex-direction: column;
@@ -64,10 +64,15 @@ const MenuLateral = {
                 font-family: 'Rubik', sans-serif;
             }
             
-            /* Botón para colapsar/expandir (opcional) */
+            /* Estado colapsado (hacia la izquierda) */
+            .menu-lateral.collapsed {
+                transform: translateX(-100%);
+            }
+            
+            /* Botón para colapsar/expandir */
             .menu-toggle {
                 position: fixed;
-                right: 290px;
+                left: 290px;
                 top: 20px;
                 background: #ff6b6b;
                 color: white;
@@ -86,18 +91,20 @@ const MenuLateral = {
                 background: #ff8e8e;
             }
             
-            /* Ajuste del contenedor principal cuando el menú está presente */
-            .container {
-                margin-right: 280px;
-                transition: margin-right 0.3s ease;
+            /* Botón cuando el menú está colapsado */
+            .menu-lateral.collapsed ~ .menu-toggle {
+                left: 20px;
             }
             
-            /* Estado colapsado */
-            .menu-lateral.collapsed {
-                transform: translateX(100%);
+            /* Ajuste del contenedor principal cuando el menú está presente */
+            .container {
+                margin-left: 280px;
+                transition: margin-left 0.3s ease;
             }
-            .menu-lateral.collapsed + .container {
-                margin-right: 0;
+            
+            /* Cuando el menú está colapsado */
+            .menu-lateral.collapsed ~ .container {
+                margin-left: 0;
             }
             
             .menu-header {
@@ -139,7 +146,7 @@ const MenuLateral = {
             .menu-btn:hover {
                 background: #3a3a3a;
                 border-color: #ff6b6b;
-                transform: translateX(-5px);
+                transform: translateX(5px);
             }
             .menu-btn.active {
                 background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
@@ -250,13 +257,13 @@ const MenuLateral = {
                     width: 260px;
                 }
                 .container {
-                    margin-right: 0;
+                    margin-left: 0;
                 }
                 .menu-toggle {
-                    right: 20px;
+                    left: 20px;
                 }
-                .menu-lateral:not(.collapsed) + .container {
-                    margin-right: 0;
+                .menu-lateral.collapsed ~ .menu-toggle {
+                    left: 20px;
                 }
             }
         `;
