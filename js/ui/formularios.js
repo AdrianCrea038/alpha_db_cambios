@@ -2,10 +2,15 @@
 const FormularioUI = {
     reset: function() {
         AppState.editandoId = null;
-        document.getElementById('editId').value = '';
-        document.getElementById('registroForm').reset();
+        const editIdField = document.getElementById('editId');
+        if (editIdField) editIdField.value = '';
         
-        ColoresModule.cargarEnFormulario([]);
+        const form = document.getElementById('registroForm');
+        if (form) form.reset();
+        
+        if (ColoresModule && ColoresModule.cargarEnFormulario) {
+            ColoresModule.cargarEnFormulario([]);
+        }
         
         const hoy = new Date().toISOString().split('T')[0];
         const fechaInput = document.getElementById('fecha');
@@ -34,6 +39,11 @@ const FormularioUI = {
     },
     
     cargarParaEdicion: function(id) {
+        if (!RegistrosModule) {
+            Notifications.error('Error: Módulo de registros no disponible');
+            return;
+        }
+        
         const registro = RegistrosModule.getById(id);
         if (!registro) {
             Notifications.error('❌ Registro no encontrado');
@@ -41,9 +51,12 @@ const FormularioUI = {
         }
         
         AppState.editandoId = id;
-        document.getElementById('editId').value = id;
+        const editIdField = document.getElementById('editId');
+        if (editIdField) editIdField.value = id;
         
-        RegistrosModule.cargarFormulario(registro);
+        if (RegistrosModule.cargarFormulario) {
+            RegistrosModule.cargarFormulario(registro);
+        }
         
         const formTitle = document.getElementById('formTitle');
         if (formTitle) formTitle.innerHTML = '✏️ EDITANDO REGISTRO';
