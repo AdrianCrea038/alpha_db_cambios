@@ -50,7 +50,8 @@ const TablaUI = {
                             <button class="btn-icon delete" onclick="window.eliminarRegistro('${reg.id}')" title="Eliminar">🗑️</button>
                         </div>
                         ${reg.observacion ? `<small style="color:#ffd93d; display:block; margin-top:5px;">📝 ${reg.observacion}</small>` : ''}
-                     </tr>
+                    </td>
+                </tr>
             `;
         }).join('');
     },
