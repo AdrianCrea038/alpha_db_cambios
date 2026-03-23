@@ -389,3 +389,15 @@ window.imprimirEtiqueta = (id) => {
         Notifications.error('Módulo de impresión no disponible');
     }
 };
+// Función global para cerrar modales
+window.cerrarModal = function(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) modal.classList.remove('show');
+};
+
+// Cerrar todos los modales
+window.cerrarTodosModales = function() {
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.classList.remove('show');
+    });
+};
