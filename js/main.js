@@ -308,3 +308,84 @@ document.querySelectorAll('.modal-close, .close-btn, .cancel-btn').forEach(btn =
         document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
     });
 });
+
+// ==================== FUNCIONES GLOBALES PARA BOTONES ====================
+
+window.editarRegistro = (id) => {
+    console.log('✏️ Editando registro:', id);
+    if (FormularioUI && FormularioUI.cargarEdicion) {
+        FormularioUI.cargarEdicion(id);
+    } else {
+        Notifications.error('Error al editar');
+    }
+};
+
+window.eliminarRegistro = async (id) => {
+    console.log('🗑️ Eliminando registro:', id);
+    if (await RegistrosModule.eliminar(id)) {
+        guardarDatosLocal();
+        if (TablaUI) TablaUI.actualizar();
+    }
+};
+
+window.verHistorial = (id) => {
+    console.log('📋 Ver historial:', id);
+    const reg = AppState.registros.find(r => r.id === id);
+    if (!reg) {
+        Notifications.error('Registro no encontrado');
+        return;
+    }
+    
+    const hist = AppState.historialEdiciones[id] || [];
+    const modal = document.getElementById('modalHistorial');
+    const container = document.getElementById('historialContainer');
+    
+    if (!modal || !container) return;
+    
+    let html = '';
+    if (hist.length === 0) {
+        html = '<p class="no-data" style="text-align:center; padding:20px;">📭 No hay historial de ediciones</p>';
+    } else {
+        html = hist.map((e, i) => `
+            <div class="historial-item" style="background:#2a2a2a; border-radius:12px; padding:12px; margin-bottom:12px;">
+                <div style="color:#ffd93d; margin-bottom:8px;">📅 ${new Date(e.fecha).toLocaleString()}</div>
+                <div style="margin-bottom:8px;">📝 ${e.descripcion || 'Sin descripción'}</div>
+                <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <div style="border-left:3px solid #ff6b6b; padding-left:8px;">
+                        <div style="font-size:11px; color:#ff6b6b;">ANTERIOR</div>
+                        <div>PO: ${e.anterior.po}</div>
+                        <div>Proceso: ${e.anterior.proceso}</div>
+                        <div>v${e.anterior.version}</div>
+                    </div>
+                    <div style="border-left:3px solid #4caf50; padding-left:8px;">
+                        <div style="font-size:11px; color:#4caf50;">NUEVO</div>
+                        <div>PO: ${e.nuevo.po}</div>
+                        <div>Proceso: ${e.nuevo.proceso}</div>
+                        <div>v${e.nuevo.version}</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    html += `
+        <div class="historial-item" style="background:#2a2a2a; border-radius:12px; padding:12px; border-left:4px solid #ffd93d;">
+            <div style="color:#ffd93d;">⚡ VERSIÓN ACTUAL v${reg.version}</div>
+            <div>PO: ${reg.po}</div>
+            <div>Proceso: ${reg.proceso}</div>
+            ${reg.observacion ? `<div>📝 ${reg.observacion}</div>` : ''}
+        </div>
+    `;
+    
+    container.innerHTML = html;
+    modal.classList.add('show');
+};
+
+window.imprimirEtiqueta = (id) => {
+    console.log('🖨️ Imprimiendo etiqueta para ID:', id);
+    if (window.ImpresionModule && window.ImpresionModule.imprimirEtiqueta) {
+        window.ImpresionModule.imprimirEtiqueta(id);
+    } else {
+        Notifications.error('Módulo de impresión no disponible');
+    }
+};
