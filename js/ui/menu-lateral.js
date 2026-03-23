@@ -11,6 +11,7 @@ const MenuLateral = {
         
         const menuHTML = `
             <div id="menuLateral" class="menu-lateral">
+                <button class="menu-toggle" id="menuToggleBtn">☰</button>
                 <div class="menu-header">
                     <h3>📋 MENÚ</h3>
                 </div>
@@ -42,6 +43,7 @@ const MenuLateral = {
     agregarEstilos: function() {
         const style = document.createElement('style');
         style.textContent = `
+            /* Menú Lateral Izquierdo */
             .menu-lateral {
                 position: fixed;
                 left: 0;
@@ -57,58 +59,76 @@ const MenuLateral = {
                 transition: transform 0.3s ease;
                 font-family: 'Rubik', sans-serif;
             }
+            
+            /* Estado colapsado - menú se esconde a la izquierda */
             .menu-lateral.collapsed {
                 transform: translateX(-100%);
             }
+            
+            /* Botón de hamburguesa DENTRO del menú */
             .menu-toggle {
-                position: fixed;
-                left: 280px;
+                position: absolute;
+                right: -20px;
                 top: 20px;
                 background: #ff6b6b;
                 color: white;
                 border: none;
-                border-radius: 0 30px 30px 0;
+                border-radius: 30px;
                 width: 40px;
-                height: 48px;
+                height: 40px;
                 cursor: pointer;
-                z-index: 1001;
+                z-index: 1002;
                 font-size: 20px;
                 transition: all 0.3s ease;
-                box-shadow: 2px 0 10px rgba(0,0,0,0.3);
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
             .menu-toggle:hover {
                 background: #ff8e8e;
-                width: 46px;
+                transform: scale(1.05);
             }
-            .menu-lateral.collapsed ~ .menu-toggle {
-                left: 10px;
-                border-radius: 30px;
-                width: 44px;
-                height: 44px;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                top: 20px;
-            }
-            .menu-lateral.collapsed ~ .menu-toggle:hover {
-                width: 50px;
+            
+            /* Cuando el menú está colapsado, el botón se mueve con él */
+            .menu-lateral.collapsed .menu-toggle {
+                right: -60px;
                 background: #ff6b6b;
             }
+            .menu-lateral.collapsed .menu-toggle:hover {
+                background: #ff8e8e;
+            }
+            
+            /* Ajuste del contenedor principal */
             .container {
                 margin-left: 280px;
                 transition: margin-left 0.3s ease;
                 max-width: calc(100% - 280px);
                 padding: 1.5rem;
             }
+            
+            /* Cuando el menú está colapsado */
             .menu-lateral.collapsed ~ .container {
                 margin-left: 0;
                 max-width: 100%;
             }
+            
+            /* Asegurar que el contenedor se ajuste cuando el menú está colapsado */
+            body:has(.menu-lateral.collapsed) .container {
+                margin-left: 0;
+            }
+            
+            /* Header y logo no se superponen */
+            .header {
+                position: relative;
+                z-index: 1;
+            }
+            
             .menu-header {
                 padding: 25px 20px;
                 border-bottom: 1px solid rgba(255, 107, 107, 0.3);
                 text-align: center;
+                margin-top: 20px;
             }
             .menu-header h3 {
                 color: #ffd93d;
@@ -116,6 +136,7 @@ const MenuLateral = {
                 font-weight: 600;
                 margin: 0;
             }
+            
             .menu-botones {
                 flex: 1;
                 padding: 20px;
@@ -123,6 +144,7 @@ const MenuLateral = {
                 flex-direction: column;
                 gap: 12px;
             }
+            
             .menu-btn {
                 background: #2a2a2a;
                 border: 1px solid rgba(255, 107, 107, 0.3);
@@ -149,8 +171,12 @@ const MenuLateral = {
                 border-color: #ffd93d;
                 box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
             }
-            .menu-icon { font-size: 1.4rem; }
-            .menu-text { flex: 1; }
+            .menu-icon {
+                font-size: 1.4rem;
+            }
+            .menu-text {
+                flex: 1;
+            }
             .menu-badge {
                 font-size: 0.65rem;
                 background: rgba(255, 107, 107, 0.3);
@@ -158,12 +184,18 @@ const MenuLateral = {
                 border-radius: 20px;
                 color: #ffd93d;
             }
+            
             .menu-footer {
                 padding: 20px;
                 border-top: 1px solid rgba(255, 107, 107, 0.3);
                 text-align: center;
             }
-            .menu-version { font-size: 0.7rem; color: #888; }
+            .menu-version {
+                font-size: 0.7rem;
+                color: #888;
+            }
+            
+            /* Panel de consultas */
             .consultas-panel {
                 background: #1e1e1e;
                 border-radius: 16px;
@@ -172,7 +204,10 @@ const MenuLateral = {
                 border: 1px solid rgba(255, 107, 107, 0.2);
                 display: none;
             }
-            .consultas-panel.active { display: block; animation: fadeIn 0.3s; }
+            .consultas-panel.active {
+                display: block;
+                animation: fadeIn 0.3s;
+            }
             .consultas-header {
                 display: flex;
                 justify-content: space-between;
@@ -181,7 +216,10 @@ const MenuLateral = {
                 flex-wrap: wrap;
                 gap: 10px;
             }
-            .consultas-header h3 { color: #ffd93d; font-size: 1rem; }
+            .consultas-header h3 {
+                color: #ffd93d;
+                font-size: 1rem;
+            }
             .consultas-filtros {
                 display: flex;
                 gap: 10px;
@@ -196,7 +234,10 @@ const MenuLateral = {
                 color: white;
                 font-family: 'Rubik', sans-serif;
             }
-            .consultas-filtros input { flex: 1; min-width: 200px; }
+            .consultas-filtros input {
+                flex: 1;
+                min-width: 200px;
+            }
             .btn-filtrar {
                 background: #ff6b6b;
                 border: none;
@@ -205,8 +246,12 @@ const MenuLateral = {
                 color: white;
                 font-weight: 600;
                 cursor: pointer;
+                transition: all 0.3s;
             }
-            .btn-filtrar:hover { background: #ff8e8e; transform: translateY(-2px); }
+            .btn-filtrar:hover {
+                background: #ff8e8e;
+                transform: translateY(-2px);
+            }
             .btn-limpiar {
                 background: #2a2a2a;
                 border: 1px solid #ff6b6b;
@@ -224,34 +269,50 @@ const MenuLateral = {
                 color: #ffd93d;
                 text-align: center;
             }
+            
             @keyframes fadeIn {
                 from { opacity: 0; transform: translateY(10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
+            
             @media (max-width: 768px) {
-                .menu-lateral { width: 260px; }
-                .menu-toggle { left: 260px; }
-                .container { margin-left: 0; max-width: 100%; padding: 1rem; }
-                .menu-lateral.collapsed ~ .menu-toggle { left: 8px; width: 40px; height: 40px; }
+                .menu-lateral {
+                    width: 260px;
+                }
+                .container {
+                    margin-left: 0;
+                    max-width: 100%;
+                    padding: 1rem;
+                }
+                .menu-lateral.collapsed ~ .container {
+                    margin-left: 0;
+                }
+                .menu-toggle {
+                    right: -20px;
+                }
+                .menu-lateral.collapsed .menu-toggle {
+                    right: -50px;
+                }
             }
         `;
         document.head.appendChild(style);
         
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'menu-toggle';
-        toggleBtn.innerHTML = '☰';
-        toggleBtn.title = 'Ocultar menú';
-        toggleBtn.onclick = () => this.toggleMenu();
-        document.body.insertAdjacentElement('afterbegin', toggleBtn);
+        // Configurar el botón de toggle
+        const toggleBtn = document.getElementById('menuToggleBtn');
+        if (toggleBtn) {
+            toggleBtn.onclick = () => this.toggleMenu();
+        }
     },
     
     toggleMenu: function() {
         const menu = document.getElementById('menuLateral');
-        const toggleBtn = document.querySelector('.menu-toggle');
+        const toggleBtn = document.getElementById('menuToggleBtn');
         if (menu) {
             menu.classList.toggle('collapsed');
-            toggleBtn.innerHTML = menu.classList.contains('collapsed') ? '☰' : '✕';
-            toggleBtn.title = menu.classList.contains('collapsed') ? 'Mostrar menú' : 'Ocultar menú';
+            if (toggleBtn) {
+                toggleBtn.innerHTML = menu.classList.contains('collapsed') ? '☰' : '✕';
+                toggleBtn.title = menu.classList.contains('collapsed') ? 'Mostrar menú' : 'Ocultar menú';
+            }
         }
     },
     
