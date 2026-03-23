@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpha DB - Sistema de Gestión Textil</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Librerías base -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -229,5 +229,24 @@
             <div class="modal-footer"><button class="modal-btn cancel-btn">CANCELAR</button></div>
         </div>
     </div>
+    <script>
+    // Cerrar modales
+    document.querySelectorAll('.modal-close, .close-btn, .cancel-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+        });
+    });
+    
+    // Cerrar modal al hacer clic fuera
+    window.addEventListener('click', function(e) {
+        document.querySelectorAll('.modal').forEach(modal => {
+            if (e.target === modal) {
+                modal.classList.remove('show');
+            }
+        });
+    });
+</script>
 </body>
 </html>x
