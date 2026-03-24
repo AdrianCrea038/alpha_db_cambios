@@ -31,14 +31,34 @@
     <script src="js/ui/calendario.js"></script>
     <script src="js/ui/tabla.js"></script>
     <script src="js/ui/formulario.js"></script>
+    <script src="js/ui/menu-lateral.js"></script>
     
     <!-- Main -->
     <script src="js/main.js"></script>
-    
-    <!-- Menu lateral -->
-    <script src="js/ui/menu-lateral.js"></script>
 </head>
 <body>
+    <!-- VERIFICACIÓN DE SESIÓN - AGREGADO -->
+    <script>
+        (function verificarSesion() {
+            const session = localStorage.getItem('alpha_db_session');
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const data = JSON.parse(session);
+                const expiracion = new Date(data.expiracion);
+                if (expiracion < new Date()) {
+                    localStorage.removeItem('alpha_db_session');
+                    window.location.href = 'login.html';
+                }
+            } catch(e) {
+                localStorage.removeItem('alpha_db_session');
+                window.location.href = 'login.html';
+            }
+        })();
+    </script>
+    
     <div class="container">
         <header class="header">
             <div class="header-top">
@@ -48,6 +68,10 @@
                     <span class="version">v9.0</span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                    <!-- BOTÓN DE SALIR - AGREGADO -->
+                    <button id="logoutBtn" class="btn-secondary" style="background: #ff6b6b;">
+                        <span>🚪</span> Salir
+                    </button>
                     <button id="exportarDBBtn" class="btn-secondary">
                         <span>💾</span> Guardar Local
                     </button>
@@ -212,39 +236,25 @@
         </section>
     </div>
 
-  <!-- Modal Historial -->
-<div id="modalHistorial" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>HISTORIAL DE EDICIONES</h3>
-            <button class="modal-close" onclick="this.closest('.modal').classList.remove('show')">✕</button>
-        </div>
-        <div class="modal-body">
-            <div id="historialContainer"></div>
-        </div>
-        <div class="modal-footer">
-            <button class="modal-btn close-btn" onclick="this.closest('.modal').classList.remove('show')">CERRAR</button>
+    <div id="modalHistorial" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>HISTORIAL DE EDICIONES</h3><button class="modal-close" onclick="this.closest('.modal').classList.remove('show')">✕</button></div>
+            <div class="modal-body"><div id="historialContainer"></div></div>
+            <div class="modal-footer"><button class="modal-btn close-btn" onclick="this.closest('.modal').classList.remove('show')">CERRAR</button></div>
         </div>
     </div>
-</div>
 
-<!-- Modal Impresión -->
-<div id="modalImpresion" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3>IMPRIMIR COMPROBANTE QR</h3>
-            <button class="modal-close" onclick="this.closest('.modal').classList.remove('show')">✕</button>
-        </div>
-        <div class="modal-body">
-            <select id="selectRegistroImprimir" style="width:100%; padding:0.8rem; background:#2a2a2a; border:2px solid #ff6b6b; border-radius:1rem; color:white; margin-bottom:1rem;">
-                <option value="">— Elige un registro —</option>
-            </select>
-            <button id="imprimirIndividualBtnAction" style="width:100%; padding:1rem; background:linear-gradient(135deg,#ff6b6b,#ff8e8e); border:none; border-radius:1rem; color:white; font-weight:bold; cursor:pointer;">IMPRIMIR CON QR</button>
-        </div>
-        <div class="modal-footer">
-            <button class="modal-btn cancel-btn" onclick="this.closest('.modal').classList.remove('show')">CANCELAR</button>
+    <div id="modalImpresion" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>IMPRIMIR COMPROBANTE QR</h3><button class="modal-close" onclick="this.closest('.modal').classList.remove('show')">✕</button></div>
+            <div class="modal-body">
+                <select id="selectRegistroImprimir" style="width:100%; padding:0.8rem; background:#2a2a2a; border:2px solid #ff6b6b; border-radius:1rem; color:white; margin-bottom:1rem;">
+                    <option value="">— Elige un registro —</option>
+                </select>
+                <button id="imprimirIndividualBtnAction" style="width:100%; padding:1rem; background:linear-gradient(135deg,#ff6b6b,#ff8e8e); border:none; border-radius:1rem; color:white; font-weight:bold; cursor:pointer;">IMPRIMIR CON QR</button>
+            </div>
+            <div class="modal-footer"><button class="modal-btn cancel-btn" onclick="this.closest('.modal').classList.remove('show')">CANCELAR</button></div>
         </div>
     </div>
-</div>
 </body>
-</html>x
+</html>
