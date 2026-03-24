@@ -1,4 +1,4 @@
-// js/ui/menu-lateral.js
+// js/ui/menu-lateral.js - VERSIÓN CORREGIDA COMPLETA
 const MenuLateral = {
     init: function() {
         if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
@@ -24,7 +24,7 @@ const MenuLateral = {
                 <div class="menu-botones">
                     <button id="btnBaseDatos" class="menu-btn active">
                         <span class="menu-icon">
-                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
                                 <rect x="3" y="3" width="18" height="18" rx="2" fill="none"/>
                                 <line x1="3" y1="9" x2="21" y2="9"/>
                                 <line x1="3" y1="15" x2="21" y2="15"/>
@@ -36,7 +36,7 @@ const MenuLateral = {
                     </button>
                     <button id="btnConsultas" class="menu-btn">
                         <span class="menu-icon">
-                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
                                 <circle cx="11" cy="11" r="8" fill="none"/>
                                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                             </svg>
@@ -45,7 +45,7 @@ const MenuLateral = {
                     </button>
                     <button id="btnTracking" class="menu-btn">
                         <span class="menu-icon">
-                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
                                 <path d="M12 2 L12 6 M12 18 L12 22 M4 12 L8 12 M16 12 L20 12" stroke="currentColor"/>
                                 <circle cx="12" cy="12" r="3" fill="none"/>
                                 <circle cx="12" cy="12" r="8" fill="none"/>
@@ -78,15 +78,13 @@ const MenuLateral = {
             menu.classList.toggle('collapsed');
             
             if (menu.classList.contains('collapsed')) {
-                toggleBtn.innerHTML = '▶';
-                toggleBtn.title = 'Expandir menú';
+                if (toggleBtn) toggleBtn.innerHTML = '▶';
                 if (container) {
                     container.style.marginLeft = '70px';
                     container.style.maxWidth = 'calc(100% - 70px)';
                 }
             } else {
-                toggleBtn.innerHTML = '◀';
-                toggleBtn.title = 'Contraer menú';
+                if (toggleBtn) toggleBtn.innerHTML = '◀';
                 if (container) {
                     container.style.marginLeft = '260px';
                     container.style.maxWidth = 'calc(100% - 260px)';
@@ -103,16 +101,26 @@ const MenuLateral = {
             toggleBtn.onclick = () => this.toggleMenu();
         }
         
-        document.getElementById('btnBaseDatos')?.addEventListener('click', () => this.mostrarBaseDatos());
-        document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsultas());
-        document.getElementById('btnTracking')?.addEventListener('click', () => this.mostrarTracking());
+        const btnBaseDatos = document.getElementById('btnBaseDatos');
+        const btnConsultas = document.getElementById('btnConsultas');
+        const btnTracking = document.getElementById('btnTracking');
+        
+        if (btnBaseDatos) btnBaseDatos.addEventListener('click', () => this.mostrarBaseDatos());
+        if (btnConsultas) btnConsultas.addEventListener('click', () => this.mostrarConsultas());
+        if (btnTracking) btnTracking.addEventListener('click', () => this.mostrarTracking());
     },
     
     mostrarBaseDatos: function() {
-        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('btnBaseDatos').classList.add('active');
-        document.getElementById('consultasPanel')?.classList.remove('active');
-        document.getElementById('trackingPanel')?.remove();
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnBaseDatos = document.getElementById('btnBaseDatos');
+        if (btnBaseDatos) btnBaseDatos.classList.add('active');
+        
+        const consultasPanel = document.getElementById('consultasPanel');
+        if (consultasPanel) consultasPanel.classList.remove('active');
+        
+        const trackingPanel = document.getElementById('trackingPanel');
+        if (trackingPanel) trackingPanel.remove();
         
         const formSection = document.querySelector('.form-section');
         const filtersSection = document.querySelector('.filters-section');
@@ -122,15 +130,23 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'block';
         if (tableSection) tableSection.style.display = 'block';
         
-        AppState.setFiltros('', '');
-        if (TablaUI) TablaUI.actualizar();
-        Notifications.info('🗄️ Vista de Base de Datos completa');
+        if (window.AppState) {
+            AppState.setFiltros('', '');
+        }
+        if (window.TablaUI && TablaUI.actualizar) {
+            TablaUI.actualizar();
+        }
+        if (window.Notifications) Notifications.info('🗄️ Vista de Base de Datos completa');
     },
     
     mostrarConsultas: function() {
-        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('btnConsultas').classList.add('active');
-        document.getElementById('trackingPanel')?.remove();
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnConsultas = document.getElementById('btnConsultas');
+        if (btnConsultas) btnConsultas.classList.add('active');
+        
+        const trackingPanel = document.getElementById('trackingPanel');
+        if (trackingPanel) trackingPanel.remove();
         
         if (!document.getElementById('consultasPanel')) this.crearPanelConsultas();
         
@@ -139,18 +155,24 @@ const MenuLateral = {
         if (formSection) formSection.style.display = 'none';
         if (filtersSection) filtersSection.style.display = 'none';
         
-        document.getElementById('consultasPanel')?.classList.add('active');
+        const consultasPanel = document.getElementById('consultasPanel');
+        if (consultasPanel) consultasPanel.classList.add('active');
+        
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'block';
         
         this.aplicarVistaUltimasSemanas();
-        Notifications.info('🔍 Vista de Consultas - Últimas 2 semanas');
+        if (window.Notifications) Notifications.info('🔍 Vista de Consultas - Últimas 2 semanas');
     },
     
     mostrarTracking: function() {
-        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('btnTracking').classList.add('active');
-        document.getElementById('consultasPanel')?.classList.remove('active');
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnTracking = document.getElementById('btnTracking');
+        if (btnTracking) btnTracking.classList.add('active');
+        
+        const consultasPanel = document.getElementById('consultasPanel');
+        if (consultasPanel) consultasPanel.classList.remove('active');
         
         const formSection = document.querySelector('.form-section');
         const filtersSection = document.querySelector('.filters-section');
@@ -160,19 +182,22 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'none';
         if (tableSection) tableSection.style.display = 'block';
         
-        if (window.TrackingModule) {
+        if (window.TrackingModule && TrackingModule.init) {
             TrackingModule.init();
         } else {
             console.error('TrackingModule no cargado');
-            Notifications.error('Error al cargar módulo de Tracking');
+            if (window.Notifications) Notifications.error('Error al cargar módulo de Tracking');
         }
         
-        Notifications.info('📍 Módulo de Tracking - Buscar por PO');
+        if (window.Notifications) Notifications.info('📍 Módulo de Tracking - Buscar por PO');
     },
     
     crearPanelConsultas: function() {
         const tableSection = document.querySelector('.table-section');
         if (!tableSection) return;
+        
+        // Verificar si ya existe
+        if (document.getElementById('consultasPanel')) return;
         
         tableSection.insertAdjacentHTML('beforebegin', `
             <div id="consultasPanel" class="consultas-panel">
@@ -201,36 +226,46 @@ const MenuLateral = {
         const filtrarBtn = document.getElementById('consultaFiltrarBtn');
         const limpiarBtn = document.getElementById('consultaLimpiarBtn');
         
-        filtrarBtn?.addEventListener('click', () => {
-            this.aplicarFiltrosConsulta(searchInput?.value || '', semanaSelect?.value || '');
-        });
-        limpiarBtn?.addEventListener('click', () => {
-            if (searchInput) searchInput.value = '';
-            if (semanaSelect) semanaSelect.value = '';
-            this.aplicarVistaUltimasSemanas();
-        });
-        searchInput?.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.aplicarFiltrosConsulta(searchInput.value, semanaSelect?.value || '');
-            }
-        });
+        if (filtrarBtn) {
+            filtrarBtn.addEventListener('click', () => {
+                this.aplicarFiltrosConsulta(searchInput ? searchInput.value : '', semanaSelect ? semanaSelect.value : '');
+            });
+        }
+        if (limpiarBtn) {
+            limpiarBtn.addEventListener('click', () => {
+                if (searchInput) searchInput.value = '';
+                if (semanaSelect) semanaSelect.value = '';
+                this.aplicarVistaUltimasSemanas();
+            });
+        }
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.aplicarFiltrosConsulta(searchInput.value, semanaSelect ? semanaSelect.value : '');
+                }
+            });
+        }
     },
     
     cargarOpcionesSemanas: function() {
         const semanaSelect = document.getElementById('consultaSemanaSelect');
-        if (!semanaSelect) return;
-        const semanas = [...new Set(AppState.registros.map(r => r.semana))].sort((a,b) => b - a);
+        if (!semanaSelect || !window.AppState || !AppState.registros) return;
+        
+        const semanas = [...new Set(AppState.registros.map(r => r.semana))].filter(s => s).sort((a,b) => b - a);
         semanaSelect.innerHTML = '<option value="">Todas las semanas</option>' + semanas.map(s => `<option value="${s}">Semana ${s}</option>`).join('');
     },
     
     actualizarInfoSemanaActual: function() {
         const infoDiv = document.getElementById('infoSemanaActual');
-        if (!infoDiv) return;
+        if (!infoDiv || !window.Utils) return;
+        
         const fecha = new Date();
         infoDiv.innerHTML = `📅 Semana actual: ${Utils.obtenerSemana(fecha)} | Fecha: ${Utils.formatearFecha(fecha.toISOString().split('T')[0])}`;
     },
     
     aplicarVistaUltimasSemanas: function() {
+        if (!window.AppState || !window.Utils || !window.TablaUI) return;
+        
         const fecha = new Date();
         const semanaActual = Utils.obtenerSemana(fecha);
         const hace14Dias = new Date(fecha);
@@ -245,23 +280,28 @@ const MenuLateral = {
         
         const registrosFiltrados = AppState.registros.filter(reg => semanasArray.includes(parseInt(reg.semana)));
         
-        if (TablaUI) {
-            const filtrosGuardados = { search: AppState.currentSearch, semana: AppState.currentSemana };
-            AppState.setFiltros('', '');
-            TablaUI.render(registrosFiltrados);
-            AppState.setFiltros(filtrosGuardados.search, filtrosGuardados.semana);
-        }
+        // Guardar filtros actuales
+        const searchGuardado = AppState.currentSearch;
+        const semanaGuardada = AppState.currentSemana;
+        
+        AppState.setFiltros('', '');
+        TablaUI.render(registrosFiltrados);
+        
+        // Restaurar filtros
+        AppState.setFiltros(searchGuardado, semanaGuardada);
         
         const infoFiltro = document.getElementById('infoFiltroActivo');
         if (infoFiltro) {
             infoFiltro.innerHTML = `📊 Mostrando registros de las últimas 2 semanas (Semana ${semanaHace14Dias} - Semana ${semanaActual})`;
         }
-        if (TablaUI) TablaUI.actualizarEstadisticas();
+        if (TablaUI.actualizarEstadisticas) TablaUI.actualizarEstadisticas();
     },
     
     aplicarFiltrosConsulta: function(search, semana) {
+        if (!window.AppState || !window.TablaUI) return;
+        
         AppState.setFiltros(search, semana);
-        if (TablaUI) TablaUI.actualizar();
+        TablaUI.actualizar();
         
         const infoFiltro = document.getElementById('infoFiltroActivo');
         if (infoFiltro) {
@@ -277,9 +317,14 @@ const MenuLateral = {
     }
 };
 
+// Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     if (!window.location.pathname.includes('login.html')) {
-        setTimeout(() => MenuLateral.init(), 500);
+        setTimeout(() => {
+            if (window.MenuLateral && MenuLateral.init) {
+                MenuLateral.init();
+            }
+        }, 500);
     }
 });
 
