@@ -122,10 +122,6 @@ body {
     transition: all 0.3s;
 }
 
-.logo-img:hover {
-    transform: scale(1.05);
-}
-
 .version {
     background: rgba(255, 255, 255, 0.1);
     padding: 0.2rem 0.5rem;
@@ -150,7 +146,7 @@ body {
     font-size: 0.7rem;
 }
 
-/* ========== BOTONES ========== */
+/* ========== BOTONES GENERALES ========== */
 .btn-secondary {
     padding: 0.5rem 1rem;
     background: rgba(42, 42, 42, 0.8);
@@ -177,6 +173,222 @@ body {
 
 .btn-secondary:active {
     transform: translateY(0px);
+}
+
+/* ========== BOTONES DE FILTRO (REPORTE, EXCEL, QR) ========== */
+.filter-buttons.three-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.8rem 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    color: white;
+}
+
+.filter-btn.print {
+    background: linear-gradient(135deg, #6b5bff, #8e6bff);
+    box-shadow: 0 2px 8px rgba(107, 91, 255, 0.3);
+}
+
+.filter-btn.excel {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.filter-btn.qr {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.filter-btn:active {
+    transform: translateY(0px);
+}
+
+/* ========== BUSCADOR ========== */
+.search-box {
+    position: relative;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.search-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff6b8a;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 0.7rem 2.5rem 0.7rem 2.5rem;
+    background: rgba(26, 26, 26, 0.8);
+    border: 1px solid #ff4b7d;
+    border-radius: 6px;
+    color: white;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #ff6b8a;
+    box-shadow: 0 0 0 2px rgba(255, 75, 125, 0.2);
+}
+
+.search-box input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.btn-clear {
+    position: absolute;
+    right: 0.8rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: #ff4b7d;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.btn-clear:hover {
+    background: #ff6b8a;
+    transform: translateY(-50%) scale(1.05);
+}
+
+.btn-clear:active {
+    transform: translateY(-50%) scale(0.98);
+}
+
+.search-hint {
+    margin-top: 0.5rem;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.hint-chip {
+    background: rgba(42, 42, 42, 0.6);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #ff6b8a;
+    border: 1px solid rgba(255, 75, 125, 0.3);
+}
+
+/* ========== CALENDARIO ========== */
+.calendario-mensual {
+    background: rgba(30, 30, 30, 0.7);
+    border-radius: 8px;
+    padding: 1rem;
+    border: 1px solid rgba(255, 75, 125, 0.3);
+    backdrop-filter: blur(5px);
+}
+
+.calendario-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+}
+
+.calendario-header h3 {
+    font-size: 0.8rem;
+    color: #ff6b8a;
+}
+
+.btn-clear-filters {
+    padding: 0.2rem 0.6rem;
+    background: rgba(42, 42, 42, 0.8);
+    border: 1px solid #ff4b7d;
+    color: #ff6b8a;
+    border-radius: 6px;
+    font-size: 0.65rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-clear-filters:hover {
+    background: #ff4b7d;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.meses-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 250px;
+    overflow-y: auto;
+}
+
+.mes-bloque {
+    background: rgba(37, 37, 37, 0.6);
+    border-radius: 6px;
+    padding: 0.5rem;
+    border: 1px solid rgba(255, 75, 125, 0.2);
+}
+
+.mes-titulo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 0.7rem;
+    color: #ffd93d;
+}
+
+.semanas-mes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.semana-mes-chip {
+    background: rgba(42, 42, 42, 0.8);
+    border: 1px solid rgba(255, 75, 125, 0.3);
+    border-radius: 4px;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.65rem;
+    color: #ffd93d;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.semana-mes-chip:hover {
+    background: #ff4b7d;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.semana-mes-chip.active {
+    background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
+    color: white;
+    border: none;
 }
 
 /* ========== FORMULARIO ========== */
@@ -225,7 +437,15 @@ body {
     gap: 0.8rem;
 }
 
-.three-col, .cuatro-col, .flat-row {
+.three-col {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.cuatro-col {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.flat-row {
     grid-template-columns: repeat(3, 1fr);
 }
 
@@ -246,10 +466,6 @@ body {
 .card-group:hover {
     border-color: rgba(255, 75, 125, 0.5);
     transform: translateY(-2px);
-}
-
-.card-group:active {
-    transform: translateY(0px);
 }
 
 .card-group label {
@@ -317,10 +533,6 @@ body {
     transform: translateY(-1px);
 }
 
-.checkbox-label:active {
-    transform: translateY(0px);
-}
-
 .checkbox-label input[type="checkbox"] {
     width: 1rem;
     height: 1rem;
@@ -375,10 +587,6 @@ body {
 .btn-guardar-bonito:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 20px rgba(255, 75, 125, 0.4);
-}
-
-.btn-guardar-bonito:active {
-    transform: translateY(0px);
 }
 
 /* ========== COLORES DINÁMICOS ========== */
@@ -463,11 +671,7 @@ body {
     box-shadow: 0 5px 15px rgba(255, 75, 125, 0.3);
 }
 
-.btn-add-color:active {
-    transform: translateY(0px);
-}
-
-/* ========== FILTROS ========== */
+/* ========== FILTROS SECCIÓN ========== */
 .filters-section {
     background: linear-gradient(160deg, 
         rgba(45, 35, 85, 0.85) 0%, 
@@ -479,6 +683,18 @@ body {
     margin-bottom: 1.5rem;
     border: 1px solid rgba(255, 75, 125, 0.3);
     backdrop-filter: blur(10px);
+}
+
+.filters-header h2 {
+    font-size: 0.9rem;
+    color: #ff4b7d;
+    margin-bottom: 1rem;
+}
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
 /* ========== TABLA ========== */
@@ -494,46 +710,110 @@ body {
     backdrop-filter: blur(10px);
 }
 
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
 .table-header h2 {
     font-size: 0.9rem;
     color: #ff4b7d;
 }
 
+.table-stats {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.stats-number {
+    background: rgba(42, 42, 42, 0.8);
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #ffd93d;
+    border: 1px solid #ff4b7d;
+}
+
+.filtro-badge {
+    background: #ff4b7d;
+    color: white;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+thead {
+    background: rgba(42, 42, 42, 0.6);
+}
+
 th {
-    padding: 0.5rem 0.3rem;
-    font-size: 0.65rem;
+    padding: 0.6rem 0.4rem;
+    text-align: left;
+    font-weight: 600;
     color: #ff6b8a;
     border-bottom: 2px solid #ff4b7d;
+    font-size: 0.7rem;
 }
 
 td {
-    padding: 0.3rem 0.3rem;
-    font-size: 0.7rem;
+    padding: 0.5rem 0.4rem;
+    border-bottom: 1px solid rgba(255, 75, 125, 0.2);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.75rem;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background: rgba(255, 75, 125, 0.1);
 }
 
 .po-badge {
-    padding: 0.15rem 0.4rem;
+    background: #000;
+    color: white;
+    padding: 0.2rem 0.5rem;
     border-radius: 4px;
+    font-weight: bold;
     font-size: 0.7rem;
+    display: inline-block;
 }
 
 .color-tag {
-    padding: 0.15rem 0.3rem;
-    font-size: 0.65rem;
-    margin: 0.05rem;
+    background: rgba(51, 51, 51, 0.8);
+    padding: 0.15rem 0.4rem;
     border-radius: 3px;
+    font-size: 0.65rem;
+    border-left: 2px solid #ff4b7d;
+    display: inline-block;
+    margin: 0.1rem;
 }
 
 /* ========== BOTONES DE ACCIÓN ========== */
+.action-buttons {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
 .btn-icon {
-    padding: 0.25rem 0.4rem;
-    font-size: 0.7rem;
-    min-width: 1.6rem;
-    border-radius: 4px;
-    transition: all 0.2s;
+    padding: 0.3rem 0.5rem;
     background: rgba(42, 42, 42, 0.8);
     border: 1px solid rgba(255, 75, 125, 0.3);
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s;
     color: white;
 }
 
@@ -558,7 +838,6 @@ td {
 .btn-icon.delete:hover {
     background: #ff4b7d;
     border-color: #ff4b7d;
-    color: white;
 }
 
 .btn-icon.history {
@@ -574,96 +853,6 @@ td {
 .btn-icon.print:hover {
     background: #8b5cf6;
     border-color: #8b5cf6;
-}
-
-/* ========== FILTROS BOTONES ========== */
-.filter-btn {
-    padding: 0.7rem 0.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    color: white;
-}
-
-.filter-btn.print {
-    background: linear-gradient(135deg, #6b5bff, #8e6bff);
-}
-
-.filter-btn.excel {
-    background: linear-gradient(135deg, #10b981, #34d399);
-}
-
-.filter-btn.qr {
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
-}
-
-.filter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.filter-btn:active {
-    transform: translateY(0px);
-}
-
-/* ========== BUSCADOR ========== */
-.search-box input {
-    background: rgba(26, 26, 26, 0.8);
-    border: 1px solid #ff4b7d;
-    border-radius: 6px;
-    color: white;
-}
-
-.search-box input:focus {
-    border-color: #ff6b8a;
-    box-shadow: 0 0 0 2px rgba(255, 75, 125, 0.2);
-}
-
-.btn-clear {
-    background: #ff4b7d;
-    border-radius: 6px;
-    transition: all 0.2s;
-}
-
-.btn-clear:hover {
-    background: #ff6b8a;
-    transform: translateY(-2px);
-}
-
-.btn-clear:active {
-    transform: translateY(0px);
-}
-
-/* ========== CALENDARIO ========== */
-.calendario-mensual {
-    background: rgba(30, 30, 30, 0.7);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 75, 125, 0.3);
-}
-
-.semana-mes-chip {
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.semana-mes-chip:hover {
-    transform: translateY(-1px);
-}
-
-.semana-mes-chip.active {
-    background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
-    border-radius: 4px;
-}
-
-.btn-clear-filters {
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.btn-clear-filters:hover {
-    transform: translateY(-1px);
 }
 
 /* ========== MENÚ LATERAL ========== */
@@ -694,7 +883,7 @@ td {
 .menu-toggle {
     position: absolute;
     right: -20px;
-    top: 20px;
+    top: 45px;
     background: #ff4b7d;
     color: white;
     border: none;
@@ -728,7 +917,7 @@ td {
     padding: 20px;
     border-bottom: 1px solid rgba(255, 75, 125, 0.3);
     text-align: center;
-    margin-top: 20px;
+    margin-top: 30px;
 }
 
 .menu-header h3 {
@@ -809,7 +998,7 @@ td {
 .menu-welcome {
     position: fixed;
     left: 20px;
-    top: 20px;
+    top: 55px;
     background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
     color: white;
     padding: 8px 16px;
@@ -858,7 +1047,7 @@ td {
     border-radius: 8px;
     backdrop-filter: blur(10px);
     width: 90%;
-    max-width: 600px;
+    max-width: 650px;
 }
 
 .modal-header {
@@ -883,6 +1072,9 @@ td {
     border-radius: 6px;
     cursor: pointer;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .modal-close:hover {
@@ -925,18 +1117,37 @@ td {
     border: 2px solid #ff4b7d;
     border-radius: 6px;
     color: white;
+    margin-bottom: 1rem;
+}
+
+.modal-action-btn {
+    width: 100%;
+    padding: 0.8rem;
+    background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
+    border: none;
+    border-radius: 6px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.modal-action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 75, 125, 0.3);
 }
 
 /* ========== HISTORIAL ========== */
 .historial-container {
-    max-height: 400px;
+    max-height: 450px;
     overflow-y: auto;
+    padding-right: 0.5rem;
 }
 
 .historial-item {
     background: rgba(42, 42, 42, 0.8);
     border-radius: 6px;
-    padding: 0.8rem;
+    padding: 1rem;
     margin-bottom: 0.8rem;
     border: 1px solid rgba(255, 75, 125, 0.2);
 }
@@ -947,7 +1158,15 @@ td {
     margin-bottom: 0.5rem;
 }
 
-/* ========== RESPONSIVE MÓVIL - TAMAÑOS MÁS PEQUEÑOS ========== */
+.historial-version {
+    background: #ff4b7d;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    display: inline-block;
+}
+
+/* ========== RESPONSIVE MÓVIL ========== */
 @media (max-width: 768px) {
     .container {
         padding: 0.6rem;
@@ -965,15 +1184,6 @@ td {
         height: 24px;
     }
     
-    .version {
-        font-size: 0.55rem;
-        padding: 0.1rem 0.35rem;
-    }
-    
-    .subtitle {
-        font-size: 0.65rem;
-    }
-    
     .btn-secondary {
         padding: 0.35rem 0.7rem;
         font-size: 0.65rem;
@@ -981,44 +1191,6 @@ td {
     
     .form-section, .filters-section, .table-section {
         padding: 0.6rem;
-    }
-    
-    .form-section h2, .table-header h2 {
-        font-size: 0.75rem;
-    }
-    
-    .card-group {
-        padding: 0.4rem;
-    }
-    
-    .card-group label {
-        font-size: 0.6rem;
-    }
-    
-    .input-bonito, .select-bonito {
-        padding: 0.35rem 0.5rem;
-        font-size: 0.7rem;
-    }
-    
-    th, td {
-        padding: 0.2rem 0.15rem;
-        font-size: 0.55rem;
-    }
-    
-    .btn-icon {
-        padding: 0.2rem 0.3rem;
-        font-size: 0.6rem;
-        min-width: 1.3rem;
-    }
-    
-    .po-badge {
-        font-size: 0.6rem;
-        padding: 0.1rem 0.25rem;
-    }
-    
-    .color-tag {
-        font-size: 0.55rem;
-        padding: 0.1rem 0.2rem;
     }
     
     .three-col, .cuatro-col, .flat-row {
@@ -1031,72 +1203,38 @@ td {
     
     .filter-buttons.three-buttons {
         grid-template-columns: 1fr;
-        gap: 0.4rem;
     }
     
     .filter-btn {
-        padding: 0.5rem;
-        font-size: 0.7rem;
+        padding: 0.6rem;
+        font-size: 0.75rem;
     }
     
-    .search-box input {
-        padding: 0.5rem 1.8rem 0.5rem 2rem;
-        font-size: 0.7rem;
-    }
-    
-    .search-icon {
-        font-size: 0.8rem;
-        left: 0.7rem;
-    }
-    
-    .btn-clear {
-        padding: 0.1rem 0.35rem;
-        font-size: 0.7rem;
-    }
-    
-    .hint-chip {
-        font-size: 0.55rem;
-        padding: 0.12rem 0.35rem;
-    }
-    
-    .menu-welcome {
-        left: 15px;
-        top: 15px;
-        font-size: 0.65rem;
-        padding: 5px 12px;
-        white-space: normal;
-        max-width: 140px;
-        text-align: center;
-        border-radius: 6px;
-    }
-    
-    .menu-welcome::before {
-        margin-right: 4px;
-        font-size: 0.8rem;
-    }
-    
-    .menu-lateral {
-        width: 260px;
+    th, td {
+        padding: 0.3rem 0.2rem;
+        font-size: 0.6rem;
     }
     
     .menu-toggle {
+        top: 35px;
         width: 35px;
         height: 35px;
         font-size: 18px;
         right: -18px;
     }
     
-    .menu-lateral.collapsed .menu-toggle {
-        right: -50px;
+    .menu-welcome {
+        left: 15px;
+        top: 45px;
+        font-size: 0.65rem;
+        padding: 5px 12px;
+        white-space: normal;
+        max-width: 130px;
+        text-align: center;
     }
     
-    .menu-btn {
-        padding: 10px 12px;
-        font-size: 0.8rem;
-    }
-    
-    .menu-icon {
-        font-size: 1rem;
+    .historial-container {
+        max-height: 350px;
     }
 }
 
@@ -1116,19 +1254,14 @@ td {
     }
     
     th, td {
-        font-size: 0.5rem;
-    }
-    
-    .btn-icon {
-        padding: 0.15rem 0.25rem;
         font-size: 0.55rem;
     }
     
     .menu-welcome {
         left: 10px;
-        top: 10px;
+        top: 40px;
         font-size: 0.6rem;
         padding: 4px 10px;
-        max-width: 130px;
+        max-width: 120px;
     }
 }
