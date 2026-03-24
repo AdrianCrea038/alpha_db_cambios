@@ -26,7 +26,6 @@
     <script src="js/modules/registros.js"></script>
     <script src="js/modules/impresion.js"></script>
     <script src="js/modules/excel.js"></script>
-    <!-- Módulo Tracking -->
     <script src="js/modules/tracking.js"></script>
     
     <!-- UI -->
@@ -39,7 +38,7 @@
     <script src="js/main.js"></script>
 </head>
 <body>
-    <!-- VERIFICACIÓN DE SESIÓN - AGREGADO -->
+    <!-- VERIFICACIÓN DE SESIÓN -->
     <script>
         (function verificarSesion() {
             const session = localStorage.getItem('alpha_db_session');
@@ -70,7 +69,6 @@
                     <span class="version">v9.0</span>
                 </div>
                 <div class="header-actions" style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                    <!-- BOTÓN DE SALIR - AGREGADO -->
                     <button id="logoutBtn" class="btn-secondary" style="background: #ff6b6b;">
                         <span>🚪</span> Salir
                     </button>
@@ -232,8 +230,8 @@
                 <table id="registrosTable">
                     <thead>
                         <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th>TELA</th><th colspan="2">COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th></thead>
-                    <tbody id="tableBody">Registros<td colspan="17" class="loading">Cargando registros...</tbody>
-                 </table>
+                    <tbody id="tableBody"><tr><td colspan="17" class="loading">Cargando registros...</td></tr></tbody>
+                </table>
             </div>
         </section>
     </div>
