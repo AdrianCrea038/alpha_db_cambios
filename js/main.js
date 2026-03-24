@@ -103,7 +103,6 @@ function generarDatosEjemplo() {
     const procesos = ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'];
     const estilos = ['LIBRE', 'MARIPOSA', 'PECHO', 'ESPALDA'];
     const telas = ['ALGODÓN', 'POLIÉSTER', 'NYLON'];
-    const nombresColores = ['ROJO', 'AZUL', 'VERDE', 'NEGRO', 'BLANCO'];
     const ahora = new Date().toISOString();
     const hoy = new Date().toISOString().split('T')[0];
     
@@ -121,7 +120,7 @@ function generarDatosEjemplo() {
             fecha: fechaStr,
             estilo: estilos[i % estilos.length],
             tela: telas[i % telas.length],
-            colores: [{ id:1, nombre: nombresColores[i % nombresColores.length], cyan: 100, magenta: 0, yellow: 0, black: 0, turquesa: 0, naranja: 0, fluorYellow: 0, fluorPink: 0 }],
+            colores: [{ id:1, nombre:'ROJO', cyan:100, magenta:0, yellow:0, black:0, turquesa:0, naranja:0, fluorYellow:0, fluorPink:0 }],
             numero_plotter: 1,
             plotter_temp: 22,
             plotter_humedad: 45,
@@ -268,7 +267,7 @@ function configurarEventos() {
         });
     }
     
-    // ==================== BOTÓN DE SALIR ====================
+    // ==================== BOTÓN DE SALIR - AGREGADO ====================
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function() {
@@ -276,36 +275,6 @@ function configurarEventos() {
                 localStorage.removeItem('alpha_db_session');
                 window.location.href = 'login.html';
             }
-        });
-    }
-    
-    // ==================== BOTÓN DE TRACKING ====================
-    const btnTracking = document.getElementById('btnTracking');
-    if (btnTracking) {
-        btnTracking.addEventListener('click', function() {
-            console.log('📍 Abriendo módulo de Tracking...');
-            
-            const formSection = document.querySelector('.form-section');
-            const filtersSection = document.querySelector('.filters-section');
-            const consultasPanel = document.getElementById('consultasPanel');
-            const tablaSection = document.querySelector('.table-section');
-            
-            if (formSection) formSection.style.display = 'none';
-            if (filtersSection) filtersSection.style.display = 'none';
-            if (consultasPanel) consultasPanel.classList.remove('active');
-            if (tablaSection) tablaSection.style.display = 'block';
-            
-            if (window.TrackingModule) {
-                TrackingModule.init();
-            } else {
-                console.error('TrackingModule no cargado');
-                Notifications.error('Error al cargar módulo de Tracking');
-            }
-            
-            document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-            btnTracking.classList.add('active');
-            
-            Notifications.info('📍 Módulo de Tracking - Buscar por PO');
         });
     }
 }
