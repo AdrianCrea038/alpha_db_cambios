@@ -1,7 +1,6 @@
 // js/ui/menu-lateral.js
 const MenuLateral = {
     init: function() {
-        // NO ejecutar en la página de login
         if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
             console.log('Menú no disponible en página de login');
             return;
@@ -10,12 +9,6 @@ const MenuLateral = {
         this.crearMenu();
         this.configurarEventos();
         this.aplicarVistaInicial();
-        this.mostrarMensajeBienvenida();
-    },
-    
-    mostrarMensajeBienvenida: function() {
-        // Mensaje eliminado - ya no es necesario
-        return;
     },
     
     crearMenu: function() {
@@ -129,11 +122,6 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'block';
         if (tableSection) tableSection.style.display = 'block';
         
-        // Cambiar modo de tabla a BASE (muestra todos los botones)
-        if (TablaUI) {
-            TablaUI.setModo('base');
-        }
-        
         AppState.setFiltros('', '');
         if (TablaUI) TablaUI.actualizar();
         Notifications.info('🗄️ Vista de Base de Datos completa');
@@ -155,11 +143,6 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'block';
         
-        // Cambiar modo de tabla a CONSULTAS (oculta editar/eliminar)
-        if (TablaUI) {
-            TablaUI.setModo('consultas');
-        }
-        
         this.aplicarVistaUltimasSemanas();
         Notifications.info('🔍 Vista de Consultas - Últimas 2 semanas');
     },
@@ -177,12 +160,6 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'none';
         if (tableSection) tableSection.style.display = 'block';
         
-        // Cambiar modo de tabla a TRACKING (oculta editar/eliminar)
-        if (TablaUI) {
-            TablaUI.setModo('tracking');
-        }
-        
-        // Inicializar módulo de tracking
         if (window.TrackingModule) {
             TrackingModule.init();
         } else {
@@ -300,7 +277,6 @@ const MenuLateral = {
     }
 };
 
-// Inicializar el menú cuando el DOM esté listo SOLO si no es login
 document.addEventListener('DOMContentLoaded', function() {
     if (!window.location.pathname.includes('login.html')) {
         setTimeout(() => MenuLateral.init(), 500);
