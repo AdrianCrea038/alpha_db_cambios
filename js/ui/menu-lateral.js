@@ -1,6 +1,12 @@
 // js/ui/menu-lateral.js
 const MenuLateral = {
     init: function() {
+        // NO ejecutar en la página de login
+        if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
+            console.log('Menú no disponible en página de login');
+            return;
+        }
+        
         this.crearMenu();
         this.configurarEventos();
         this.aplicarVistaInicial();
@@ -8,6 +14,9 @@ const MenuLateral = {
     },
     
     mostrarMensajeBienvenida: function() {
+        // NO ejecutar en la página de login
+        if (window.location.pathname.includes('login.html')) return;
+        
         const mensaje = document.createElement('div');
         mensaje.className = 'menu-welcome';
         mensaje.textContent = 'Menú';
@@ -22,6 +31,8 @@ const MenuLateral = {
     },
     
     crearMenu: function() {
+        // NO ejecutar en la página de login
+        if (window.location.pathname.includes('login.html')) return;
         if (document.getElementById('menuLateral')) return;
         
         const menuHTML = `
@@ -106,6 +117,9 @@ const MenuLateral = {
     },
     
     configurarEventos: function() {
+        // NO ejecutar en la página de login
+        if (window.location.pathname.includes('login.html')) return;
+        
         const toggleBtn = document.getElementById('menuToggleBtn');
         if (toggleBtn) {
             toggleBtn.onclick = () => this.toggleMenu();
@@ -262,8 +276,12 @@ const MenuLateral = {
     }
 };
 
+// Inicializar el menú cuando el DOM esté listo SOLO si no es login
 document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(() => MenuLateral.init(), 500);
+    // Verificar que no sea la página de login
+    if (!window.location.pathname.includes('login.html')) {
+        setTimeout(() => MenuLateral.init(), 500);
+    }
 });
 
 window.MenuLateral = MenuLateral;
