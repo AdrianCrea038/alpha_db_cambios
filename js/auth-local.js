@@ -59,8 +59,11 @@ window.cerrarSesion = function() {
 
 // Inicializar el login
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🔐 Página de login cargada');
+    
     // Verificar si ya hay sesión activa
     if (verificarSesion()) {
+        console.log('✅ Sesión existente, redirigiendo...');
         return;
     }
     
@@ -84,11 +87,15 @@ document.addEventListener('DOMContentLoaded', function() {
         const username = usernameInput.value.trim();
         const password = passwordInput.value;
         
+        console.log('🔐 Intentando login con:', username);
+        
         // Validar credenciales (mayúsculas o minúsculas)
         const esValido = (username === USUARIO_VALIDO.username && password === USUARIO_VALIDO.password) ||
                          (username === USUARIO_VALIDO_LOWERCASE.username && password === USUARIO_VALIDO_LOWERCASE.password);
         
         if (esValido) {
+            console.log('✅ Login exitoso, redirigiendo...');
+            
             // Guardar usuario recordado
             if (rememberMeCheck.checked) {
                 localStorage.setItem('alpha_db_remembered_user', username);
@@ -102,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Redirigir al sistema principal
             window.location.href = 'index.html';
         } else {
-            // Mostrar error
+            console.log('❌ Login fallido');
             mostrarError('Usuario o contraseña incorrectos');
         }
     });
