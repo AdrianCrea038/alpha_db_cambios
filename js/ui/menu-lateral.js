@@ -25,22 +25,41 @@ const MenuLateral = {
         if (document.getElementById('menuLateral')) return;
         
         const menuHTML = `
-            <div id="menuLateral" class="menu-lateral collapsed">
-                <button class="menu-toggle" id="menuToggleBtn">☰</button>
+            <div id="menuLateral" class="menu-lateral">
+                <button class="menu-toggle" id="menuToggleBtn">◀</button>
                 <div class="menu-header">
                     <h3>📋 MENÚ</h3>
                 </div>
                 <div class="menu-botones">
                     <button id="btnBaseDatos" class="menu-btn active">
-                        <span class="menu-icon">🗄️</span>
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <rect x="3" y="3" width="18" height="18" rx="2" fill="none"/>
+                                <line x1="3" y1="9" x2="21" y2="9"/>
+                                <line x1="3" y1="15" x2="21" y2="15"/>
+                                <line x1="9" y1="3" x2="9" y2="21"/>
+                                <line x1="15" y1="3" x2="15" y2="21"/>
+                            </svg>
+                        </span>
                         <span class="menu-text">Base de Datos</span>
                     </button>
                     <button id="btnConsultas" class="menu-btn">
-                        <span class="menu-icon">🔍</span>
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="11" cy="11" r="8" fill="none"/>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                            </svg>
+                        </span>
                         <span class="menu-text">Consultas</span>
                     </button>
                     <button id="btnTracking" class="menu-btn">
-                        <span class="menu-icon">📍</span>
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path d="M12 2 L12 6 M12 18 L12 22 M4 12 L8 12 M16 12 L20 12" stroke="currentColor"/>
+                                <circle cx="12" cy="12" r="3" fill="none"/>
+                                <circle cx="12" cy="12" r="8" fill="none"/>
+                            </svg>
+                        </span>
                         <span class="menu-text">Tracking</span>
                         <span class="menu-badge">Próximamente</span>
                     </button>
@@ -55,8 +74,8 @@ const MenuLateral = {
         
         const container = document.querySelector('.container');
         if (container) {
-            container.style.marginLeft = '0';
-            container.style.maxWidth = '100%';
+            container.style.marginLeft = '260px';
+            container.style.maxWidth = 'calc(100% - 260px)';
         }
     },
     
@@ -69,18 +88,18 @@ const MenuLateral = {
             menu.classList.toggle('collapsed');
             
             if (menu.classList.contains('collapsed')) {
-                toggleBtn.innerHTML = '☰';
-                toggleBtn.title = 'Mostrar menú';
+                toggleBtn.innerHTML = '▶';
+                toggleBtn.title = 'Expandir menú';
                 if (container) {
-                    container.style.marginLeft = '0';
-                    container.style.maxWidth = '100%';
+                    container.style.marginLeft = '70px';
+                    container.style.maxWidth = 'calc(100% - 70px)';
                 }
             } else {
-                toggleBtn.innerHTML = '✕';
-                toggleBtn.title = 'Ocultar menú';
+                toggleBtn.innerHTML = '◀';
+                toggleBtn.title = 'Contraer menú';
                 if (container) {
-                    container.style.marginLeft = '280px';
-                    container.style.maxWidth = 'calc(100% - 280px)';
+                    container.style.marginLeft = '260px';
+                    container.style.maxWidth = 'calc(100% - 260px)';
                 }
             }
         }
