@@ -59,7 +59,6 @@ const MenuLateral = {
                             </svg>
                         </span>
                         <span class="menu-text">Tracking</span>
-                        <!-- ELIMINADO EL BADGE "Próximamente" -->
                     </button>
                 </div>
                 <div class="menu-footer">
@@ -113,45 +112,14 @@ const MenuLateral = {
         
         document.getElementById('btnBaseDatos')?.addEventListener('click', () => this.mostrarBaseDatos());
         document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsultas());
-        
-        // BOTÓN DE TRACKING - ACTIVADO
-        const btnTracking = document.getElementById('btnTracking');
-        if (btnTracking) {
-            btnTracking.addEventListener('click', () => {
-                console.log('📍 Abriendo módulo de Tracking...');
-                
-                // Ocultar otras vistas
-                const formSection = document.querySelector('.form-section');
-                const filtersSection = document.querySelector('.filters-section');
-                const consultasPanel = document.getElementById('consultasPanel');
-                const tablaSection = document.querySelector('.table-section');
-                
-                if (formSection) formSection.style.display = 'none';
-                if (filtersSection) filtersSection.style.display = 'none';
-                if (consultasPanel) consultasPanel.classList.remove('active');
-                if (tablaSection) tablaSection.style.display = 'block';
-                
-                // Inicializar módulo de tracking
-                if (window.TrackingModule) {
-                    TrackingModule.init();
-                } else {
-                    console.error('TrackingModule no cargado');
-                    Notifications.error('Error al cargar módulo de Tracking');
-                }
-                
-                // Cambiar estado activo del menú
-                document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-                btnTracking.classList.add('active');
-                
-                Notifications.info('📍 Módulo de Tracking - Buscar por PO');
-            });
-        }
+        document.getElementById('btnTracking')?.addEventListener('click', () => this.mostrarTracking());
     },
     
     mostrarBaseDatos: function() {
         document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('btnBaseDatos').classList.add('active');
         document.getElementById('consultasPanel')?.classList.remove('active');
+        document.getElementById('trackingPanel')?.remove();
         
         const formSection = document.querySelector('.form-section');
         const filtersSection = document.querySelector('.filters-section');
@@ -161,6 +129,11 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'block';
         if (tableSection) tableSection.style.display = 'block';
         
+        // Cambiar modo de tabla a BASE (muestra todos los botones)
+        if (TablaUI) {
+            TablaUI.setModo('base');
+        }
+        
         AppState.setFiltros('', '');
         if (TablaUI) TablaUI.actualizar();
         Notifications.info('🗄️ Vista de Base de Datos completa');
@@ -169,6 +142,7 @@ const MenuLateral = {
     mostrarConsultas: function() {
         document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('btnConsultas').classList.add('active');
+        document.getElementById('trackingPanel')?.remove();
         
         if (!document.getElementById('consultasPanel')) this.crearPanelConsultas();
         
@@ -181,8 +155,42 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'block';
         
+        // Cambiar modo de tabla a CONSULTAS (oculta editar/eliminar)
+        if (TablaUI) {
+            TablaUI.setModo('consultas');
+        }
+        
         this.aplicarVistaUltimasSemanas();
         Notifications.info('🔍 Vista de Consultas - Últimas 2 semanas');
+    },
+    
+    mostrarTracking: function() {
+        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btnTracking').classList.add('active');
+        document.getElementById('consultasPanel')?.classList.remove('active');
+        
+        const formSection = document.querySelector('.form-section');
+        const filtersSection = document.querySelector('.filters-section');
+        const tableSection = document.querySelector('.table-section');
+        
+        if (formSection) formSection.style.display = 'none';
+        if (filtersSection) filtersSection.style.display = 'none';
+        if (tableSection) tableSection.style.display = 'block';
+        
+        // Cambiar modo de tabla a TRACKING (oculta editar/eliminar)
+        if (TablaUI) {
+            TablaUI.setModo('tracking');
+        }
+        
+        // Inicializar módulo de tracking
+        if (window.TrackingModule) {
+            TrackingModule.init();
+        } else {
+            console.error('TrackingModule no cargado');
+            Notifications.error('Error al cargar módulo de Tracking');
+        }
+        
+        Notifications.info('📍 Módulo de Tracking - Buscar por PO');
     },
     
     crearPanelConsultas: function() {
