@@ -1,4 +1,4 @@
-// js/ui/menu-lateral.js - VERSIÓN CORREGIDA CON SOLICITUDES Y VERIFICACIÓN DE MÓDULOS
+// js/ui/menu-lateral.js - VERSIÓN CORREGIDA CON FILTRO FUNCIONAL Y CÁMARA EN CONSULTAS
 const MenuLateral = {
     init: function() {
         if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
@@ -193,7 +193,9 @@ const MenuLateral = {
             TablaUI.setModo('solo-lectura');
         }
         
+        // Aplicar vista inicial de últimas 2 semanas
         this.aplicarVistaUltimasSemanas();
+        
         if (window.Notifications) Notifications.info('🔍 Vista de Consultas - Solo lectura');
     },
     
@@ -249,12 +251,10 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'none';
         
-        // Verificar que el módulo existe antes de llamarlo
         if (window.AprobacionesModule && typeof AprobacionesModule.init === 'function') {
             AprobacionesModule.init();
         } else {
             console.error('AprobacionesModule no cargado correctamente');
-            this.mostrarMensajeError('Error al cargar módulo de Aprobaciones');
             if (window.Notifications) Notifications.error('Error al cargar módulo de Aprobaciones');
         }
         
@@ -272,49 +272,14 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'none';
         
-        // Verificar que el módulo existe antes de llamarlo
         if (window.BandejaEntradaModule && typeof BandejaEntradaModule.init === 'function') {
             BandejaEntradaModule.init();
         } else {
             console.error('BandejaEntradaModule no cargado correctamente');
-            this.mostrarMensajeError('Error al cargar módulo de Bandeja de Entrada');
             if (window.Notifications) Notifications.error('Error al cargar módulo de Bandeja de Entrada');
         }
         
         if (window.Notifications) Notifications.info('📥 Bandeja de Entrada - Aprobaciones registradas');
-    },
-    
-    mostrarMensajeError: function(mensaje) {
-        const container = document.querySelector('.container');
-        if (!container) return;
-        
-        const errorPanel = document.createElement('div');
-        errorPanel.id = 'errorPanel';
-        errorPanel.style.cssText = `
-            background: rgba(239,68,68,0.2);
-            border: 2px solid #ef4444;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-            color: #ef4444;
-        `;
-        errorPanel.innerHTML = `
-            <div style="font-size: 3rem;">⚠️</div>
-            <h3>${mensaje}</h3>
-            <p>Por favor, recarga la página (F5) e intenta nuevamente.</p>
-        `;
-        
-        const filtersSection = document.querySelector('.filters-section');
-        if (filtersSection) {
-            filtersSection.insertAdjacentElement('beforebegin', errorPanel);
-        } else {
-            container.insertAdjacentElement('afterbegin', errorPanel);
-        }
-        
-        setTimeout(() => {
-            if (errorPanel) errorPanel.remove();
-        }, 5000);
     },
     
     ocultarTodosLosPaneles: function() {
@@ -381,10 +346,18 @@ const MenuLateral = {
                     <div class="info-semana" id="infoSemanaActual"></div>
                 </div>
                 <div class="consultas-filtros">
-                    <input type="text" id="consultaSearchInput" placeholder="Buscar por PO, estilo, tela, proceso...">
+                    <div style="display: flex; gap: 0.5rem; flex: 2;">
+                        <input type="text" id="consultaSearchInput" placeholder="Buscar por PO, estilo, tela, proceso..." style="flex: 1;">
+                        <button id="consultaEscanearBtn" class="btn-secondary" style="background: #9c27b0; white-space: nowrap;">📷 ESCANEAR QR</button>
+                    </div>
                     <select id="consultaSemanaSelect"><option value="">Todas las semanas</option></select>
                     <button id="consultaFiltrarBtn" class="btn-filtrar">🔍 Buscar</button>
                     <button id="consultaLimpiarBtn" class="btn-limpiar">✕ Limpiar</button>
+                </div>
+                <div id="consultaScannerContainer" class="scanner-container" style="display: none;">
+                    <video id="consultaVideo" autoplay playsinline></video>
+                    <canvas id="consultaCanvas" style="display: none;"></canvas>
+                    <button id="consultaCerrarScanner" class="btn-secondary">✕ Cerrar escáner</button>
                 </div>
                 <div class="info-semana" id="infoFiltroActivo"></div>
             </div>
@@ -393,6 +366,114 @@ const MenuLateral = {
         this.configurarEventosConsultas();
         this.cargarOpcionesSemanas();
         this.actualizarInfoSemanaActual();
+        this.configurarScannerConsultas();
+    },
+    
+    configurarScannerConsultas: function() {
+        const escanearBtn = document.getElementById('consultaEscanearBtn');
+        const cerrarBtn = document.getElementById('consultaCerrarScanner');
+        const scannerContainer = document.getElementById('consultaScannerContainer');
+        const video = document.getElementById('consultaVideo');
+        const canvas = document.getElementById('consultaCanvas');
+        
+        if (!escanearBtn) return;
+        
+        let scanning = false;
+        let animationId = null;
+        
+        const iniciarScanner = () => {
+            if (scannerContainer) scannerContainer.style.display = 'block';
+            
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+                .then(stream => {
+                    if (video) {
+                        video.srcObject = stream;
+                        video.setAttribute('playsinline', true);
+                        video.play();
+                        scanning = true;
+                        
+                        const context = canvas?.getContext('2d');
+                        
+                        const tick = () => {
+                            if (!scanning) return;
+                            
+                            if (video.readyState === video.HAVE_ENOUGH_DATA && canvas && context) {
+                                canvas.width = video.videoWidth;
+                                canvas.height = video.videoHeight;
+                                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                
+                                const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                                const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                                    inversionAttempts: "dontInvert",
+                                });
+                                
+                                if (code) {
+                                    const qrData = code.data;
+                                    console.log('📷 QR detectado en Consultas:', qrData);
+                                    
+                                    scanning = false;
+                                    if (animationId) cancelAnimationFrame(animationId);
+                                    
+                                    // Detener cámara
+                                    if (video.srcObject) {
+                                        video.srcObject.getTracks().forEach(track => track.stop());
+                                        video.srcObject = null;
+                                    }
+                                    
+                                    if (scannerContainer) scannerContainer.style.display = 'none';
+                                    
+                                    // Extraer PO del QR
+                                    let poEncontrado = '';
+                                    const matchPO = qrData.match(/PO[:\s]*([A-Z0-9\-]+)/i);
+                                    if (matchPO) {
+                                        poEncontrado = matchPO[1];
+                                    } else {
+                                        poEncontrado = qrData.trim();
+                                    }
+                                    
+                                    // Escribir en el input de búsqueda
+                                    const searchInput = document.getElementById('consultaSearchInput');
+                                    if (searchInput) {
+                                        searchInput.value = poEncontrado;
+                                    }
+                                    
+                                    // Ejecutar búsqueda
+                                    const filtrarBtn = document.getElementById('consultaFiltrarBtn');
+                                    if (filtrarBtn) {
+                                        filtrarBtn.click();
+                                    }
+                                    
+                                    if (window.Notifications) Notifications.success(`📱 QR leído: ${poEncontrado}`);
+                                    return;
+                                }
+                            }
+                            
+                            animationId = requestAnimationFrame(tick);
+                        };
+                        
+                        tick();
+                    }
+                })
+                .catch(err => {
+                    console.error('Error al acceder a cámara:', err);
+                    if (window.Notifications) Notifications.error('No se pudo acceder a la cámara');
+                    if (scannerContainer) scannerContainer.style.display = 'none';
+                });
+        };
+        
+        escanearBtn.onclick = iniciarScanner;
+        
+        if (cerrarBtn) {
+            cerrarBtn.onclick = () => {
+                scanning = false;
+                if (animationId) cancelAnimationFrame(animationId);
+                if (video && video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                    video.srcObject = null;
+                }
+                if (scannerContainer) scannerContainer.style.display = 'none';
+            };
+        }
     },
     
     configurarEventosConsultas: function() {
@@ -473,15 +554,25 @@ const MenuLateral = {
     aplicarFiltrosConsulta: function(search, semana) {
         if (!window.AppState || !window.TablaUI) return;
         
-        AppState.setFiltros(search, semana);
-        TablaUI.actualizar();
+        // Aplicar filtros al AppState
+        AppState.currentSearch = search || '';
+        AppState.currentSemana = semana || '';
+        
+        // Actualizar tabla con los filtros aplicados
+        const filtrados = window.RegistrosModule ? RegistrosModule.filtrar() : AppState.registros;
+        TablaUI.render(filtrados);
+        TablaUI.actualizarEstadisticas();
         
         const infoFiltro = document.getElementById('infoFiltroActivo');
         if (infoFiltro) {
-            if (search && semana) infoFiltro.innerHTML = `🔍 Buscando: "${search}" | Semana: ${semana}`;
-            else if (search) infoFiltro.innerHTML = `🔍 Buscando: "${search}"`;
-            else if (semana) infoFiltro.innerHTML = `📅 Semana: ${semana}`;
-            else infoFiltro.innerHTML = `📊 Mostrando todos los registros`;
+            if (search && semana) infoFiltro.innerHTML = `🔍 Buscando: "${search}" | Semana: ${semana} | Resultados: ${filtrados.length}`;
+            else if (search) infoFiltro.innerHTML = `🔍 Buscando: "${search}" | Resultados: ${filtrados.length}`;
+            else if (semana) infoFiltro.innerHTML = `📅 Semana: ${semana} | Resultados: ${filtrados.length}`;
+            else infoFiltro.innerHTML = `📊 Mostrando todos los registros (${filtrados.length})`;
+        }
+        
+        if (window.Notifications && search) {
+            Notifications.info(`🔍 ${filtrados.length} resultado(s) encontrado(s)`);
         }
     },
     
