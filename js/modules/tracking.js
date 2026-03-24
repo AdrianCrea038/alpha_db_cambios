@@ -186,7 +186,7 @@ const TrackingModule = {
                 setTimeout(() => {
                     this.cerrarScanner();
                     const poInput = document.getElementById('trackingPoInput');
-                    if (poInput) poInput.value = this.datosPO ? this.datosPO.po : 'PO-2401-001';
+                    if (poInput && this.datosPO) poInput.value = this.datosPO.po;
                     this.buscarPO();
                 }, 2000);
             })
@@ -227,7 +227,6 @@ const TrackingModule = {
         const piezasCompletadas = this.calcularPiezasCompletadas(procesoActual);
         const porcentajeCumplimiento = Math.min(100, Math.round((piezasCompletadas / this.metaPiezas) * 100));
         
-        // Generar cards de procesos con porcentajes
         let procesosCardsHtml = '';
         for (let i = 0; i < this.procesos.length; i++) {
             const proceso = this.procesos[i];
