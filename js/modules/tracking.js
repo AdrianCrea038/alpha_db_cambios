@@ -1,6 +1,4 @@
 // js/modules/tracking.js
-// Módulo de Tracking - Seguimiento de producción por PO
-
 const TrackingModule = {
     poActual: null,
     datosPO: null,
@@ -16,8 +14,6 @@ const TrackingModule = {
         'BORDADO': 250
     },
     
-    container: null,
-    
     init: function() {
         console.log('📍 Módulo de Tracking iniciado');
         this.renderizar();
@@ -25,16 +21,11 @@ const TrackingModule = {
     },
     
     renderizar: function() {
-        this.container = document.querySelector('.container');
-        if (!this.container) {
-            console.error('No se encontró el contenedor .container');
-            return;
-        }
+        const container = document.querySelector('.container');
+        if (!container) return;
         
         let trackingPanel = document.getElementById('trackingPanel');
-        if (trackingPanel) {
-            trackingPanel.remove();
-        }
+        if (trackingPanel) trackingPanel.remove();
         
         const panelHTML = `
             <div id="trackingPanel" class="tracking-panel">
@@ -69,7 +60,7 @@ const TrackingModule = {
         if (filtersSection) {
             filtersSection.insertAdjacentHTML('beforebegin', panelHTML);
         } else {
-            this.container.insertAdjacentHTML('afterbegin', panelHTML);
+            container.insertAdjacentHTML('afterbegin', panelHTML);
         }
         
         this.agregarEstilos();
@@ -94,7 +85,7 @@ const TrackingModule = {
             .tracking-buscador { margin-bottom: 1.5rem; }
             .buscador-input-group { display: flex; gap: 0.8rem; flex-wrap: wrap; }
             .buscador-input-group input { flex: 1; min-width: 250px; background: rgba(26,26,26,0.8); border: 1px solid #ff4b7d; border-radius: 6px; padding: 0.7rem 1rem; color: white; }
-            .btn-primary { background: linear-gradient(90deg, #ff4b7d, #ff6b8a); border: none; padding: 0.7rem 1.5rem; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; transition: all 0.3s; }
+            .btn-primary { background: linear-gradient(90deg, #ff4b7d, #ff6b8a); border: none; padding: 0.7rem 1.5rem; border-radius: 6px; color: white; font-weight: 600; cursor: pointer; }
             .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255,75,125,0.3); }
             .scanner-container { margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.5); border-radius: 8px; text-align: center; }
             .scanner-container video { width: 100%; max-width: 400px; border-radius: 8px; border: 2px solid #ff4b7d; }
@@ -170,7 +161,6 @@ const TrackingModule = {
             if (registroEncontrado) {
                 this.datosPO = registroEncontrado;
                 this.poActual = po;
-                this.actualizarMetaPiezas();
                 this.mostrarResultados();
             } else {
                 this.mostrarError('No se encontró la PO: ' + po);
@@ -178,11 +168,6 @@ const TrackingModule = {
             }
             this.mostrarLoader(false);
         }, 500);
-    },
-    
-    actualizarMetaPiezas: function() {
-        const poNum = parseInt(this.poActual.replace(/\D/g, '')) || 1;
-        this.metaPiezas = 300 + (poNum % 3) * 100;
     },
     
     iniciarScanner: function() {
@@ -198,7 +183,12 @@ const TrackingModule = {
                 video.srcObject = stream;
                 video.setAttribute('playsinline', true);
                 video.play();
-                this.iniciarEscanerQR();
+                setTimeout(() => {
+                    this.cerrarScanner();
+                    const poInput = document.getElementById('trackingPoInput');
+                    if (poInput) poInput.value = this.datosPO ? this.datosPO.po : 'PO-2401-001';
+                    this.buscarPO();
+                }, 2000);
             })
             .catch(err => {
                 this.mostrarError('No se pudo acceder a la cámara');
@@ -206,36 +196,9 @@ const TrackingModule = {
             });
     },
     
-    iniciarEscanerQR: function() {
-        const video = document.getElementById('trackingVideo');
-        
-        let escaneando = true;
-        const escanear = () => {
-            if (!escaneando || video.readyState !== video.HAVE_ENOUGH_DATA) {
-                requestAnimationFrame(escanear);
-                return;
-            }
-            
-            // Simulación de lectura QR
-            escaneando = false;
-            this.cerrarScanner();
-            const poInput = document.getElementById('trackingPoInput');
-            if (poInput) {
-                // Simula leer el código QR de la etiqueta
-                poInput.value = 'PO-2401-001';
-            }
-            this.buscarPO();
-        };
-        
-        this.escaneando = true;
-        setTimeout(() => escanear(), 1000);
-    },
-    
     cerrarScanner: function() {
         const scannerContainer = document.getElementById('trackingScannerContainer');
         const video = document.getElementById('trackingVideo');
-        
-        this.escaneando = false;
         
         if (video && video.srcObject) {
             video.srcObject.getTracks().forEach(track => track.stop());
@@ -298,28 +261,6 @@ const TrackingModule = {
             `;
         }
         
-        // Tabla de procesos detallada
-        let tablaHtml = '<div class="procesos-tabla"><table><thead><tr><th>Proceso</th><th>Responsable</th><th>Piezas</th><th>Avance</th><th>Fecha</th><th>Estado</th></tr></thead><tbody>';
-        for (let i = 0; i < this.procesos.length; i++) {
-            const proceso = this.procesos[i];
-            const estado = this.getEstadoProceso(proceso, procesoActual, procesosCompletados);
-            const piezasProceso = this.piezasPorProceso[proceso];
-            const piezasRealizadas = this.getPiezasRealizadasProceso(proceso, procesoActual);
-            const porcentaje = Math.min(100, Math.round((piezasRealizadas / piezasProceso) * 100));
-            
-            tablaHtml += `
-                <tr>
-                    <td>${this.getIconoProceso(proceso)} ${proceso}</td>
-                    <td>${this.getResponsableProceso(proceso)}</td>
-                    <td>${piezasRealizadas} / ${piezasProceso}</td>
-                    <td>${porcentaje}%</td>
-                    <td>${this.getFechaProceso(proceso)}</td>
-                    <td><span class="estado-${estado}">${this.getTextoEstado(estado)}</span></td>
-                </tr>
-            `;
-        }
-        tablaHtml += '</tbody></table></div>';
-        
         const html = `
             <div class="tracking-dashboard">
                 <div class="dashboard-cards">
@@ -343,9 +284,6 @@ const TrackingModule = {
                 
                 <h3 style="margin: 1rem 0 0.8rem; color: #ff6b8a;">📋 PROGRESO POR PROCESO</h3>
                 <div class="procesos-cards">${procesosCardsHtml}</div>
-                
-                <h3 style="margin: 1rem 0 0.8rem; color: #ff6b8a;">📊 DETALLE DE PROCESOS</h3>
-                ${tablaHtml}
                 
                 <div class="produccion-semanal">
                     <h4>📈 PRODUCCIÓN SEMANAL</h4>
