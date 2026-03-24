@@ -162,16 +162,30 @@ const AprobacionesModule = {
         colorGroup.className = 'aprobacion-color-grupo';
         colorGroup.dataset.id = nuevoId;
         
+        // Escapar caracteres especiales para HTML
+        const nombreEscapado = (nombreColor || '').replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+        const observacionEscapada = (observacion || '').replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+        
         colorGroup.innerHTML = `
             <div class="aprobacion-color-header">
                 <span class="color-titulo">🎨 COLOR</span>
                 <button type="button" class="btn-eliminar-color-aprobacion" onclick="AprobacionesModule.eliminarGrupoColor(this)">✕</button>
             </div>
             <div class="aprobacion-color-nombre">
-                <input type="text" id="aprobacionColorNombre_${nuevoId}" placeholder="NOMBRE DEL COLOR" value="${nombreColor.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;';})}" class="input-bonito">
+                <input type="text" id="aprobacionColorNombre_${nuevoId}" placeholder="NOMBRE DEL COLOR" value="${nombreEscapado}" class="input-bonito">
             </div>
             <div class="aprobacion-color-observacion">
-                <textarea id="aprobacionColorObservacion_${nuevoId}" rows="2" placeholder="Observación del color (opcional)" class="input-bonito">${observacion.replace(/[&<>]/g, function(m){return m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;';})}</textarea>
+                <textarea id="aprobacionColorObservacion_${nuevoId}" rows="2" placeholder="Observación del color (opcional)" class="input-bonito">${observacionEscapada}</textarea>
             </div>
         `;
         
