@@ -1,5 +1,13 @@
 // js/ui/tabla.js
 const TablaUI = {
+    // Variable para controlar qué botones mostrar
+    modoActual: 'completo', // 'completo', 'solo-lectura', 'tracking'
+    
+    setModo: function(modo) {
+        this.modoActual = modo;
+        this.actualizar();
+    },
+    
     render: function(registrosMostrar) {
         const tbody = document.getElementById('tableBody');
         if (!tbody) return;
@@ -25,6 +33,26 @@ const TablaUI = {
                 coloresHtml = reg.colores.map(c => '<span class="color-tag" style="background:rgba(51,51,51,0.8); padding:0.15rem 0.4rem; border-radius:3px; font-size:0.65rem; border-left:2px solid #ff4b7d; display:inline-block; margin:0.1rem;">' + (c.nombre || '?') + '</span>').join(' ');
             }
             
+            // Construir botones según el modo actual
+            let botonesHtml = '';
+            
+            if (this.modoActual === 'completo') {
+                botonesHtml = `
+                    <div class="action-buttons" style="display:flex; gap:0.3rem; flex-wrap:wrap;">
+                        <button class="btn-icon edit" onclick="window.editarRegistro('${reg.id}')" title="Editar" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">✏️</button>
+                        <button class="btn-icon history" onclick="window.verHistorial('${reg.id}')" title="Historial" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">📋</button>
+                        <button class="btn-icon print" onclick="window.imprimirEtiqueta('${reg.id}')" title="Imprimir QR" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">📱</button>
+                        <button class="btn-icon delete" onclick="window.eliminarRegistro('${reg.id}')" title="Eliminar" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">🗑️</button>
+                    </div>
+                `;
+            } else if (this.modoActual === 'solo-lectura' || this.modoActual === 'tracking') {
+                botonesHtml = `
+                    <div class="action-buttons" style="display:flex; gap:0.3rem; flex-wrap:wrap;">
+                        <button class="btn-icon history" onclick="window.verHistorial('${reg.id}')" title="Historial" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">📋</button>
+                    </div>
+                `;
+            }
+            
             return `
                 <tr class="${rowClass}" data-id="${reg.id}">
                     <td><span class="po-badge" style="background:#000; color:white; padding:0.2rem 0.5rem; border-radius:4px; font-size:0.7rem; display:inline-block;">${reg.po || '-'}</span></td>
@@ -43,12 +71,7 @@ const TablaUI = {
                     <td>${(reg.temperatura_flat || 0).toFixed(1)}°</td>
                     <td>${(reg.tiempo_flat || 0).toFixed(1)}s</td>
                     <td class="action-cell">
-                        <div class="action-buttons" style="display:flex; gap:0.3rem; flex-wrap:wrap;">
-                            <button class="btn-icon edit" onclick="window.editarRegistro('${reg.id}')" title="Editar" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">✏️</button>
-                            <button class="btn-icon history" onclick="window.verHistorial('${reg.id}')" title="Historial" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">📋</button>
-                            <button class="btn-icon print" onclick="window.imprimirEtiqueta('${reg.id}')" title="Imprimir QR" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">📱</button>
-                            <button class="btn-icon delete" onclick="window.eliminarRegistro('${reg.id}')" title="Eliminar" style="padding:0.3rem 0.5rem; background:rgba(42,42,42,0.8); border:1px solid #ff6b8a; border-radius:4px; cursor:pointer;">🗑️</button>
-                        </div>
+                        ${botonesHtml}
                         ${reg.observacion ? '<small style="color:#ffd93d; display:block; margin-top:5px; font-size:0.65rem;">📝 ' + reg.observacion + '</small>' : ''}
                     </td>
                 </tr>
