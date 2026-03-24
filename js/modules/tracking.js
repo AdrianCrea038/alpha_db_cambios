@@ -5,7 +5,6 @@ const TrackingModule = {
     procesos: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'],
     metaPiezas: 500,
     
-    // Metas por proceso (valores por defecto - se pueden editar)
     metasPorProceso: {
         'DISEÑO': 500,
         'PLOTTER': 450,
@@ -15,7 +14,6 @@ const TrackingModule = {
         'BORDADO': 250
     },
     
-    // Avance real por proceso (simulado - se puede editar manualmente)
     avancePorProceso: {
         'DISEÑO': 500,
         'PLOTTER': 380,
@@ -25,7 +23,6 @@ const TrackingModule = {
         'BORDADO': 180
     },
     
-    // Para almacenar el modo de edición
     modoEdicion: false,
     
     init: function() {
@@ -36,7 +33,6 @@ const TrackingModule = {
     },
     
     cargarMetasGuardadas: function() {
-        // Cargar metas guardadas en localStorage
         const metasGuardadas = localStorage.getItem('alpha_db_metas_proceso');
         if (metasGuardadas) {
             try {
@@ -88,7 +84,6 @@ const TrackingModule = {
                 
                 <div id="trackingResultados" style="display: none;"></div>
                 
-                <!-- Sección de indicadores por proceso (configurables) -->
                 <div id="indicadoresProceso" class="indicadores-proceso-section">
                     <div class="indicadores-header">
                         <h3>📊 INDICADORES DE CUMPLIMIENTO POR PROCESO</h3>
@@ -193,7 +188,6 @@ const TrackingModule = {
             .tracking-loader { text-align: center; padding: 2rem; }
             .tracking-loader .spinner { width: 40px; height: 40px; border: 3px solid rgba(255,75,125,0.3); border-top-color: #ff4b7d; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem; }
             
-            /* Indicadores por proceso */
             .indicadores-proceso-section {
                 margin-top: 2rem;
                 padding-top: 1rem;
@@ -307,7 +301,6 @@ const TrackingModule = {
                 color: rgba(255,255,255,0.4);
             }
             
-            /* Modal de edición */
             .modal-editar-meta {
                 position: fixed;
                 top: 0;
@@ -326,26 +319,31 @@ const TrackingModule = {
                 border: 2px solid #ff4b7d;
                 border-radius: 12px;
                 width: 90%;
-                max-width: 500px;
+                max-width: 450px;
+                max-height: 80vh;
+                display: flex;
+                flex-direction: column;
                 padding: 1.5rem;
             }
             .modal-editar-meta-content h3 {
                 color: #ff6b8a;
-                margin-bottom: 1rem;
+                margin-bottom: 0.5rem;
+                margin-top: 0;
             }
             .modal-editar-meta-content input {
                 width: 100%;
-                padding: 0.6rem;
-                margin: 0.5rem 0;
+                padding: 0.4rem;
+                margin: 0.3rem 0;
                 background: rgba(26,26,26,0.8);
                 border: 1px solid #ff4b7d;
                 border-radius: 6px;
                 color: white;
+                font-size: 0.8rem;
             }
             .modal-buttons {
                 display: flex;
                 gap: 0.5rem;
-                margin-top: 1rem;
+                margin-top: 0.8rem;
             }
             .modal-buttons button {
                 flex: 1;
@@ -422,14 +420,13 @@ const TrackingModule = {
     },
     
     abrirEditorMetas: function() {
-        // Crear modal para editar metas
         const modal = document.createElement('div');
         modal.className = 'modal-editar-meta';
         modal.innerHTML = `
             <div class="modal-editar-meta-content">
                 <h3>✏️ EDITAR METAS Y AVANCES</h3>
-                <p style="font-size:0.8rem; color:#ffd93d; margin-bottom:1rem;">Ajusta las metas de producción y el avance real por proceso</p>
-                <div id="editorMetasLista"></div>
+                <p style="font-size:0.7rem; color:#ffd93d; margin-bottom:0.8rem;">Ajusta las metas de producción y el avance real por proceso</p>
+                <div id="editorMetasLista" style="flex:1; overflow-y:auto; max-height:55vh; padding-right:0.5rem;"></div>
                 <div class="modal-buttons">
                     <button id="guardarMetasBtn" class="btn-guardar-meta">💾 GUARDAR CAMBIOS</button>
                     <button id="cancelarMetasBtn" class="btn-cancelar-meta">✕ CANCELAR</button>
@@ -441,16 +438,16 @@ const TrackingModule = {
         let html = '';
         for (const proceso of this.procesos) {
             html += `
-                <div style="margin-bottom:1rem; padding:0.5rem; background:rgba(0,0,0,0.3); border-radius:6px;">
-                    <label style="display:block; margin-bottom:0.3rem; color:#ff6b8a;">${this.getIconoProceso(proceso)} ${proceso}</label>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+                <div style="margin-bottom:0.6rem; padding:0.4rem; background:rgba(0,0,0,0.3); border-radius:6px;">
+                    <label style="display:block; margin-bottom:0.2rem; color:#ff6b8a; font-size:0.75rem;">${this.getIconoProceso(proceso)} ${proceso}</label>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.4rem;">
                         <div>
-                            <label style="font-size:0.7rem;">Meta (piezas)</label>
-                            <input type="number" id="meta_${proceso}" value="${this.metasPorProceso[proceso]}" class="input-bonito">
+                            <label style="font-size:0.6rem;">Meta (piezas)</label>
+                            <input type="number" id="meta_${proceso}" value="${this.metasPorProceso[proceso]}" class="input-bonito" style="padding:0.3rem; font-size:0.7rem;">
                         </div>
                         <div>
-                            <label style="font-size:0.7rem;">Avance real (piezas)</label>
-                            <input type="number" id="avance_${proceso}" value="${this.avancePorProceso[proceso]}" class="input-bonito">
+                            <label style="font-size:0.6rem;">Avance real (piezas)</label>
+                            <input type="number" id="avance_${proceso}" value="${this.avancePorProceso[proceso]}" class="input-bonito" style="padding:0.3rem; font-size:0.7rem;">
                         </div>
                     </div>
                 </div>
@@ -515,27 +512,104 @@ const TrackingModule = {
     iniciarScanner: function() {
         const scannerContainer = document.getElementById('trackingScannerContainer');
         const video = document.getElementById('trackingVideo');
+        const canvas = document.getElementById('trackingCanvas');
         
         if (!scannerContainer || !video) return;
         
         scannerContainer.style.display = 'block';
+        
+        let scanning = true;
+        let animationId = null;
         
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(stream => {
                 video.srcObject = stream;
                 video.setAttribute('playsinline', true);
                 video.play();
-                setTimeout(() => {
-                    this.cerrarScanner();
-                    const poInput = document.getElementById('trackingPoInput');
-                    if (poInput && this.datosPO) poInput.value = this.datosPO.po;
-                    this.buscarPO();
-                }, 2000);
+                
+                const context = canvas.getContext('2d');
+                
+                const tick = () => {
+                    if (!scanning) return;
+                    
+                    if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                        canvas.width = video.videoWidth;
+                        canvas.height = video.videoHeight;
+                        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                        
+                        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height, {
+                            inversionAttempts: "dontInvert",
+                        });
+                        
+                        if (code) {
+                            // QR detectado!
+                            const qrData = code.data;
+                            console.log('📷 QR detectado:', qrData);
+                            
+                            // Detener escaneo
+                            scanning = false;
+                            if (animationId) cancelAnimationFrame(animationId);
+                            
+                            // Cerrar scanner
+                            this.cerrarScanner();
+                            
+                            // Extraer PO del QR
+                            let poEncontrado = '';
+                            
+                            // Intentar extraer PO de diferentes formatos
+                            const matchPO = qrData.match(/PO[:\s]*([A-Z0-9\-]+)/i);
+                            if (matchPO) {
+                                poEncontrado = matchPO[1];
+                            } else {
+                                // Si no encuentra patrón, usar todo el texto
+                                poEncontrado = qrData.trim();
+                            }
+                            
+                            // Escribir en el input de búsqueda
+                            const poInput = document.getElementById('trackingPoInput');
+                            if (poInput) {
+                                poInput.value = poEncontrado;
+                            }
+                            
+                            // Ejecutar búsqueda automática
+                            this.buscarPO();
+                            
+                            this.mostrarMensajeQR(`📱 QR leído: ${poEncontrado}`, 'success');
+                            return;
+                        }
+                    }
+                    
+                    animationId = requestAnimationFrame(tick);
+                };
+                
+                tick();
             })
             .catch(err => {
-                this.mostrarError('No se pudo acceder a la cámara');
+                console.error('Error al acceder a cámara:', err);
+                this.mostrarError('No se pudo acceder a la cámara. Verifica los permisos.');
                 this.cerrarScanner();
             });
+    },
+    
+    mostrarMensajeQR: function(mensaje, tipo) {
+        const resultadosDiv = document.getElementById('trackingResultados');
+        if (resultadosDiv) {
+            const msgDiv = document.createElement('div');
+            msgDiv.style.cssText = `
+                background: rgba(16,185,129,0.2);
+                border-left: 3px solid #10b981;
+                padding: 0.8rem;
+                margin: 0.5rem 0;
+                border-radius: 6px;
+                text-align: center;
+                color: #10b981;
+            `;
+            msgDiv.innerHTML = `✅ ${mensaje}`;
+            resultadosDiv.insertAdjacentElement('afterbegin', msgDiv);
+            setTimeout(() => msgDiv.remove(), 3000);
+        }
+        if (window.Notifications) Notifications.success(mensaje);
     },
     
     cerrarScanner: function() {
