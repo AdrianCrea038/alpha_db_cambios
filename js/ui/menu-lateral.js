@@ -14,24 +14,11 @@ const MenuLateral = {
     },
     
     mostrarMensajeBienvenida: function() {
-        // NO ejecutar en la página de login
-        if (window.location.pathname.includes('login.html')) return;
-        
-        const mensaje = document.createElement('div');
-        mensaje.className = 'menu-welcome';
-        mensaje.textContent = 'Menú';
-        document.body.appendChild(mensaje);
-        
-        setTimeout(() => {
-            mensaje.classList.add('fade-out');
-            setTimeout(() => {
-                if (mensaje) mensaje.remove();
-            }, 500);
-        }, 18000);
+        // Mensaje eliminado - ya no es necesario
+        return;
     },
     
     crearMenu: function() {
-        // NO ejecutar en la página de login
         if (window.location.pathname.includes('login.html')) return;
         if (document.getElementById('menuLateral')) return;
         
@@ -117,7 +104,6 @@ const MenuLateral = {
     },
     
     configurarEventos: function() {
-        // NO ejecutar en la página de login
         if (window.location.pathname.includes('login.html')) return;
         
         const toggleBtn = document.getElementById('menuToggleBtn');
@@ -278,7 +264,6 @@ const MenuLateral = {
 
 // Inicializar el menú cuando el DOM esté listo SOLO si no es login
 document.addEventListener('DOMContentLoaded', function() {
-    // Verificar que no sea la página de login
     if (!window.location.pathname.includes('login.html')) {
         setTimeout(() => MenuLateral.init(), 500);
     }
