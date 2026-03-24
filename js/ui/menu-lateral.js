@@ -59,7 +59,7 @@ const MenuLateral = {
                             </svg>
                         </span>
                         <span class="menu-text">Tracking</span>
-                        <span class="menu-badge">Próximamente</span>
+                        <!-- ELIMINADO EL BADGE "Próximamente" -->
                     </button>
                 </div>
                 <div class="menu-footer">
@@ -113,9 +113,39 @@ const MenuLateral = {
         
         document.getElementById('btnBaseDatos')?.addEventListener('click', () => this.mostrarBaseDatos());
         document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsultas());
-        document.getElementById('btnTracking')?.addEventListener('click', () => {
-            Notifications.info('📍 Módulo de Tracking en desarrollo');
-        });
+        
+        // BOTÓN DE TRACKING - ACTIVADO
+        const btnTracking = document.getElementById('btnTracking');
+        if (btnTracking) {
+            btnTracking.addEventListener('click', () => {
+                console.log('📍 Abriendo módulo de Tracking...');
+                
+                // Ocultar otras vistas
+                const formSection = document.querySelector('.form-section');
+                const filtersSection = document.querySelector('.filters-section');
+                const consultasPanel = document.getElementById('consultasPanel');
+                const tablaSection = document.querySelector('.table-section');
+                
+                if (formSection) formSection.style.display = 'none';
+                if (filtersSection) filtersSection.style.display = 'none';
+                if (consultasPanel) consultasPanel.classList.remove('active');
+                if (tablaSection) tablaSection.style.display = 'block';
+                
+                // Inicializar módulo de tracking
+                if (window.TrackingModule) {
+                    TrackingModule.init();
+                } else {
+                    console.error('TrackingModule no cargado');
+                    Notifications.error('Error al cargar módulo de Tracking');
+                }
+                
+                // Cambiar estado activo del menú
+                document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+                btnTracking.classList.add('active');
+                
+                Notifications.info('📍 Módulo de Tracking - Buscar por PO');
+            });
+        }
     },
     
     mostrarBaseDatos: function() {
