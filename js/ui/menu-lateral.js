@@ -8,13 +8,11 @@ const MenuLateral = {
     },
     
     mostrarMensajeBienvenida: function() {
-        // Crear mensaje flotante que dice "Menú"
         const mensaje = document.createElement('div');
         mensaje.className = 'menu-welcome';
         mensaje.textContent = 'Menú';
         document.body.appendChild(mensaje);
         
-        // Ocultar después de 18 segundos
         setTimeout(() => {
             mensaje.classList.add('fade-out');
             setTimeout(() => {
@@ -55,7 +53,6 @@ const MenuLateral = {
         
         document.body.insertAdjacentHTML('afterbegin', menuHTML);
         
-        // Ajustar el container para que no se superponga al menú colapsado
         const container = document.querySelector('.container');
         if (container) {
             container.style.marginLeft = '0';
