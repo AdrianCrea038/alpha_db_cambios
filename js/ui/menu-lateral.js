@@ -8,7 +8,7 @@ const MenuLateral = {
     },
     
     mostrarMensajeBienvenida: function() {
-        // Crear mensaje flotante
+        // Crear mensaje flotante que dice "Menú"
         const mensaje = document.createElement('div');
         mensaje.className = 'menu-welcome';
         mensaje.textContent = 'Menú';
