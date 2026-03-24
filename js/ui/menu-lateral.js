@@ -4,13 +4,30 @@ const MenuLateral = {
         this.crearMenu();
         this.configurarEventos();
         this.aplicarVistaInicial();
+        this.mostrarMensajeBienvenida();
+    },
+    
+    mostrarMensajeBienvenida: function() {
+        // Crear mensaje flotante
+        const mensaje = document.createElement('div');
+        mensaje.className = 'menu-welcome';
+        mensaje.textContent = 'Menú';
+        document.body.appendChild(mensaje);
+        
+        // Ocultar después de 18 segundos
+        setTimeout(() => {
+            mensaje.classList.add('fade-out');
+            setTimeout(() => {
+                if (mensaje) mensaje.remove();
+            }, 500);
+        }, 18000);
     },
     
     crearMenu: function() {
         if (document.getElementById('menuLateral')) return;
         
         const menuHTML = `
-            <div id="menuLateral" class="menu-lateral">
+            <div id="menuLateral" class="menu-lateral collapsed">
                 <button class="menu-toggle" id="menuToggleBtn">☰</button>
                 <div class="menu-header">
                     <h3>📋 MENÚ</h3>
@@ -37,286 +54,47 @@ const MenuLateral = {
         `;
         
         document.body.insertAdjacentHTML('afterbegin', menuHTML);
-        this.agregarEstilos();
-    },
-    
-    agregarEstilos: function() {
-        const style = document.createElement('style');
-        style.textContent = `
-            /* Menú Lateral Izquierdo */
-            .menu-lateral {
-                position: fixed;
-                left: 0;
-                top: 0;
-                width: 280px;
-                height: 100vh;
-                background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
-                border-right: 2px solid #ff6b6b;
-                box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
-                z-index: 1000;
-                display: flex;
-                flex-direction: column;
-                transition: transform 0.3s ease;
-                font-family: 'Rubik', sans-serif;
-            }
-            
-            /* Estado colapsado - menú se esconde a la izquierda */
-            .menu-lateral.collapsed {
-                transform: translateX(-100%);
-            }
-            
-            /* Botón de hamburguesa DENTRO del menú */
-            .menu-toggle {
-                position: absolute;
-                right: -20px;
-                top: 20px;
-                background: #ff6b6b;
-                color: white;
-                border: none;
-                border-radius: 30px;
-                width: 40px;
-                height: 40px;
-                cursor: pointer;
-                z-index: 1002;
-                font-size: 20px;
-                transition: all 0.3s ease;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .menu-toggle:hover {
-                background: #ff8e8e;
-                transform: scale(1.05);
-            }
-            
-            /* Cuando el menú está colapsado, el botón se mueve con él */
-            .menu-lateral.collapsed .menu-toggle {
-                right: -60px;
-                background: #ff6b6b;
-            }
-            .menu-lateral.collapsed .menu-toggle:hover {
-                background: #ff8e8e;
-            }
-            
-            /* Ajuste del contenedor principal */
-            .container {
-                margin-left: 280px;
-                transition: margin-left 0.3s ease;
-                max-width: calc(100% - 280px);
-                padding: 1.5rem;
-            }
-            
-            /* Cuando el menú está colapsado */
-            .menu-lateral.collapsed ~ .container {
-                margin-left: 0;
-                max-width: 100%;
-            }
-            
-            /* Asegurar que el contenedor se ajuste cuando el menú está colapsado */
-            body:has(.menu-lateral.collapsed) .container {
-                margin-left: 0;
-            }
-            
-            /* Header y logo no se superponen */
-            .header {
-                position: relative;
-                z-index: 1;
-            }
-            
-            .menu-header {
-                padding: 25px 20px;
-                border-bottom: 1px solid rgba(255, 107, 107, 0.3);
-                text-align: center;
-                margin-top: 20px;
-            }
-            .menu-header h3 {
-                color: #ffd93d;
-                font-size: 1.2rem;
-                font-weight: 600;
-                margin: 0;
-            }
-            
-            .menu-botones {
-                flex: 1;
-                padding: 20px;
-                display: flex;
-                flex-direction: column;
-                gap: 12px;
-            }
-            
-            .menu-btn {
-                background: #2a2a2a;
-                border: 1px solid rgba(255, 107, 107, 0.3);
-                border-radius: 12px;
-                padding: 14px 16px;
-                color: #fff;
-                font-size: 1rem;
-                font-weight: 500;
-                cursor: pointer;
-                transition: all 0.3s;
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                text-align: left;
-                font-family: 'Rubik', sans-serif;
-            }
-            .menu-btn:hover {
-                background: #3a3a3a;
-                border-color: #ff6b6b;
-                transform: translateX(5px);
-            }
-            .menu-btn.active {
-                background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
-                border-color: #ffd93d;
-                box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
-            }
-            .menu-icon {
-                font-size: 1.4rem;
-            }
-            .menu-text {
-                flex: 1;
-            }
-            .menu-badge {
-                font-size: 0.65rem;
-                background: rgba(255, 107, 107, 0.3);
-                padding: 3px 8px;
-                border-radius: 20px;
-                color: #ffd93d;
-            }
-            
-            .menu-footer {
-                padding: 20px;
-                border-top: 1px solid rgba(255, 107, 107, 0.3);
-                text-align: center;
-            }
-            .menu-version {
-                font-size: 0.7rem;
-                color: #888;
-            }
-            
-            /* Panel de consultas */
-            .consultas-panel {
-                background: #1e1e1e;
-                border-radius: 16px;
-                padding: 20px;
-                margin-bottom: 20px;
-                border: 1px solid rgba(255, 107, 107, 0.2);
-                display: none;
-            }
-            .consultas-panel.active {
-                display: block;
-                animation: fadeIn 0.3s;
-            }
-            .consultas-header {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-            .consultas-header h3 {
-                color: #ffd93d;
-                font-size: 1rem;
-            }
-            .consultas-filtros {
-                display: flex;
-                gap: 10px;
-                flex-wrap: wrap;
-                margin-bottom: 20px;
-            }
-            .consultas-filtros input, .consultas-filtros select {
-                padding: 10px 15px;
-                background: #2a2a2a;
-                border: 1px solid #ff6b6b;
-                border-radius: 8px;
-                color: white;
-                font-family: 'Rubik', sans-serif;
-            }
-            .consultas-filtros input {
-                flex: 1;
-                min-width: 200px;
-            }
-            .btn-filtrar {
-                background: #ff6b6b;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s;
-            }
-            .btn-filtrar:hover {
-                background: #ff8e8e;
-                transform: translateY(-2px);
-            }
-            .btn-limpiar {
-                background: #2a2a2a;
-                border: 1px solid #ff6b6b;
-                padding: 10px 20px;
-                border-radius: 8px;
-                color: #ffd93d;
-                cursor: pointer;
-            }
-            .info-semana {
-                background: #2a2a2a;
-                padding: 10px;
-                border-radius: 8px;
-                margin-top: 15px;
-                font-size: 0.8rem;
-                color: #ffd93d;
-                text-align: center;
-            }
-            
-            @keyframes fadeIn {
-                from { opacity: 0; transform: translateY(10px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
-            @media (max-width: 768px) {
-                .menu-lateral {
-                    width: 260px;
-                }
-                .container {
-                    margin-left: 0;
-                    max-width: 100%;
-                    padding: 1rem;
-                }
-                .menu-lateral.collapsed ~ .container {
-                    margin-left: 0;
-                }
-                .menu-toggle {
-                    right: -20px;
-                }
-                .menu-lateral.collapsed .menu-toggle {
-                    right: -50px;
-                }
-            }
-        `;
-        document.head.appendChild(style);
         
-        // Configurar el botón de toggle
-        const toggleBtn = document.getElementById('menuToggleBtn');
-        if (toggleBtn) {
-            toggleBtn.onclick = () => this.toggleMenu();
+        // Ajustar el container para que no se superponga al menú colapsado
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.marginLeft = '0';
+            container.style.maxWidth = '100%';
         }
     },
     
     toggleMenu: function() {
         const menu = document.getElementById('menuLateral');
         const toggleBtn = document.getElementById('menuToggleBtn');
+        const container = document.querySelector('.container');
+        
         if (menu) {
             menu.classList.toggle('collapsed');
-            if (toggleBtn) {
-                toggleBtn.innerHTML = menu.classList.contains('collapsed') ? '☰' : '✕';
-                toggleBtn.title = menu.classList.contains('collapsed') ? 'Mostrar menú' : 'Ocultar menú';
+            
+            if (menu.classList.contains('collapsed')) {
+                toggleBtn.innerHTML = '☰';
+                toggleBtn.title = 'Mostrar menú';
+                if (container) {
+                    container.style.marginLeft = '0';
+                    container.style.maxWidth = '100%';
+                }
+            } else {
+                toggleBtn.innerHTML = '✕';
+                toggleBtn.title = 'Ocultar menú';
+                if (container) {
+                    container.style.marginLeft = '280px';
+                    container.style.maxWidth = 'calc(100% - 280px)';
+                }
             }
         }
     },
     
     configurarEventos: function() {
+        const toggleBtn = document.getElementById('menuToggleBtn');
+        if (toggleBtn) {
+            toggleBtn.onclick = () => this.toggleMenu();
+        }
+        
         document.getElementById('btnBaseDatos')?.addEventListener('click', () => this.mostrarBaseDatos());
         document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsultas());
         document.getElementById('btnTracking')?.addEventListener('click', () => {
