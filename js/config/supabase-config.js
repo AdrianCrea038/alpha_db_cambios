@@ -6,6 +6,10 @@ const SUPABASE_CONFIG = {
     tablaHistorial: "historial"
 };
 
-window.SUPABASE_CONFIG = SUPABASE_CONFIG;
-console.log('✅ Supabase configurado');
-console.log('📌 URL:', SUPABASE_CONFIG.url);
+// Asegurar que esté disponible globalmente
+if (typeof window !== 'undefined') {
+    window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+}
+
+console.log('✅ Supabase configurado correctamente');
+console.log('📌 URL:', SUPABASE_CONFIG.url);;
