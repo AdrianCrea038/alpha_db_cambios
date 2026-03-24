@@ -46,16 +46,6 @@ body {
     to { opacity: 0; transform: translateY(-10px); visibility: hidden; }
 }
 
-@keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
 @keyframes gradientShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -171,59 +161,32 @@ body {
     box-shadow: 0 5px 15px rgba(255, 75, 125, 0.2);
 }
 
-.btn-secondary:active {
-    transform: translateY(0px);
+/* ========== FILTROS Y BÚSQUEDA ========== */
+.filters-section {
+    background: linear-gradient(160deg, 
+        rgba(45, 35, 85, 0.85) 0%, 
+        rgba(90, 40, 80, 0.8) 30%,
+        rgba(60, 50, 100, 0.85) 60%,
+        rgba(30, 40, 80, 0.9) 100%);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(255, 75, 125, 0.3);
+    backdrop-filter: blur(10px);
 }
 
-/* ========== BOTONES DE FILTRO (REPORTE, EXCEL, QR) ========== */
-.filter-buttons.three-buttons {
+.filters-header h2 {
+    font-size: 0.9rem;
+    color: #ff4b7d;
+    margin-bottom: 1rem;
+}
+
+.filters-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.8rem;
-    margin-top: 0.5rem;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
 }
 
-.filter-btn {
-    padding: 0.8rem 0.5rem;
-    border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    font-size: 0.85rem;
-    letter-spacing: 0.5px;
-    color: white;
-}
-
-.filter-btn.print {
-    background: linear-gradient(135deg, #6b5bff, #8e6bff);
-    box-shadow: 0 2px 8px rgba(107, 91, 255, 0.3);
-}
-
-.filter-btn.excel {
-    background: linear-gradient(135deg, #10b981, #34d399);
-    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
-}
-
-.filter-btn.qr {
-    background: linear-gradient(135deg, #9c27b0, #673ab7);
-    box-shadow: 0 2px 8px rgba(156, 39, 176, 0.3);
-}
-
-.filter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
-
-.filter-btn:active {
-    transform: translateY(0px);
-}
-
-/* ========== BUSCADOR ========== */
 .search-box {
     position: relative;
     width: 100%;
@@ -257,10 +220,6 @@ body {
     box-shadow: 0 0 0 2px rgba(255, 75, 125, 0.2);
 }
 
-.search-box input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
-}
-
 .btn-clear {
     position: absolute;
     right: 0.8rem;
@@ -281,10 +240,6 @@ body {
     transform: translateY(-50%) scale(1.05);
 }
 
-.btn-clear:active {
-    transform: translateY(-50%) scale(0.98);
-}
-
 .search-hint {
     margin-top: 0.5rem;
     display: flex;
@@ -301,13 +256,51 @@ body {
     border: 1px solid rgba(255, 75, 125, 0.3);
 }
 
+.filter-buttons.three-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+    margin-top: 0.5rem;
+}
+
+.filter-btn {
+    padding: 0.8rem 0.5rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: white;
+}
+
+.filter-btn.print {
+    background: linear-gradient(135deg, #6b5bff, #8e6bff);
+}
+
+.filter-btn.excel {
+    background: linear-gradient(135deg, #10b981, #34d399);
+}
+
+.filter-btn.qr {
+    background: linear-gradient(135deg, #9c27b0, #673ab7);
+}
+
+.filter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
 /* ========== CALENDARIO ========== */
 .calendario-mensual {
     background: rgba(30, 30, 30, 0.7);
     border-radius: 8px;
     padding: 1rem;
     border: 1px solid rgba(255, 75, 125, 0.3);
-    backdrop-filter: blur(5px);
 }
 
 .calendario-header {
@@ -336,7 +329,6 @@ body {
 .btn-clear-filters:hover {
     background: #ff4b7d;
     color: white;
-    transform: translateY(-1px);
 }
 
 .meses-grid {
@@ -351,7 +343,6 @@ body {
     background: rgba(37, 37, 37, 0.6);
     border-radius: 6px;
     padding: 0.5rem;
-    border: 1px solid rgba(255, 75, 125, 0.2);
 }
 
 .mes-titulo {
@@ -382,13 +373,11 @@ body {
 .semana-mes-chip:hover {
     background: #ff4b7d;
     color: white;
-    transform: translateY(-1px);
 }
 
 .semana-mes-chip.active {
     background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
     color: white;
-    border: none;
 }
 
 /* ========== FORMULARIO ========== */
@@ -402,7 +391,6 @@ body {
     padding: 1rem;
     margin-bottom: 1.5rem;
     border: 1px solid rgba(255, 75, 125, 0.3);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(10px);
 }
 
@@ -411,7 +399,6 @@ body {
     font-weight: 600;
     color: #ff4b7d;
     margin-bottom: 1rem;
-    letter-spacing: 1px;
     display: flex;
     align-items: center;
     gap: 0.5rem;
@@ -453,14 +440,12 @@ body {
     grid-column: 1 / -1;
 }
 
-/* ========== CARD GROUP ========== */
 .card-group {
     background: rgba(34, 34, 34, 0.7);
     border-radius: 6px;
     padding: 0.6rem;
     border: 1px solid rgba(255, 75, 125, 0.2);
     transition: all 0.3s;
-    backdrop-filter: blur(5px);
 }
 
 .card-group:hover {
@@ -476,10 +461,8 @@ body {
     font-size: 0.7rem;
     font-weight: 600;
     color: #ff6b8a;
-    letter-spacing: 0.5px;
 }
 
-/* ========== INPUTS ========== */
 .input-bonito, .input-color {
     width: 100%;
     padding: 0.5rem 0.7rem;
@@ -488,16 +471,14 @@ body {
     border-radius: 4px;
     font-size: 0.8rem;
     color: #fff;
-    transition: all 0.3s;
 }
 
-.input-bonito:focus, .input-color:focus {
+.input-bonito:focus {
     outline: none;
     border-color: #ff4b7d;
     box-shadow: 0 0 0 2px rgba(255, 75, 125, 0.2);
 }
 
-/* ========== SELECT ========== */
 .select-bonito {
     width: 100%;
     padding: 0.5rem 0.7rem;
@@ -511,10 +492,8 @@ body {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ff4b7d' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.7rem center;
-    background-size: 12px;
 }
 
-/* ========== CHECKBOX ========== */
 .checkbox-label {
     display: flex;
     align-items: center;
@@ -525,12 +504,6 @@ body {
     background: rgba(42, 42, 42, 0.6);
     border-radius: 20px;
     border: 1px solid #ff4b7d;
-    transition: all 0.2s;
-}
-
-.checkbox-label:hover {
-    background: rgba(60, 60, 60, 0.7);
-    transform: translateY(-1px);
 }
 
 .checkbox-label input[type="checkbox"] {
@@ -539,7 +512,6 @@ body {
     accent-color: #ff4b7d;
 }
 
-/* ========== TÍTULOS DE SECCIÓN ========== */
 .section-title-bonito {
     display: flex;
     align-items: center;
@@ -563,11 +535,9 @@ body {
     font-size: 0.85rem;
     font-weight: 700;
     color: #ff6b8a;
-    letter-spacing: 1px;
     text-transform: uppercase;
 }
 
-/* ========== BOTÓN GUARDAR ========== */
 .btn-guardar-bonito {
     background: linear-gradient(90deg, #ff4b7d 0%, #ff6b8a 100%);
     background-size: 200% 200%;
@@ -581,7 +551,7 @@ body {
     border: none;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.3s;
 }
 
 .btn-guardar-bonito:hover {
@@ -589,20 +559,18 @@ body {
     box-shadow: 0 5px 20px rgba(255, 75, 125, 0.4);
 }
 
-/* ========== COLORES DINÁMICOS ========== */
+/* ========== COLORES ========== */
 .color-grupo {
     background: rgba(30, 30, 30, 0.7);
     border-radius: 6px;
     padding: 0.8rem;
     margin-bottom: 0.8rem;
     border: 2px solid #ff4b7d;
-    backdrop-filter: blur(5px);
 }
 
 .color-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
     margin-bottom: 0.8rem;
     padding-bottom: 0.3rem;
     border-bottom: 1px solid #ff6b8a;
@@ -623,7 +591,6 @@ body {
     border-radius: 50%;
     cursor: pointer;
     transition: all 0.3s;
-    font-size: 1rem;
 }
 
 .btn-eliminar-color:hover {
@@ -655,7 +622,7 @@ body {
 }
 
 .btn-add-color {
-    background: linear-gradient(90deg, #ff4b7d 0%, #ff6b8a 100%);
+    background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
     border-radius: 20px;
     padding: 0.6rem 1.5rem;
     font-size: 0.85rem;
@@ -668,33 +635,6 @@ body {
 
 .btn-add-color:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 75, 125, 0.3);
-}
-
-/* ========== FILTROS SECCIÓN ========== */
-.filters-section {
-    background: linear-gradient(160deg, 
-        rgba(45, 35, 85, 0.85) 0%, 
-        rgba(90, 40, 80, 0.8) 30%,
-        rgba(60, 50, 100, 0.85) 60%,
-        rgba(30, 40, 80, 0.9) 100%);
-    border-radius: 8px;
-    padding: 1rem;
-    margin-bottom: 1.5rem;
-    border: 1px solid rgba(255, 75, 125, 0.3);
-    backdrop-filter: blur(10px);
-}
-
-.filters-header h2 {
-    font-size: 0.9rem;
-    color: #ff4b7d;
-    margin-bottom: 1rem;
-}
-
-.filters-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem;
 }
 
 /* ========== TABLA ========== */
@@ -725,7 +665,6 @@ body {
 .table-stats {
     display: flex;
     gap: 0.5rem;
-    align-items: center;
 }
 
 .stats-number {
@@ -761,7 +700,6 @@ thead {
 th {
     padding: 0.6rem 0.4rem;
     text-align: left;
-    font-weight: 600;
     color: #ff6b8a;
     border-bottom: 2px solid #ff4b7d;
     font-size: 0.7rem;
@@ -770,9 +708,7 @@ th {
 td {
     padding: 0.5rem 0.4rem;
     border-bottom: 1px solid rgba(255, 75, 125, 0.2);
-    color: rgba(255, 255, 255, 0.9);
     font-size: 0.75rem;
-    vertical-align: middle;
 }
 
 tbody tr:hover {
@@ -784,7 +720,6 @@ tbody tr:hover {
     color: white;
     padding: 0.2rem 0.5rem;
     border-radius: 4px;
-    font-weight: bold;
     font-size: 0.7rem;
     display: inline-block;
 }
@@ -796,10 +731,8 @@ tbody tr:hover {
     font-size: 0.65rem;
     border-left: 2px solid #ff4b7d;
     display: inline-block;
-    margin: 0.1rem;
 }
 
-/* ========== BOTONES DE ACCIÓN ========== */
 .action-buttons {
     display: flex;
     gap: 0.3rem;
@@ -821,10 +754,6 @@ tbody tr:hover {
     transform: translateY(-2px);
 }
 
-.btn-icon:active {
-    transform: translateY(0px);
-}
-
 .btn-icon.edit {
     border: 1px solid #ff6b8a;
     color: #ff6b8a;
@@ -837,7 +766,6 @@ tbody tr:hover {
 
 .btn-icon.delete:hover {
     background: #ff4b7d;
-    border-color: #ff4b7d;
 }
 
 .btn-icon.history {
@@ -850,17 +778,12 @@ tbody tr:hover {
     color: white;
 }
 
-.btn-icon.print:hover {
-    background: #8b5cf6;
-    border-color: #8b5cf6;
-}
-
-/* ========== MENÚ LATERAL ========== */
+/* ========== MENÚ LATERAL CONTRÁIBLE A BARRA DE ICONOS ========== */
 .menu-lateral {
     position: fixed;
     left: 0;
     top: 0;
-    width: 280px;
+    width: 260px;
     height: 100vh;
     background: linear-gradient(160deg, 
         rgba(45, 35, 85, 0.95) 0%, 
@@ -872,27 +795,58 @@ tbody tr:hover {
     z-index: 1000;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease;
     backdrop-filter: blur(10px);
+    overflow: hidden;
 }
 
+/* Estado contraído - barra delgada de iconos */
 .menu-lateral.collapsed {
-    transform: translateX(-100%);
+    width: 70px;
 }
 
+.menu-lateral.collapsed .menu-text,
+.menu-lateral.collapsed .menu-badge,
+.menu-lateral.collapsed .menu-header h3 {
+    display: none;
+}
+
+.menu-lateral.collapsed .menu-header {
+    padding: 20px 0;
+}
+
+.menu-lateral.collapsed .menu-btn {
+    justify-content: center;
+    padding: 12px 0;
+}
+
+.menu-lateral.collapsed .menu-icon {
+    font-size: 1.4rem;
+    margin: 0;
+}
+
+.menu-lateral.collapsed .menu-footer {
+    padding: 15px 0;
+}
+
+.menu-lateral.collapsed .menu-version {
+    display: none;
+}
+
+/* Botón de toggle del menú */
 .menu-toggle {
     position: absolute;
-    right: -20px;
+    right: -15px;
     top: 45px;
     background: #ff4b7d;
     color: white;
     border: none;
-    border-radius: 6px;
-    width: 40px;
-    height: 40px;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
     cursor: pointer;
     z-index: 1002;
-    font-size: 20px;
+    font-size: 14px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 10px rgba(0,0,0,0.3);
     display: flex;
@@ -905,41 +859,38 @@ tbody tr:hover {
     transform: scale(1.05);
 }
 
-.menu-toggle:active {
-    transform: scale(0.98);
-}
-
-.menu-lateral.collapsed .menu-toggle {
-    right: -60px;
-}
-
+/* Header del menú */
 .menu-header {
     padding: 20px;
     border-bottom: 1px solid rgba(255, 75, 125, 0.3);
     text-align: center;
     margin-top: 30px;
+    transition: padding 0.3s ease;
 }
 
 .menu-header h3 {
     color: #ff4b7d;
     font-size: 1.1rem;
     font-weight: 600;
+    white-space: nowrap;
 }
 
+/* Botones del menú - Iconos de línea */
 .menu-botones {
     flex: 1;
     padding: 20px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
+    transition: padding 0.3s ease;
 }
 
 .menu-btn {
-    background: rgba(42, 42, 42, 0.8);
-    border: 1px solid rgba(255, 75, 125, 0.3);
-    border-radius: 6px;
-    padding: 12px 14px;
-    color: #fff;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: rgba(255, 255, 255, 0.8);
     font-size: 0.9rem;
     font-weight: 500;
     cursor: pointer;
@@ -948,27 +899,37 @@ tbody tr:hover {
     align-items: center;
     gap: 12px;
     text-align: left;
+    white-space: nowrap;
 }
 
 .menu-btn:hover {
-    background: rgba(60, 60, 60, 0.9);
-    border-color: #ff4b7d;
+    background: rgba(255, 75, 125, 0.2);
+    color: #ff6b8a;
     transform: translateX(5px);
-    box-shadow: 0 2px 8px rgba(255, 75, 125, 0.2);
-}
-
-.menu-btn:active {
-    transform: translateX(2px);
 }
 
 .menu-btn.active {
-    background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
-    border-color: #ffd93d;
-    box-shadow: 0 2px 10px rgba(255, 75, 125, 0.3);
+    background: linear-gradient(90deg, rgba(255, 75, 125, 0.3), rgba(255, 107, 138, 0.1));
+    color: #ff6b8a;
+    border-left: 3px solid #ff4b7d;
 }
 
+/* Iconos de línea SVG */
 .menu-icon {
-    font-size: 1.2rem;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0;
+}
+
+.menu-icon svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    fill: none;
 }
 
 .menu-text {
@@ -987,17 +948,31 @@ tbody tr:hover {
     padding: 15px;
     border-top: 1px solid rgba(255, 75, 125, 0.3);
     text-align: center;
+    transition: padding 0.3s ease;
 }
 
 .menu-version {
     font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
 }
 
-/* ========== MENSAJE DE BIENVENIDA ========== */
+/* Ajuste del contenedor principal según estado del menú */
+.container {
+    margin-left: 260px;
+    transition: margin-left 0.3s ease;
+    max-width: calc(100% - 260px);
+}
+
+.menu-lateral.collapsed ~ .container {
+    margin-left: 70px;
+    max-width: calc(100% - 70px);
+}
+
+/* Mensaje de bienvenida */
 .menu-welcome {
     position: fixed;
-    left: 20px;
+    left: 85px;
     top: 55px;
     background: linear-gradient(90deg, #ff4b7d, #ff6b8a);
     color: white;
@@ -1166,35 +1141,48 @@ tbody tr:hover {
     display: inline-block;
 }
 
-/* ========== RESPONSIVE MÓVIL ========== */
+/* ========== RESPONSIVE ========== */
 @media (max-width: 768px) {
     .container {
         padding: 0.6rem;
+        margin-left: 70px;
+        max-width: calc(100% - 70px);
     }
     
-    .header {
-        padding: 0.6rem 0.8rem;
+    .menu-lateral {
+        width: 70px;
     }
     
-    .logo-container h1 {
-        font-size: 1rem;
+    .menu-lateral:not(.collapsed) {
+        width: 220px;
     }
     
-    .logo-img {
-        height: 24px;
+    .menu-lateral:not(.collapsed) .container {
+        margin-left: 220px;
     }
     
-    .btn-secondary {
-        padding: 0.35rem 0.7rem;
-        font-size: 0.65rem;
+    .menu-header h3,
+    .menu-text,
+    .menu-badge,
+    .menu-version {
+        display: none;
     }
     
-    .form-section, .filters-section, .table-section {
-        padding: 0.6rem;
+    .menu-lateral:not(.collapsed) .menu-header h3,
+    .menu-lateral:not(.collapsed) .menu-text,
+    .menu-lateral:not(.collapsed) .menu-badge,
+    .menu-lateral:not(.collapsed) .menu-version {
+        display: block;
     }
     
-    .three-col, .cuatro-col, .flat-row {
-        grid-template-columns: 1fr;
+    .menu-btn {
+        justify-content: center;
+        padding: 12px 0;
+    }
+    
+    .menu-lateral:not(.collapsed) .menu-btn {
+        justify-content: flex-start;
+        padding: 10px 12px;
     }
     
     .filters-grid {
@@ -1205,63 +1193,16 @@ tbody tr:hover {
         grid-template-columns: 1fr;
     }
     
-    .filter-btn {
-        padding: 0.6rem;
-        font-size: 0.75rem;
-    }
-    
-    th, td {
-        padding: 0.3rem 0.2rem;
-        font-size: 0.6rem;
-    }
-    
-    .menu-toggle {
-        top: 35px;
-        width: 35px;
-        height: 35px;
-        font-size: 18px;
-        right: -18px;
+    .three-col, .cuatro-col, .flat-row {
+        grid-template-columns: 1fr;
     }
     
     .menu-welcome {
-        left: 15px;
-        top: 45px;
+        left: 85px;
         font-size: 0.65rem;
         padding: 5px 12px;
         white-space: normal;
         max-width: 130px;
         text-align: center;
-    }
-    
-    .historial-container {
-        max-height: 350px;
-    }
-}
-
-@media (max-width: 480px) {
-    .header-top {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    
-    .header-actions {
-        width: 100%;
-        justify-content: space-between;
-    }
-    
-    .logo-container h1 {
-        font-size: 0.9rem;
-    }
-    
-    th, td {
-        font-size: 0.55rem;
-    }
-    
-    .menu-welcome {
-        left: 10px;
-        top: 40px;
-        font-size: 0.6rem;
-        padding: 4px 10px;
-        max-width: 120px;
     }
 }
