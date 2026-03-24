@@ -1,7 +1,13 @@
 // js/core/notifications.js
 const Notifications = {
     mostrar: function(mensaje, tipo = 'success') {
+        // Eliminar notificación existente para evitar acumulación
+        const existing = document.querySelector('.alpha-notification');
+        if (existing) existing.remove();
+        
         const notificacion = document.createElement('div');
+        notificacion.className = 'alpha-notification';
+        
         const colores = {
             success: '#10b981',
             error: '#ef4444',
@@ -9,7 +15,14 @@ const Notifications = {
             warning: '#f59e0b'
         };
         
-        notificacion.textContent = mensaje;
+        const iconos = {
+            success: '✅',
+            error: '❌',
+            info: 'ℹ️',
+            warning: '⚠️'
+        };
+        
+        notificacion.innerHTML = `${iconos[tipo] || '✅'} ${mensaje}`;
         notificacion.style.cssText = `
             position: fixed;
             top: 20px;
@@ -18,19 +31,25 @@ const Notifications = {
             background: ${colores[tipo] || colores.success};
             color: white;
             border-radius: 0.5rem;
-            z-index: 1000;
-            animation: slideIn 0.3s;
+            z-index: 10000;
+            animation: slideIn 0.3s ease;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             font-weight: 500;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Rubik', sans-serif;
+            font-size: 0.9rem;
+            pointer-events: none;
         `;
         
         document.body.appendChild(notificacion);
         
         setTimeout(() => {
-            notificacion.style.animation = 'slideOut 0.3s';
-            setTimeout(() => document.body.removeChild(notificacion), 300);
-        }, 2500);
+            if (notificacion && notificacion.parentNode) {
+                notificacion.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => {
+                    if (notificacion.parentNode) notificacion.remove();
+                }, 300);
+            }
+        }, 3000);
     },
     
     success: function(msg) { this.mostrar(msg, 'success'); },
@@ -39,5 +58,21 @@ const Notifications = {
     warning: function(msg) { this.mostrar(msg, 'warning'); }
 };
 
+// Asegurar que las animaciones existan
+if (typeof document !== 'undefined') {
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+    `;
+    document.head.appendChild(style);
+}
+
 window.Notifications = Notifications;
-console.log('✅ Notifications cargado');
+console.log('✅ Notifications cargado correctamente');
