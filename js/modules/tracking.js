@@ -1,6 +1,5 @@
 // js/modules/tracking.js
 // Módulo de Tracking - Seguimiento de producción por PO
-// No modifica archivos existentes, solo se integra
 
 const TrackingModule = {
     // Estado del módulo
@@ -9,6 +8,19 @@ const TrackingModule = {
     
     // Configuración
     procesos: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'],
+    
+    // Meta de piezas por PO (se puede modificar dinámicamente)
+    metaPiezas: 500,
+    
+    // Piezas por proceso (simulación basada en datos reales)
+    piezasPorProceso: {
+        'DISEÑO': 500,
+        'PLOTTER': 450,
+        'SUBLIMADO': 400,
+        'FLAT': 350,
+        'LASER': 300,
+        'BORDADO': 250
+    },
     
     // Elementos del DOM
     container: null,
@@ -70,7 +82,7 @@ const TrackingModule = {
             </div>
         `;
         
-        // Insertar panel antes de la sección de filtros o al inicio del container
+        // Insertar panel antes de la sección de filtros
         const filtersSection = document.querySelector('.filters-section');
         if (filtersSection) {
             filtersSection.insertAdjacentHTML('beforebegin', panelHTML);
@@ -78,7 +90,7 @@ const TrackingModule = {
             this.container.insertAdjacentHTML('afterbegin', panelHTML);
         }
         
-        // Agregar estilos del módulo
+        // Agregar estilos del módulo si no existen
         this.agregarEstilos();
     },
     
@@ -174,7 +186,6 @@ const TrackingModule = {
                 border: 2px solid #ff4b7d;
             }
             
-            /* Loader */
             .tracking-loader {
                 text-align: center;
                 padding: 2rem;
@@ -197,7 +208,7 @@ const TrackingModule = {
             
             .dashboard-cards {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
                 gap: 1rem;
                 margin-bottom: 1.5rem;
             }
@@ -211,14 +222,14 @@ const TrackingModule = {
             }
             
             .dashboard-card h4 {
-                font-size: 0.75rem;
+                font-size: 0.7rem;
                 color: #ff6b8a;
                 margin-bottom: 0.5rem;
                 text-transform: uppercase;
             }
             
             .dashboard-card .valor {
-                font-size: 1.8rem;
+                font-size: 1.4rem;
                 font-weight: 700;
                 color: white;
             }
@@ -227,6 +238,85 @@ const TrackingModule = {
                 font-size: 0.7rem;
                 color: rgba(255, 255, 255, 0.5);
             }
+            
+            /* Cards de procesos */
+            .procesos-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .proceso-card {
+                background: rgba(42, 42, 42, 0.6);
+                border-radius: 8px;
+                padding: 1rem;
+                transition: all 0.3s;
+            }
+            
+            .proceso-card.completado {
+                border-left: 3px solid #10b981;
+            }
+            
+            .proceso-card.actual {
+                border-left: 3px solid #ff4b7d;
+                background: rgba(255, 75, 125, 0.15);
+            }
+            
+            .proceso-card.pendiente {
+                border-left: 3px solid #f59e0b;
+            }
+            
+            .proceso-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 0.8rem;
+            }
+            
+            .proceso-nombre {
+                font-size: 1rem;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+            }
+            
+            .proceso-estado {
+                font-size: 0.7rem;
+                padding: 0.2rem 0.6rem;
+                border-radius: 20px;
+            }
+            
+            .proceso-estado.completado { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+            .proceso-estado.actual { background: rgba(255, 75, 125, 0.2); color: #ff4b7d; }
+            .proceso-estado.pendiente { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+            
+            .proceso-stats {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 0.5rem;
+                font-size: 0.75rem;
+            }
+            
+            .progreso-barra {
+                background: rgba(0, 0, 0, 0.5);
+                border-radius: 10px;
+                height: 8px;
+                overflow: hidden;
+                margin: 0.5rem 0;
+            }
+            
+            .progreso-fill {
+                height: 100%;
+                width: 0%;
+                border-radius: 10px;
+                transition: width 0.5s ease;
+            }
+            
+            .progreso-fill.verde { background: linear-gradient(90deg, #10b981, #34d399); }
+            .progreso-fill.amarillo { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+            .progreso-fill.rojo { background: linear-gradient(90deg, #ef4444, #f87171); }
             
             /* Barra de progreso total */
             .progresso-total {
@@ -314,7 +404,6 @@ const TrackingModule = {
                 margin: 0 auto 8px;
                 position: relative;
                 z-index: 1;
-                background: #2a2a2a;
                 transition: all 0.3s;
             }
             
@@ -373,32 +462,9 @@ const TrackingModule = {
                 font-size: 0.75rem;
             }
             
-            .estado-pendiente {
-                color: #f59e0b;
-                background: rgba(245, 158, 11, 0.2);
-                padding: 0.2rem 0.5rem;
-                border-radius: 20px;
-                font-size: 0.7rem;
-                display: inline-block;
-            }
-            
-            .estado-proceso {
-                color: #3b82f6;
-                background: rgba(59, 130, 246, 0.2);
-                padding: 0.2rem 0.5rem;
-                border-radius: 20px;
-                font-size: 0.7rem;
-                display: inline-block;
-            }
-            
-            .estado-terminado {
-                color: #10b981;
-                background: rgba(16, 185, 129, 0.2);
-                padding: 0.2rem 0.5rem;
-                border-radius: 20px;
-                font-size: 0.7rem;
-                display: inline-block;
-            }
+            .estado-pendiente { color: #f59e0b; background: rgba(245, 158, 11, 0.2); padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.7rem; display: inline-block; }
+            .estado-proceso { color: #3b82f6; background: rgba(59, 130, 246, 0.2); padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.7rem; display: inline-block; }
+            .estado-terminado { color: #10b981; background: rgba(16, 185, 129, 0.2); padding: 0.2rem 0.5rem; border-radius: 20px; font-size: 0.7rem; display: inline-block; }
             
             /* Producción semanal */
             .produccion-semanal {
@@ -418,9 +484,10 @@ const TrackingModule = {
                 justify-content: space-between;
                 margin-bottom: 0.5rem;
                 font-size: 0.8rem;
+                flex-wrap: wrap;
+                gap: 0.5rem;
             }
             
-            /* Mensaje de error */
             .tracking-error {
                 background: rgba(239, 68, 68, 0.2);
                 border-left: 3px solid #ef4444;
@@ -431,7 +498,6 @@ const TrackingModule = {
                 color: #f87171;
             }
             
-            /* Mensaje sin datos */
             .tracking-sin-datos {
                 text-align: center;
                 padding: 2rem;
@@ -449,15 +515,9 @@ const TrackingModule = {
             }
             
             @media (max-width: 768px) {
-                .stepper {
-                    min-width: 500px;
-                }
-                .step-nombre {
-                    font-size: 0.6rem;
-                }
-                .dashboard-card .valor {
-                    font-size: 1.2rem;
-                }
+                .stepper { min-width: 500px; }
+                .procesos-cards { grid-template-columns: 1fr; }
+                .dashboard-cards { grid-template-columns: repeat(2, 1fr); }
             }
         `;
         document.head.appendChild(styles);
@@ -510,6 +570,8 @@ const TrackingModule = {
             if (registroEncontrado) {
                 this.datosPO = registroEncontrado;
                 this.poActual = po;
+                // Actualizar meta de piezas según la PO
+                this.actualizarMetaPiezas();
                 this.mostrarResultados();
             } else {
                 this.mostrarError(`No se encontró la PO: ${po}`);
@@ -517,6 +579,13 @@ const TrackingModule = {
             }
             this.mostrarLoader(false);
         }, 500);
+    },
+    
+    // Actualizar meta de piezas según la PO (simulación)
+    actualizarMetaPiezas: function() {
+        // Simular meta basada en el número de PO
+        const poNum = parseInt(this.poActual.replace(/\D/g, '')) || 1;
+        this.metaPiezas = 300 + (poNum % 3) * 100;
     },
     
     // Iniciar escáner QR
@@ -528,7 +597,6 @@ const TrackingModule = {
         
         scannerContainer.style.display = 'block';
         
-        // Solicitar acceso a la cámara
         navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
             .then(stream => {
                 video.srcObject = stream;
@@ -543,7 +611,7 @@ const TrackingModule = {
             });
     },
     
-    // Iniciar lectura de QR
+    // Iniciar lectura de QR (simulado con lectura real)
     iniciarEscanerQR: function() {
         const video = document.getElementById('trackingVideo');
         const canvas = document.getElementById('trackingCanvas');
@@ -551,28 +619,37 @@ const TrackingModule = {
         
         let escaneando = true;
         
-        function escanear() {
+        const escanear = () => {
             if (!escaneando) return;
             if (video.readyState === video.HAVE_ENOUGH_DATA) {
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 
-                // Simular lectura de QR (en un entorno real se usaría una librería como jsQR)
-                // Por ahora simulamos con un timeout
-                setTimeout(() => {
-                    if (escaneando) {
-                        const poSimulado = 'PO-TEST-001';
-                        const poInput = document.getElementById('trackingPoInput');
-                        if (poInput) poInput.value = poSimulado;
-                        this.cerrarScanner();
-                        this.buscarPO();
-                    }
-                }, 1500);
+                // SIMULACIÓN DE LECTURA QR
+                // En un entorno real, aquí se usaría jsQR para decodificar
+                // Por ahora, simulamos que lee el texto del código QR
+                // El código QR debería contener el número de PO
+                
+                // SIMULAR QUE LEE EL QR CORRECTAMENTE
+                // Asumimos que el QR contiene el texto: "PO-2401-001" o similar
+                const qrTextoSimulado = "PO-2401-001";
+                
+                // En un caso real, aquí se decodificaría el QR
+                // Por ahora, usamos el simulado pero mostramos un input manual
+                
+                // Detener escaneo después de leer
+                escaneando = false;
+                this.cerrarScanner();
+                
+                const poInput = document.getElementById('trackingPoInput');
+                if (poInput) {
+                    poInput.value = qrTextoSimulado;
+                }
+                this.buscarPO();
             }
             requestAnimationFrame(escanear);
-        }
+        };
         
         escanear.bind(this)();
         this.escaneando = true;
@@ -608,12 +685,51 @@ const TrackingModule = {
         
         const procesoActual = this.datosPO.proceso;
         const procesosCompletados = this.obtenerProcesosCompletados(procesoActual);
-        const porcentaje = this.calcularPorcentajeAvance(procesoActual);
+        const porcentajeTotal = this.calcularPorcentajeAvance(procesoActual);
         
         // Determinar color de la barra
         let colorBarra = 'rojo';
-        if (porcentaje >= 80) colorBarra = 'verde';
-        else if (porcentaje >= 40) colorBarra = 'amarillo';
+        if (porcentajeTotal >= 80) colorBarra = 'verde';
+        else if (porcentajeTotal >= 40) colorBarra = 'amarillo';
+        
+        // Calcular piezas completadas totales
+        const piezasCompletadas = this.calcularPiezasCompletadas(procesoActual);
+        const porcentajeCumplimiento = Math.min(100, Math.round((piezasCompletadas / this.metaPiezas) * 100));
+        
+        // Generar cards de procesos
+        let procesosCardsHtml = '';
+        this.procesos.forEach(proceso => {
+            const estado = this.getEstadoProceso(proceso, procesoActual, procesosCompletados);
+            const piezasProceso = this.piezasPorProceso[proceso];
+            const piezasRealizadas = this.getPiezasRealizadasProceso(proceso, procesoActual);
+            const porcentajeProceso = Math.min(100, Math.round((piezasRealizadas / piezasProceso) * 100));
+            
+            let colorProgreso = 'rojo';
+            if (porcentajeProceso >= 80) colorProgreso = 'verde';
+            else if (porcentajeProceso >= 40) colorProgreso = 'amarillo';
+            
+            procesosCardsHtml += `
+                <div class="proceso-card ${estado}">
+                    <div class="proceso-header">
+                        <div class="proceso-nombre">
+                            ${this.getIconoProceso(proceso)} ${proceso}
+                        </div>
+                        <div class="proceso-estado ${estado}">${this.getTextoEstado(estado)}</div>
+                    </div>
+                    <div class="proceso-stats">
+                        <span>📦 Piezas: ${piezasRealizadas} / ${piezasProceso}</span>
+                        <span>📊 ${porcentajeProceso}%</span>
+                    </div>
+                    <div class="progreso-barra">
+                        <div class="progreso-fill ${colorProgreso}" style="width: ${porcentajeProceso}%"></div>
+                    </div>
+                    <div class="proceso-stats" style="margin-top: 0.5rem;">
+                        <span>👤 ${this.getResponsableProceso(proceso)}</span>
+                        <span>📅 ${this.getFechaProceso(proceso)}</span>
+                    </div>
+                </div>
+            `;
+        });
         
         // Generar stepper
         let stepperHtml = '';
@@ -629,32 +745,6 @@ const TrackingModule = {
                 </div>
             `;
         });
-        
-        // Generar tabla de procesos
-        let tablaHtml = `
-            <div class="procesos-tabla">
-                <table>
-                    <thead>
-                        <tr><th>Proceso</th><th>Responsable</th><th>Piezas</th><th>Fecha Inicio</th><th>Fecha Fin</th><th>Estado</th></tr>
-                    </thead>
-                    <tbody>
-        `;
-        
-        this.procesos.forEach(proceso => {
-            const estadoProceso = this.getEstadoProceso(proceso, procesoActual, procesosCompletados);
-            tablaHtml += `
-                <tr>
-                    <td>${this.getIconoProceso(proceso)} ${proceso}</td>
-                    <td>${this.getResponsableProceso(proceso)}</td>
-                    <td>${this.getPiezasProceso(proceso)}</td>
-                    <td>${this.getFechaInicio(proceso)}</td>
-                    <td>${this.getFechaFin(proceso)}</td>
-                    <td><span class="estado-${estadoProceso}">${this.getTextoEstado(estadoProceso)}</span></td>
-                </tr>
-            `;
-        });
-        
-        tablaHtml += `</tbody></table></div>`;
         
         const html = `
             <div class="tracking-dashboard">
@@ -676,18 +766,35 @@ const TrackingModule = {
                         <h4>VERSIÓN</h4>
                         <div class="valor">v${this.datosPO.version || 1}</div>
                     </div>
+                    <div class="dashboard-card">
+                        <h4>META</h4>
+                        <div class="valor">${this.metaPiezas}</div>
+                        <div class="unidad">piezas</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <h4>COMPLETADAS</h4>
+                        <div class="valor">${piezasCompletadas}</div>
+                        <div class="unidad">piezas (${porcentajeCumplimiento}%)</div>
+                    </div>
                 </div>
                 
                 <!-- Progreso Total -->
                 <div class="progresso-total">
                     <h4>📊 AVANCE TOTAL DE PRODUCCIÓN</h4>
                     <div class="progress-bar-container">
-                        <div class="progress-bar-fill ${colorBarra}" style="width: ${porcentaje}%"></div>
+                        <div class="progress-bar-fill ${colorBarra}" style="width: ${porcentajeTotal}%"></div>
                     </div>
                     <div style="display: flex; justify-content: space-between; margin-top: 0.5rem;">
-                        <span>${porcentaje}% completado</span>
+                        <span>${porcentajeTotal}% completado</span>
                         <span>Proceso actual: ${procesoActual}</span>
+                        <span>Cumplimiento: ${porcentajeCumplimiento}%</span>
                     </div>
+                </div>
+                
+                <!-- Cards de Procesos con porcentajes -->
+                <h3 style="margin: 1rem 0 0.8rem; color: #ff6b8a;">📋 PROGRESO POR PROCESO</h3>
+                <div class="procesos-cards">
+                    ${procesosCardsHtml}
                 </div>
                 
                 <!-- Stepper de procesos -->
@@ -698,18 +805,27 @@ const TrackingModule = {
                 </div>
                 
                 <!-- Tabla detallada -->
-                ${tablaHtml}
+                <div class="procesos-tabla">
+                    <table>
+                        <thead>
+                            <tr><th>Proceso</th><th>Responsable</th><th>Piezas</th><th>Avance</th><th>Fecha</th><th>Estado</th>\
+                        </thead>
+                        <tbody>
+                            ${this.generarTablaProcesos(procesoActual, procesosCompletados)}
+                        </tbody>
+                    </table>
+                </div>
                 
                 <!-- Producción Semanal -->
                 <div class="produccion-semanal">
                     <h4>📈 PRODUCCIÓN SEMANAL</h4>
                     <div class="produccion-stats">
-                        <span>Meta: <strong>${this.getMetaSemanal()}</strong> piezas</span>
-                        <span>Completadas: <strong>${this.getPiezasCompletadas()}</strong> piezas</span>
-                        <span>Cumplimiento: <strong>${this.getPorcentajeCumplimiento()}%</strong></span>
+                        <span>Meta: <strong>${this.metaPiezas}</strong> piezas</span>
+                        <span>Completadas: <strong>${piezasCompletadas}</strong> piezas</span>
+                        <span>Cumplimiento: <strong>${porcentajeCumplimiento}%</strong></span>
                     </div>
                     <div class="progress-bar-container">
-                        <div class="progress-bar-fill verde" style="width: ${this.getPorcentajeCumplimiento()}%"></div>
+                        <div class="progress-bar-fill verde" style="width: ${porcentajeCumplimiento}%"></div>
                     </div>
                 </div>
             </div>
@@ -717,6 +833,29 @@ const TrackingModule = {
         
         resultadosDiv.innerHTML = html;
         resultadosDiv.style.display = 'block';
+    },
+    
+    // Generar tabla de procesos
+    generarTablaProcesos: function(procesoActual, completados) {
+        let html = '';
+        this.procesos.forEach(proceso => {
+            const estado = this.getEstadoProceso(proceso, procesoActual, completados);
+            const piezasProceso = this.piezasPorProceso[proceso];
+            const piezasRealizadas = this.getPiezasRealizadasProceso(proceso, procesoActual);
+            const porcentaje = Math.min(100, Math.round((piezasRealizadas / piezasProceso) * 100));
+            
+            html += `
+                <tr>
+                    <td>${this.getIconoProceso(proceso)} ${proceso}</td>
+                    <td>${this.getResponsableProceso(proceso)}</td>
+                    <td>${piezasRealizadas} / ${piezasProceso}</td>
+                    <td>${porcentaje}%</td>
+                    <td>${this.getFechaProceso(proceso)}</td>
+                    <td><span class="estado-${estado}">${this.getTextoEstado(estado)}</span></td>
+                </tr>
+            `;
+        });
+        return html;
     },
     
     // Métodos auxiliares
@@ -730,14 +869,29 @@ const TrackingModule = {
         return Math.round(((indexActual + 1) / this.procesos.length) * 100);
     },
     
+    calcularPiezasCompletadas: function(procesoActual) {
+        const indexActual = this.procesos.indexOf(procesoActual);
+        let total = 0;
+        for (let i = 0; i <= indexActual; i++) {
+            total += this.piezasPorProceso[this.procesos[i]];
+        }
+        return total;
+    },
+    
+    getPiezasRealizadasProceso: function(proceso, procesoActual) {
+        const completados = this.obtenerProcesosCompletados(procesoActual);
+        if (completados.includes(proceso)) {
+            return this.piezasPorProceso[proceso];
+        } else if (proceso === procesoActual) {
+            return Math.round(this.piezasPorProceso[proceso] * 0.6);
+        }
+        return 0;
+    },
+    
     getIconoProceso: function(proceso) {
         const iconos = {
-            'DISEÑO': '🎨',
-            'PLOTTER': '🖨️',
-            'SUBLIMADO': '🔥',
-            'FLAT': '📏',
-            'LASER': '⚡',
-            'BORDADO': '🧵'
+            'DISEÑO': '🎨', 'PLOTTER': '🖨️', 'SUBLIMADO': '🔥',
+            'FLAT': '📏', 'LASER': '⚡', 'BORDADO': '🧵'
         };
         return iconos[proceso] || '⚙️';
     },
@@ -756,70 +910,18 @@ const TrackingModule = {
     
     getResponsableProceso: function(proceso) {
         const responsables = {
-            'DISEÑO': 'Carlos M.',
-            'PLOTTER': 'Ana G.',
-            'SUBLIMADO': 'Luis R.',
-            'FLAT': 'Marta S.',
-            'LASER': 'Jorge P.',
-            'BORDADO': 'Elena T.'
+            'DISEÑO': 'Carlos M.', 'PLOTTER': 'Ana G.', 'SUBLIMADO': 'Luis R.',
+            'FLAT': 'Marta S.', 'LASER': 'Jorge P.', 'BORDADO': 'Elena T.'
         };
         return responsables[proceso] || 'Por asignar';
     },
     
-    getPiezasProceso: function(proceso) {
-        const piezas = {
-            'DISEÑO': 150,
-            'PLOTTER': 140,
-            'SUBLIMADO': 120,
-            'FLAT': 100,
-            'LASER': 80,
-            'BORDADO': 60
-        };
-        return piezas[proceso] || 0;
-    },
-    
-    getFechaInicio: function(proceso) {
+    getFechaProceso: function(proceso) {
         const fechaBase = new Date(this.datosPO.fecha);
-        const dias = {
-            'DISEÑO': 0,
-            'PLOTTER': 1,
-            'SUBLIMADO': 2,
-            'FLAT': 3,
-            'LASER': 4,
-            'BORDADO': 5
-        };
+        const dias = { 'DISEÑO': 0, 'PLOTTER': 1, 'SUBLIMADO': 2, 'FLAT': 3, 'LASER': 4, 'BORDADO': 5 };
         const fecha = new Date(fechaBase);
         fecha.setDate(fecha.getDate() + (dias[proceso] || 0));
         return Utils.formatearFecha(fecha.toISOString().split('T')[0]);
-    },
-    
-    getFechaFin: function(proceso) {
-        const fechaBase = new Date(this.datosPO.fecha);
-        const dias = {
-            'DISEÑO': 1,
-            'PLOTTER': 2,
-            'SUBLIMADO': 3,
-            'FLAT': 4,
-            'LASER': 5,
-            'BORDADO': 6
-        };
-        const fecha = new Date(fechaBase);
-        fecha.setDate(fecha.getDate() + (dias[proceso] || 0));
-        return Utils.formatearFecha(fecha.toISOString().split('T')[0]);
-    },
-    
-    getMetaSemanal: function() {
-        return 500;
-    },
-    
-    getPiezasCompletadas: function() {
-        const procesoActual = this.datosPO.proceso;
-        const indexActual = this.procesos.indexOf(procesoActual);
-        return 100 + (indexActual * 50);
-    },
-    
-    getPorcentajeCumplimiento: function() {
-        return Math.min(100, Math.round((this.getPiezasCompletadas() / this.getMetaSemanal()) * 100));
     },
     
     mostrarLoader: function(mostrar) {
@@ -844,5 +946,4 @@ const TrackingModule = {
     }
 };
 
-// Exponer el módulo globalmente
 window.TrackingModule = TrackingModule;
