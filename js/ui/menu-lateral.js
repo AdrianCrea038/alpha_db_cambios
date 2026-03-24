@@ -1,4 +1,4 @@
-// js/ui/menu-lateral.js - VERSIÓN CORREGIDA COMPLETA
+// js/ui/menu-lateral.js - VERSIÓN COMPLETA CON NUEVOS BOTONES
 const MenuLateral = {
     init: function() {
         if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
@@ -53,6 +53,26 @@ const MenuLateral = {
                         </span>
                         <span class="menu-text">Tracking</span>
                     </button>
+                    <button id="btnSolicitudes" class="menu-btn">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                                <path d="M22 6.5L12 13L2 6.5M22 6.5L12 13L2 6.5M2 6.5L12 13L2 6.5Z" fill="none"/>
+                                <path d="M12 13V21M2 6.5V17.5C2 18.3 2.5 19 3.2 19.4L12 22L20.8 19.4C21.5 19 22 18.3 22 17.5V6.5" fill="none"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">Solicitudes</span>
+                        <span class="menu-badge">🚧</span>
+                    </button>
+                    <button id="btnAprobaciones" class="menu-btn">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                                <path d="M22 11.1C22 16.5 17.5 20 12 20C6.5 20 2 16.5 2 11.1C2 6.8 6 2.5 12 2.5C18 2.5 22 6.8 22 11.1Z" fill="none"/>
+                                <path d="M8 12L11 15L16 9" stroke="currentColor" fill="none"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">Aprobaciones piso</span>
+                        <span class="menu-badge">🚧</span>
+                    </button>
                 </div>
                 <div class="menu-footer">
                     <div class="menu-version">Alpha DB v9.0</div>
@@ -80,8 +100,8 @@ const MenuLateral = {
             if (menu.classList.contains('collapsed')) {
                 if (toggleBtn) toggleBtn.innerHTML = '▶';
                 if (container) {
-                    container.style.marginLeft = '70px';
-                    container.style.maxWidth = 'calc(100% - 70px)';
+                    container.style.marginLeft = '60px';
+                    container.style.maxWidth = 'calc(100% - 60px)';
                 }
             } else {
                 if (toggleBtn) toggleBtn.innerHTML = '◀';
@@ -104,10 +124,14 @@ const MenuLateral = {
         const btnBaseDatos = document.getElementById('btnBaseDatos');
         const btnConsultas = document.getElementById('btnConsultas');
         const btnTracking = document.getElementById('btnTracking');
+        const btnSolicitudes = document.getElementById('btnSolicitudes');
+        const btnAprobaciones = document.getElementById('btnAprobaciones');
         
         if (btnBaseDatos) btnBaseDatos.addEventListener('click', () => this.mostrarBaseDatos());
         if (btnConsultas) btnConsultas.addEventListener('click', () => this.mostrarConsultas());
         if (btnTracking) btnTracking.addEventListener('click', () => this.mostrarTracking());
+        if (btnSolicitudes) btnSolicitudes.addEventListener('click', () => this.mostrarSolicitudes());
+        if (btnAprobaciones) btnAprobaciones.addEventListener('click', () => this.mostrarAprobaciones());
     },
     
     mostrarBaseDatos: function() {
@@ -129,6 +153,11 @@ const MenuLateral = {
         if (formSection) formSection.style.display = 'block';
         if (filtersSection) filtersSection.style.display = 'block';
         if (tableSection) tableSection.style.display = 'block';
+        
+        // Modo completo para TablaUI
+        if (window.TablaUI && TablaUI.setModo) {
+            TablaUI.setModo('completo');
+        }
         
         if (window.AppState) {
             AppState.setFiltros('', '');
@@ -161,8 +190,13 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'block';
         
+        // Modo solo lectura para TablaUI (solo botón historial)
+        if (window.TablaUI && TablaUI.setModo) {
+            TablaUI.setModo('solo-lectura');
+        }
+        
         this.aplicarVistaUltimasSemanas();
-        if (window.Notifications) Notifications.info('🔍 Vista de Consultas - Últimas 2 semanas');
+        if (window.Notifications) Notifications.info('🔍 Vista de Consultas - Solo lectura');
     },
     
     mostrarTracking: function() {
@@ -182,6 +216,11 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'none';
         if (tableSection) tableSection.style.display = 'block';
         
+        // Modo tracking para TablaUI (solo botón historial)
+        if (window.TablaUI && TablaUI.setModo) {
+            TablaUI.setModo('tracking');
+        }
+        
         if (window.TrackingModule && TrackingModule.init) {
             TrackingModule.init();
         } else {
@@ -192,11 +231,72 @@ const MenuLateral = {
         if (window.Notifications) Notifications.info('📍 Módulo de Tracking - Buscar por PO');
     },
     
+    mostrarSolicitudes: function() {
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnSolicitudes = document.getElementById('btnSolicitudes');
+        if (btnSolicitudes) btnSolicitudes.classList.add('active');
+        
+        // Ocultar paneles existentes
+        const consultasPanel = document.getElementById('consultasPanel');
+        if (consultasPanel) consultasPanel.classList.remove('active');
+        
+        const trackingPanel = document.getElementById('trackingPanel');
+        if (trackingPanel) trackingPanel.remove();
+        
+        // Mostrar mensaje de "Próximamente"
+        this.mostrarMensajeProximamente('Solicitudes');
+        
+        if (window.Notifications) Notifications.info('📋 Módulo de Solicitudes - Próximamente disponible');
+    },
+    
+    mostrarAprobaciones: function() {
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnAprobaciones = document.getElementById('btnAprobaciones');
+        if (btnAprobaciones) btnAprobaciones.classList.add('active');
+        
+        // Ocultar paneles existentes
+        const consultasPanel = document.getElementById('consultasPanel');
+        if (consultasPanel) consultasPanel.classList.remove('active');
+        
+        const trackingPanel = document.getElementById('trackingPanel');
+        if (trackingPanel) trackingPanel.remove();
+        
+        // Mostrar mensaje de "Próximamente"
+        this.mostrarMensajeProximamente('Aprobaciones piso');
+        
+        if (window.Notifications) Notifications.info('✅ Módulo de Aprobaciones - Próximamente disponible');
+    },
+    
+    mostrarMensajeProximamente: function(titulo) {
+        // Eliminar panel existente si hay
+        const existingPanel = document.getElementById('proximamentePanel');
+        if (existingPanel) existingPanel.remove();
+        
+        const tableSection = document.querySelector('.table-section');
+        if (!tableSection) return;
+        
+        const panelHTML = `
+            <div id="proximamentePanel" class="consultas-panel" style="display:block; text-align:center; padding:3rem;">
+                <div style="font-size:4rem; margin-bottom:1rem;">🚧</div>
+                <h3 style="color:#ff6b8a; margin-bottom:1rem;">${titulo}</h3>
+                <p style="color:rgba(255,255,255,0.7); margin-bottom:1rem;">Esta sección está en desarrollo</p>
+                <p style="color:#ffd93d; font-size:0.8rem;">Próximamente disponible</p>
+            </div>
+        `;
+        
+        tableSection.insertAdjacentHTML('beforebegin', panelHTML);
+        
+        // Ocultar tabla si está visible
+        const tableSectionContent = document.querySelector('.table-section');
+        if (tableSectionContent) tableSectionContent.style.display = 'none';
+    },
+    
     crearPanelConsultas: function() {
         const tableSection = document.querySelector('.table-section');
         if (!tableSection) return;
         
-        // Verificar si ya existe
         if (document.getElementById('consultasPanel')) return;
         
         tableSection.insertAdjacentHTML('beforebegin', `
@@ -280,14 +380,12 @@ const MenuLateral = {
         
         const registrosFiltrados = AppState.registros.filter(reg => semanasArray.includes(parseInt(reg.semana)));
         
-        // Guardar filtros actuales
         const searchGuardado = AppState.currentSearch;
         const semanaGuardada = AppState.currentSemana;
         
         AppState.setFiltros('', '');
         TablaUI.render(registrosFiltrados);
         
-        // Restaurar filtros
         AppState.setFiltros(searchGuardado, semanaGuardada);
         
         const infoFiltro = document.getElementById('infoFiltroActivo');
