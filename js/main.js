@@ -266,6 +266,17 @@ function configurarEventos() {
             }
         });
     }
+    
+    // ==================== BOTÓN DE SALIR - AGREGADO ====================
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function() {
+            if (confirm('¿Cerrar sesión?')) {
+                localStorage.removeItem('alpha_db_session');
+                window.location.href = 'login.html';
+            }
+        });
+    }
 }
 
 window.editarRegistro = (id) => {
@@ -368,134 +379,5 @@ document.querySelectorAll('.modal-close, .close-btn, .cancel-btn').forEach(btn =
 window.addEventListener('click', (e) => {
     document.querySelectorAll('.modal').forEach(modal => {
         if (e.target === modal) modal.classList.remove('show');
-    });
-});
-
-// Cerrar modales
-function cerrarModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('show');
-}
-
-function cerrarTodosModales() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('show');
-    });
-}
-
-// Eventos para cerrar modales
-document.querySelectorAll('.modal-close, .close-btn, .cancel-btn').forEach(btn => {
-    btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        const modal = this.closest('.modal');
-        if (modal) modal.classList.remove('show');
-    });
-});
-
-// Cerrar al hacer clic fuera del modal
-window.addEventListener('click', function(e) {
-    if (e.target.classList && e.target.classList.contains('modal')) {
-        e.target.classList.remove('show');
-    }
-});
-// ==================== FUNCIONES PARA CERRAR MODALES ====================
-
-// Función para cerrar un modal específico
-function cerrarModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) modal.classList.remove('show');
-}
-
-// Función para cerrar todos los modales
-function cerrarTodosModales() {
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.classList.remove('show');
-    });
-}
-
-// Cerrar modal de historial específicamente
-function cerrarModalHistorial() {
-    const modal = document.getElementById('modalHistorial');
-    if (modal) modal.classList.remove('show');
-}
-
-// Cerrar modal de impresión específicamente
-function cerrarModalImpresion() {
-    const modal = document.getElementById('modalImpresion');
-    if (modal) modal.classList.remove('show');
-}
-
-// Configurar todos los botones de cierre después de que el DOM esté listo
-document.addEventListener('DOMContentLoaded', function() {
-    // Botones de cierre en modales
-    const closeButtons = document.querySelectorAll('.modal-close, .close-btn, .cancel-btn');
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.classList.remove('show');
-            }
-        });
-    });
-    
-    // Cerrar al hacer clic fuera del modal
-    window.addEventListener('click', function(e) {
-        if (e.target.classList && e.target.classList.contains('modal')) {
-            e.target.classList.remove('show');
-        }
-    });
-});
-
-// ==================== FUNCIONES GLOBALES PARA CERRAR MODALES ====================
-
-window.cerrarModalHistorial = function() {
-    const modal = document.getElementById('modalHistorial');
-    if (modal) {
-        modal.classList.remove('show');
-        console.log('✅ Modal historial cerrado');
-    } else {
-        console.log('⚠️ Modal historial no encontrado');
-    }
-};
-
-window.cerrarModalImpresion = function() {
-    const modal = document.getElementById('modalImpresion');
-    if (modal) {
-        modal.classList.remove('show');
-        console.log('✅ Modal impresión cerrado');
-    }
-};
-
-window.cerrarTodosModales = function() {
-    const modales = document.querySelectorAll('.modal');
-    modales.forEach(modal => {
-        modal.classList.remove('show');
-    });
-    console.log('✅ Todos los modales cerrados');
-};
-
-// También agregar función para cerrar haciendo clic en la X o botón CERRAR
-document.addEventListener('DOMContentLoaded', function() {
-    // Botones de cierre dentro de modales
-    const closeButtons = document.querySelectorAll('.modal-close, .close-btn, .cancel-btn');
-    closeButtons.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const modal = this.closest('.modal');
-            if (modal) {
-                modal.classList.remove('show');
-                console.log('✅ Modal cerrado:', modal.id);
-            }
-        });
-    });
-    
-    // Cerrar al hacer clic fuera del modal
-    window.addEventListener('click', function(e) {
-        if (e.target.classList && e.target.classList.contains('modal')) {
-            e.target.classList.remove('show');
-            console.log('✅ Modal cerrado por clic fuera');
-        }
     });
 });
