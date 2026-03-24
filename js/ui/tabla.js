@@ -38,6 +38,7 @@ const TablaUI = {
             // Botones de acción condicionales
             let botonesHtml = '';
             if (mostrarBotonesAccion) {
+                // Modo BASE: muestra todos los botones (editar, historial, imprimir, eliminar)
                 botonesHtml = `
                     <div class="action-buttons">
                         <button class="btn-icon edit" onclick="window.editarRegistro('${reg.id}')" title="Editar">✏️</button>
@@ -47,7 +48,7 @@ const TablaUI = {
                     </div>
                 `;
             } else {
-                // Solo mostrar historial e imprimir en modo consultas/tracking
+                // Modo CONSULTAS o TRACKING: solo muestra historial e imprimir
                 botonesHtml = `
                     <div class="action-buttons">
                         <button class="btn-icon history" onclick="window.verHistorial('${reg.id}')" title="Historial">📋</button>
