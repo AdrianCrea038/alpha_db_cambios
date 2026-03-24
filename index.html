@@ -13,13 +13,17 @@
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config/supabase-config.js"></script>
-    <script src="js/supabase/client.js"></script>
     
-    <!-- Core -->
+    <!-- Configuración (DEBE ir antes que client.js) -->
+    <script src="js/config/supabase-config.js"></script>
+    
+    <!-- Core (orden correcto) -->
     <script src="js/core/utils.js"></script>
     <script src="js/core/notifications.js"></script>
     <script src="js/core/app-state.js"></script>
+    
+    <!-- Supabase Client -->
+    <script src="js/supabase/client.js"></script>
     
     <!-- Módulos -->
     <script src="js/modules/colores.js"></script>
@@ -34,7 +38,7 @@
     <script src="js/ui/formulario.js"></script>
     <script src="js/ui/menu-lateral.js"></script>
     
-    <!-- Main -->
+    <!-- Main (DEBE ir al final) -->
     <script src="js/main.js"></script>
 </head>
 <body>
@@ -229,8 +233,9 @@
             <div class="table-container">
                 <table id="registrosTable">
                     <thead>
-                        <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th>TELA</th><th colspan="2">COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th></thead>
-                    <tbody id="tableBody"><tr><td colspan="17" class="loading">Cargando registros...</td></tr></tbody>
+                        <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th>TELA</th><th colspan="2">COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th></tr>
+                    </thead>
+                    <tbody id="tableBody"><tr><td colspan="18" class="loading">Cargando registros...</td></tr></tbody>
                 </table>
             </div>
         </section>
