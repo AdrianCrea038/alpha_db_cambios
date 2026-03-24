@@ -1,6 +1,6 @@
 // js/ui/tabla.js
 const TablaUI = {
-    modoActual: 'base', // 'base', 'consultas', 'tracking'
+    modoActual: 'base',
     
     setModo: function(modo) {
         this.modoActual = modo;
@@ -12,11 +12,10 @@ const TablaUI = {
         if (!tbody) return;
         
         if (!registrosMostrar || registrosMostrar.length === 0) {
-            tbody.innerHTML = '发展<td colspan="18" class="loading">📭 Sin resultados发展发展';
+            tbody.innerHTML = '<tr><td colspan="18" class="loading">📭 Sin resultados</td></tr>';
             return;
         }
         
-        // Determinar si mostrar botones de editar y eliminar
         const mostrarBotonesAccion = (this.modoActual === 'base');
         
         tbody.innerHTML = registrosMostrar.map(reg => {
@@ -24,21 +23,19 @@ const TablaUI = {
             const rowClass = tieneHistorial ? 'has-history' : '';
             
             const plotterText = reg.plotter_temp ? 
-                `#${reg.numero_plotter || 0} ${reg.plotter_temp.toFixed(1)}°/${reg.plotter_humedad.toFixed(0)}%` : '-';
+                '#' + (reg.numero_plotter || 0) + ' ' + reg.plotter_temp.toFixed(1) + '°/' + reg.plotter_humedad.toFixed(0) + '%' : '-';
             
             const reemplazoIcon = reg.es_reemplazo ? '🔄 Sí' : '⚙️ No';
             const procesoBadge = reg.proceso ? 
-                `<span style="background: ${Utils.getProcesoColor(reg.proceso)}; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">${reg.proceso}</span>` : '-';
+                '<span style="background: ' + Utils.getProcesoColor(reg.proceso) + '; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">' + reg.proceso + '</span>' : '-';
             
             let coloresHtml = '-';
             if (reg.colores && reg.colores.length > 0) {
-                coloresHtml = reg.colores.map(c => `<span class="color-tag" title="${c.nombre}">${c.nombre}</span>`).join(' ');
+                coloresHtml = reg.colores.map(c => '<span class="color-tag" title="' + c.nombre + '">' + c.nombre + '</span>').join(' ');
             }
             
-            // Botones de acción condicionales
             let botonesHtml = '';
             if (mostrarBotonesAccion) {
-                // Modo BASE: muestra todos los botones (editar, historial, imprimir, eliminar)
                 botonesHtml = `
                     <div class="action-buttons">
                         <button class="btn-icon edit" onclick="window.editarRegistro('${reg.id}')" title="Editar">✏️</button>
@@ -48,7 +45,6 @@ const TablaUI = {
                     </div>
                 `;
             } else {
-                // Modo CONSULTAS o TRACKING: solo muestra historial e imprimir
                 botonesHtml = `
                     <div class="action-buttons">
                         <button class="btn-icon history" onclick="window.verHistorial('${reg.id}')" title="Historial">📋</button>
@@ -59,26 +55,26 @@ const TablaUI = {
             
             return `
                 <tr class="${rowClass}" data-id="${reg.id}">
-                    <td><span class="po-badge">${reg.po || '-'}</span>发展
-                    <td><span style="background:#ff0000; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">v${reg.version || 1}</span>发展
-                    <td>${procesoBadge}发展
-                    <td>${reemplazoIcon}发展
-                    <td>${reg.semana}发展
-                    <td>${Utils.formatearFecha(reg.fecha)}发展
-                    <td>${reg.estilo || '-'}发展
-                    <td>${reg.tela || '-'}发展
-                    <td colspan="2">${coloresHtml}发展
-                    <td><span style="background:#9c27b0; color:white; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">${plotterText}</span>发展
-                    <td>${reg.adhesivo || '-'}发展
-                    <td>${(reg.temperatura_monti || 0).toFixed(1)}°发展
-                    <td>${(reg.velocidad_monti || 0).toFixed(1)}发展
-                    <td>${(reg.temperatura_flat || 0).toFixed(1)}°发展
-                    <td>${(reg.tiempo_flat || 0).toFixed(1)}s发展
+                    <td><span class="po-badge">${reg.po || '-'}</span></td>
+                    <td><span style="background:#ff0000; color:white; padding:0.2rem 0.5rem; border-radius:1rem;">v${reg.version || 1}</span></td>
+                    <td>${procesoBadge}</td>
+                    <td>${reemplazoIcon}</td>
+                    <td>${reg.semana}</td>
+                    <td>${Utils.formatearFecha(reg.fecha)}</td>
+                    <td>${reg.estilo || '-'}</td>
+                    <td>${reg.tela || '-'}</td>
+                    <td colspan="2">${coloresHtml}</td>
+                    <td><span style="background:#9c27b0; color:white; padding:0.2rem 0.5rem; border-radius:1rem; font-size:0.7rem;">${plotterText}</span></td>
+                    <td>${reg.adhesivo || '-'}</td>
+                    <td>${(reg.temperatura_monti || 0).toFixed(1)}°</td>
+                    <td>${(reg.velocidad_monti || 0).toFixed(1)}</td>
+                    <td>${(reg.temperatura_flat || 0).toFixed(1)}°</td>
+                    <td>${(reg.tiempo_flat || 0).toFixed(1)}s</td>
                     <td class="action-cell">
                         ${botonesHtml}
-                        ${reg.observacion ? `<small style="color:#ffd93d; display:block; margin-top:5px;">📝 ${reg.observacion}</small>` : ''}
-                    发展
-                发展
+                        ${reg.observacion ? '<small style="color:#ffd93d; display:block; margin-top:5px;">📝 ' + reg.observacion + '</small>' : ''}
+                    </td>
+                </tr>
             `;
         }).join('');
     },
@@ -96,12 +92,12 @@ const TablaUI = {
         const totalSpan = document.getElementById('totalRegistros');
         const filtroBadge = document.getElementById('filtroActivo');
         
-        if (totalSpan) totalSpan.innerHTML = `${total} registros`;
+        if (totalSpan) totalSpan.innerHTML = total + ' registros';
         
         if (filtroBadge) {
             if (AppState.currentSemana || AppState.currentSearch) {
                 filtroBadge.style.display = 'inline';
-                filtroBadge.innerHTML = `${filtrados.length} resultados`;
+                filtroBadge.innerHTML = filtrados.length + ' resultados';
             } else {
                 filtroBadge.style.display = 'none';
             }
