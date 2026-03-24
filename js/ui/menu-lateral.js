@@ -1,4 +1,4 @@
-// js/ui/menu-lateral.js - VERSIÓN COMPLETA CON NUEVOS BOTONES
+// js/ui/menu-lateral.js - VERSIÓN ACTUALIZADA CON APROBACIONES PISO Y BANDEJA DE ENTRADA
 const MenuLateral = {
     init: function() {
         if (window.location.pathname.includes('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
@@ -53,16 +53,6 @@ const MenuLateral = {
                         </span>
                         <span class="menu-text">Tracking</span>
                     </button>
-                    <button id="btnSolicitudes" class="menu-btn">
-                        <span class="menu-icon">
-                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
-                                <path d="M22 6.5L12 13L2 6.5M22 6.5L12 13L2 6.5M2 6.5L12 13L2 6.5Z" fill="none"/>
-                                <path d="M12 13V21M2 6.5V17.5C2 18.3 2.5 19 3.2 19.4L12 22L20.8 19.4C21.5 19 22 18.3 22 17.5V6.5" fill="none"/>
-                            </svg>
-                        </span>
-                        <span class="menu-text">Solicitudes</span>
-                        <span class="menu-badge">🚧</span>
-                    </button>
                     <button id="btnAprobaciones" class="menu-btn">
                         <span class="menu-icon">
                             <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
@@ -71,7 +61,15 @@ const MenuLateral = {
                             </svg>
                         </span>
                         <span class="menu-text">Aprobaciones piso</span>
-                        <span class="menu-badge">🚧</span>
+                    </button>
+                    <button id="btnBandejaEntrada" class="menu-btn">
+                        <span class="menu-icon">
+                            <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="20" height="20">
+                                <path d="M22 6.5L12 13L2 6.5M22 6.5L12 13L2 6.5M2 6.5L12 13L2 6.5Z" fill="none"/>
+                                <path d="M12 13V21M2 6.5V17.5C2 18.3 2.5 19 3.2 19.4L12 22L20.8 19.4C21.5 19 22 18.3 22 17.5V6.5" fill="none"/>
+                            </svg>
+                        </span>
+                        <span class="menu-text">Bandeja de entrada</span>
                     </button>
                 </div>
                 <div class="menu-footer">
@@ -124,27 +122,23 @@ const MenuLateral = {
         const btnBaseDatos = document.getElementById('btnBaseDatos');
         const btnConsultas = document.getElementById('btnConsultas');
         const btnTracking = document.getElementById('btnTracking');
-        const btnSolicitudes = document.getElementById('btnSolicitudes');
         const btnAprobaciones = document.getElementById('btnAprobaciones');
+        const btnBandejaEntrada = document.getElementById('btnBandejaEntrada');
         
         if (btnBaseDatos) btnBaseDatos.addEventListener('click', () => this.mostrarBaseDatos());
         if (btnConsultas) btnConsultas.addEventListener('click', () => this.mostrarConsultas());
         if (btnTracking) btnTracking.addEventListener('click', () => this.mostrarTracking());
-        if (btnSolicitudes) btnSolicitudes.addEventListener('click', () => this.mostrarSolicitudes());
         if (btnAprobaciones) btnAprobaciones.addEventListener('click', () => this.mostrarAprobaciones());
+        if (btnBandejaEntrada) btnBandejaEntrada.addEventListener('click', () => this.mostrarBandejaEntrada());
     },
     
     mostrarBaseDatos: function() {
+        this.ocultarTodosLosPaneles();
+        
         const btns = document.querySelectorAll('.menu-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         const btnBaseDatos = document.getElementById('btnBaseDatos');
         if (btnBaseDatos) btnBaseDatos.classList.add('active');
-        
-        const consultasPanel = document.getElementById('consultasPanel');
-        if (consultasPanel) consultasPanel.classList.remove('active');
-        
-        const trackingPanel = document.getElementById('trackingPanel');
-        if (trackingPanel) trackingPanel.remove();
         
         const formSection = document.querySelector('.form-section');
         const filtersSection = document.querySelector('.filters-section');
@@ -154,7 +148,6 @@ const MenuLateral = {
         if (filtersSection) filtersSection.style.display = 'block';
         if (tableSection) tableSection.style.display = 'block';
         
-        // Modo completo para TablaUI
         if (window.TablaUI && TablaUI.setModo) {
             TablaUI.setModo('completo');
         }
@@ -169,20 +162,14 @@ const MenuLateral = {
     },
     
     mostrarConsultas: function() {
+        this.ocultarTodosLosPaneles();
+        
         const btns = document.querySelectorAll('.menu-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         const btnConsultas = document.getElementById('btnConsultas');
         if (btnConsultas) btnConsultas.classList.add('active');
         
-        const trackingPanel = document.getElementById('trackingPanel');
-        if (trackingPanel) trackingPanel.remove();
-        
         if (!document.getElementById('consultasPanel')) this.crearPanelConsultas();
-        
-        const formSection = document.querySelector('.form-section');
-        const filtersSection = document.querySelector('.filters-section');
-        if (formSection) formSection.style.display = 'none';
-        if (filtersSection) filtersSection.style.display = 'none';
         
         const consultasPanel = document.getElementById('consultasPanel');
         if (consultasPanel) consultasPanel.classList.add('active');
@@ -190,7 +177,6 @@ const MenuLateral = {
         const tableSection = document.querySelector('.table-section');
         if (tableSection) tableSection.style.display = 'block';
         
-        // Modo solo lectura para TablaUI (solo botón historial)
         if (window.TablaUI && TablaUI.setModo) {
             TablaUI.setModo('solo-lectura');
         }
@@ -200,23 +186,16 @@ const MenuLateral = {
     },
     
     mostrarTracking: function() {
+        this.ocultarTodosLosPaneles();
+        
         const btns = document.querySelectorAll('.menu-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         const btnTracking = document.getElementById('btnTracking');
         if (btnTracking) btnTracking.classList.add('active');
         
-        const consultasPanel = document.getElementById('consultasPanel');
-        if (consultasPanel) consultasPanel.classList.remove('active');
-        
-        const formSection = document.querySelector('.form-section');
-        const filtersSection = document.querySelector('.filters-section');
         const tableSection = document.querySelector('.table-section');
-        
-        if (formSection) formSection.style.display = 'none';
-        if (filtersSection) filtersSection.style.display = 'none';
         if (tableSection) tableSection.style.display = 'block';
         
-        // Modo tracking para TablaUI (solo botón historial)
         if (window.TablaUI && TablaUI.setModo) {
             TablaUI.setModo('tracking');
         }
@@ -231,66 +210,72 @@ const MenuLateral = {
         if (window.Notifications) Notifications.info('📍 Módulo de Tracking - Buscar por PO');
     },
     
-    mostrarSolicitudes: function() {
-        const btns = document.querySelectorAll('.menu-btn');
-        btns.forEach(btn => btn.classList.remove('active'));
-        const btnSolicitudes = document.getElementById('btnSolicitudes');
-        if (btnSolicitudes) btnSolicitudes.classList.add('active');
-        
-        // Ocultar paneles existentes
-        const consultasPanel = document.getElementById('consultasPanel');
-        if (consultasPanel) consultasPanel.classList.remove('active');
-        
-        const trackingPanel = document.getElementById('trackingPanel');
-        if (trackingPanel) trackingPanel.remove();
-        
-        // Mostrar mensaje de "Próximamente"
-        this.mostrarMensajeProximamente('Solicitudes');
-        
-        if (window.Notifications) Notifications.info('📋 Módulo de Solicitudes - Próximamente disponible');
-    },
-    
     mostrarAprobaciones: function() {
+        this.ocultarTodosLosPaneles();
+        
         const btns = document.querySelectorAll('.menu-btn');
         btns.forEach(btn => btn.classList.remove('active'));
         const btnAprobaciones = document.getElementById('btnAprobaciones');
         if (btnAprobaciones) btnAprobaciones.classList.add('active');
         
-        // Ocultar paneles existentes
+        const tableSection = document.querySelector('.table-section');
+        if (tableSection) tableSection.style.display = 'none';
+        
+        if (window.AprobacionesModule && AprobacionesModule.init) {
+            AprobacionesModule.init();
+        } else {
+            console.error('AprobacionesModule no cargado');
+            if (window.Notifications) Notifications.error('Error al cargar módulo de Aprobaciones');
+        }
+        
+        if (window.Notifications) Notifications.info('✅ Módulo de Aprobaciones de Piso');
+    },
+    
+    mostrarBandejaEntrada: function() {
+        this.ocultarTodosLosPaneles();
+        
+        const btns = document.querySelectorAll('.menu-btn');
+        btns.forEach(btn => btn.classList.remove('active'));
+        const btnBandejaEntrada = document.getElementById('btnBandejaEntrada');
+        if (btnBandejaEntrada) btnBandejaEntrada.classList.add('active');
+        
+        const tableSection = document.querySelector('.table-section');
+        if (tableSection) tableSection.style.display = 'none';
+        
+        if (window.BandejaEntradaModule && BandejaEntradaModule.init) {
+            BandejaEntradaModule.init();
+        } else {
+            console.error('BandejaEntradaModule no cargado');
+            if (window.Notifications) Notifications.error('Error al cargar módulo de Bandeja de Entrada');
+        }
+        
+        if (window.Notifications) Notifications.info('📥 Bandeja de Entrada - Aprobaciones registradas');
+    },
+    
+    ocultarTodosLosPaneles: function() {
+        // Ocultar formulario principal
+        const formSection = document.querySelector('.form-section');
+        if (formSection) formSection.style.display = 'none';
+        
+        // Ocultar filtros
+        const filtersSection = document.querySelector('.filters-section');
+        if (filtersSection) filtersSection.style.display = 'none';
+        
+        // Ocultar paneles específicos
         const consultasPanel = document.getElementById('consultasPanel');
         if (consultasPanel) consultasPanel.classList.remove('active');
         
         const trackingPanel = document.getElementById('trackingPanel');
         if (trackingPanel) trackingPanel.remove();
         
-        // Mostrar mensaje de "Próximamente"
-        this.mostrarMensajeProximamente('Aprobaciones piso');
+        const aprobacionesPanel = document.getElementById('aprobacionesPanel');
+        if (aprobacionesPanel) aprobacionesPanel.remove();
         
-        if (window.Notifications) Notifications.info('✅ Módulo de Aprobaciones - Próximamente disponible');
-    },
-    
-    mostrarMensajeProximamente: function(titulo) {
-        // Eliminar panel existente si hay
-        const existingPanel = document.getElementById('proximamentePanel');
-        if (existingPanel) existingPanel.remove();
+        const bandejaPanel = document.getElementById('bandejaEntradaPanel');
+        if (bandejaPanel) bandejaPanel.remove();
         
-        const tableSection = document.querySelector('.table-section');
-        if (!tableSection) return;
-        
-        const panelHTML = `
-            <div id="proximamentePanel" class="consultas-panel" style="display:block; text-align:center; padding:3rem;">
-                <div style="font-size:4rem; margin-bottom:1rem;">🚧</div>
-                <h3 style="color:#ff6b8a; margin-bottom:1rem;">${titulo}</h3>
-                <p style="color:rgba(255,255,255,0.7); margin-bottom:1rem;">Esta sección está en desarrollo</p>
-                <p style="color:#ffd93d; font-size:0.8rem;">Próximamente disponible</p>
-            </div>
-        `;
-        
-        tableSection.insertAdjacentHTML('beforebegin', panelHTML);
-        
-        // Ocultar tabla si está visible
-        const tableSectionContent = document.querySelector('.table-section');
-        if (tableSectionContent) tableSectionContent.style.display = 'none';
+        const proximamentePanel = document.getElementById('proximamentePanel');
+        if (proximamentePanel) proximamentePanel.remove();
     },
     
     crearPanelConsultas: function() {
@@ -415,7 +400,6 @@ const MenuLateral = {
     }
 };
 
-// Inicialización
 document.addEventListener('DOMContentLoaded', function() {
     if (!window.location.pathname.includes('login.html')) {
         setTimeout(() => {
