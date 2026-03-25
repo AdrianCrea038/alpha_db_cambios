@@ -1,383 +1,509 @@
-// js/main.js
-let datosCargados = false;
+import { FileHandler } from './modules/fileHandler.js';
+import { ColorMatcher } from './modules/colorMatcher.js';
+import { DataManager } from './modules/dataManager.js';
+import { UIRenderer } from './modules/uiRenderer.js';
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🚀 Iniciando Alpha DB v9.0...');
-    
-    window.onStateChange = function() {
-        if (TablaUI && TablaUI.actualizar) TablaUI.actualizar();
-    };
-    
-    const hoy = new Date().toISOString().split('T')[0];
-    const fechaInput = document.getElementById('fecha');
-    if (fechaInput) {
-        fechaInput.value = hoy;
-        fechaInput.setAttribute('max', hoy);
-        fechaInput.addEventListener('change', function() {
-            if (FormularioUI && FormularioUI.verificarFecha) FormularioUI.verificarFecha();
-        });
+class AlphaColorMatch {
+    constructor() {
+        this.fileHandler = new FileHandler();
+        this.colorMatcher = new ColorMatcher();
+        this.dataManager = new DataManager();
+        this.uiRenderer = new UIRenderer(this);
+        
+        this.primaryData = [];
+        this.secondaryData = [];
+        this.comparisonResults = [];
+        this.currentFilter = 'all';
+        this.actionHistory = [];
+        this.actionCounter = 0;
+        
+        this.init();
     }
     
-    const agregarColorBtn = document.getElementById('agregarColorBtn');
-    if (agregarColorBtn && ColoresModule) {
-        agregarColorBtn.addEventListener('click', () => ColoresModule.agregarGrupo());
+    init() {
+        this.bindEvents();
+        this.loadHistory();
+        this.uiRenderer.initCreatorTable();
+        window.app = this;
     }
     
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            if (AppState) AppState.setFiltros(e.target.value, AppState.currentSemana);
-            if (TablaUI) TablaUI.actualizar();
-        });
-    }
-    
-    const clearSearch = document.getElementById('clearSearch');
-    if (clearSearch) {
-        clearSearch.addEventListener('click', () => {
-            const input = document.getElementById('searchInput');
-            if (input) input.value = '';
-            if (AppState) AppState.setFiltros('', AppState.currentSemana);
-            if (TablaUI) TablaUI.actualizar();
-        });
-    }
-    
-    const limpiarFiltro = document.getElementById('limpiarFiltroBtn');
-    if (limpiarFiltro) {
-        limpiarFiltro.addEventListener('click', () => {
-            const input = document.getElementById('searchInput');
-            if (input) input.value = '';
-            if (AppState) AppState.setFiltros('', '');
-            if (TablaUI) TablaUI.actualizar();
-            if (Notifications) Notifications.info('🧹 Filtros eliminados');
-        });
-    }
-    
-    cargarDatosIniciales();
-    configurarEventos();
-    
-    setTimeout(() => {
-        const container = document.getElementById('coloresContainer');
-        if (container && ColoresModule && container.children.length === 0) {
-            ColoresModule.agregarGrupo();
+    showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.display = show ? 'flex' : 'none';
         }
-    }, 100);
-});
-
-async function cargarDatosIniciales() {
-    if(window.SupabaseClient && window.SupabaseClient.init && window.SupabaseClient.init()) {
-        console.log('📡 Conectando a Supabase...');
-        const data = await window.SupabaseClient.getRegistros();
-        if(data && data.length > 0) {
-            if(AppState) AppState.setRegistros(data);
-            console.log(`📦 Cargados ${data.length} registros desde Supabase`);
-            if(TablaUI) TablaUI.actualizar();
+    }
+    
+    bindEvents() {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.switchView(btn.dataset.view));
+        });
+        
+        document.getElementById('primaryFileInput').addEventListener('change', (e) => this.loadPrimaryFile(e.target.files[0]));
+        document.getElementById('secondaryFileInput').addEventListener('change', (e) => this.loadSecondaryFile(e.target.files[0]));
+        
+        document.getElementById('compareBtn').addEventListener('click', () => this.compareFiles());
+        document.getElementById('replaceAllBtn')?.addEventListener('click', () => this.replaceAllColors());
+        document.getElementById('exportResultsBtn').addEventListener('click', () => this.exportResults());
+        document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
+        document.getElementById('clearHistoryBtn')?.addEventListener('click', () => this.clearHistory());
+        document.getElementById('downloadTxtBtn')?.addEventListener('click', () => this.downloadCreatorFile());
+        document.getElementById('addColorRowBtn')?.addEventListener('click', () => this.uiRenderer.addCreatorRow());
+        document.getElementById('resetCreatorBtn')?.addEventListener('click', () => this.uiRenderer.resetCreatorTable());
+        
+        document.getElementById('searchInput').addEventListener('input', (e) => this.filterResults());
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.currentFilter = tab.dataset.filter;
+                document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                this.filterResults();
+            });
+        });
+    }
+    
+    async loadPrimaryFile(file) {
+        if (!file) return;
+        this.showLoading(true);
+        try {
+            const data = await this.fileHandler.parseTxtFile(file);
+            this.primaryData = data;
+            this.updateFileInfo('primary', file.name, data.length);
+            this.uiRenderer.showToast(`✅ Archivo principal cargado: ${data.length} colores`, 'success');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    async loadSecondaryFile(file) {
+        if (!file) return;
+        this.showLoading(true);
+        try {
+            const data = await this.fileHandler.parseTxtFile(file);
+            this.secondaryData = data;
+            this.updateFileInfo('secondary', file.name, data.length);
+            this.uiRenderer.showToast(`✅ Archivo secundario cargado: ${data.length} colores`, 'success');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+    
+    updateFileInfo(type, filename, count) {
+        const infoDiv = document.getElementById(`${type}FileInfo`);
+        if (infoDiv) {
+            infoDiv.querySelector('.filename').textContent = filename;
+            infoDiv.querySelector('.record-count').textContent = `${count} registro${count !== 1 ? 's' : ''}`;
+        }
+        if (type === 'primary') {
+            document.getElementById('primaryCount').textContent = count;
+        } else {
+            document.getElementById('secondaryCount').textContent = count;
+        }
+    }
+    
+    compareFiles() {
+        if (this.primaryData.length === 0) {
+            this.uiRenderer.showToast('⚠️ Por favor, cargue el archivo principal primero', 'warning');
             return;
         }
-    }
-    
-    const saved = localStorage.getItem('alpha_db_registros_v9');
-    if(saved) {
-        try {
-            const data = JSON.parse(saved);
-            if(AppState) {
-                AppState.setRegistros(data.registros || []);
-                AppState.historialEdiciones = data.historial || {};
-            }
-            console.log(`📦 Cargados ${AppState.registros.length} registros de localStorage`);
-        } catch(e) { 
-            console.error('Error cargando localStorage:', e);
-            generarDatosEjemplo(); 
+        if (this.secondaryData.length === 0) {
+            this.uiRenderer.showToast('⚠️ Por favor, cargue el archivo secundario para comparar', 'warning');
+            return;
         }
-    } else {
-        generarDatosEjemplo();
-    }
-    
-    if(TablaUI) TablaUI.actualizar();
-}
-
-function generarDatosEjemplo() {
-    if(!AppState || !Utils) return;
-    
-    const ejemplos = [];
-    const pos = ['PO-2401-001', 'PO-2401-002', 'PO-2402-015', 'PO-2402-023'];
-    const procesos = ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'];
-    const estilos = ['LIBRE', 'MARIPOSA', 'PECHO', 'ESPALDA'];
-    const telas = ['ALGODÓN', 'POLIÉSTER', 'NYLON'];
-    const ahora = new Date().toISOString();
-    const hoy = new Date().toISOString().split('T')[0];
-    
-    for (let i = 0; i < 3; i++) {
-        const fecha = new Date();
-        fecha.setDate(fecha.getDate() - i * 2);
-        const fechaStr = fecha.toISOString().split('T')[0];
         
-        ejemplos.push({
-            id: Utils.generarIdUnico(),
-            po: pos[i % pos.length],
-            proceso: procesos[i % procesos.length],
-            es_reemplazo: false,
-            semana: Utils.obtenerSemana(fecha),
-            fecha: fechaStr,
-            estilo: estilos[i % estilos.length],
-            tela: telas[i % telas.length],
-            colores: [{ id:1, nombre:'ROJO', cyan:100, magenta:0, yellow:0, black:0, turquesa:0, naranja:0, fluorYellow:0, fluorPink:0 }],
-            numero_plotter: 1,
-            plotter_temp: 22,
-            plotter_humedad: 45,
-            plotter_perfil: 'MEDIO',
-            monti_numero: 1,
-            temperatura_monti: 180,
-            velocidad_monti: 3,
-            monti_presion: 2,
-            temperatura_flat: 160,
-            tiempo_flat: 15,
-            adhesivo: 'TIPO A',
-            version: 1,
-            observacion: null,
-            creado: ahora,
-            actualizado: ahora
-        });
-    }
-    
-    AppState.setRegistros(ejemplos);
-    guardarDatosLocal();
-}
-
-function guardarDatosLocal() {
-    if(!AppState) return;
-    try {
-        const registrosParaGuardar = AppState.registros.map(reg => {
-            const { historial, ...regSinHistorial } = reg;
-            return regSinHistorial;
-        });
-        const dataToSave = {
-            registros: registrosParaGuardar,
-            historial: AppState.historialEdiciones
-        };
-        localStorage.setItem('alpha_db_registros_v9', JSON.stringify(dataToSave));
-    } catch(error) {
-        console.error('Error al guardar:', error);
-    }
-}
-
-function configurarEventos() {
-    const registroForm = document.getElementById('registroForm');
-    if (registroForm && RegistrosModule) {
-        registroForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const datos = RegistrosModule.obtenerFormulario();
-            const editId = document.getElementById('editId').value;
-            if (editId) {
-                datos.descripcionEdicion = prompt('📝 Describe los cambios realizados:', '');
+        this.showLoading(true);
+        
+        setTimeout(() => {
+            try {
+                this.actionHistory = [];
+                this.actionCounter = 0;
+                
+                this.comparisonResults = this.colorMatcher.smartCompare(this.primaryData, this.secondaryData);
+                
+                const stats = this.colorMatcher.getComparisonStats(this.comparisonResults);
+                this.updateStats(stats);
+                this.updateStatsBar(stats);
+                
+                this.saveToHistory(stats);
+                this.filterResults();
+                
+                this.uiRenderer.showToast(`🔍 Comparación completada: ${stats.differences} diferencias encontradas, ${stats.missing} colores no encontrados`, 'info');
+            } finally {
+                this.showLoading(false);
             }
-            const exito = await RegistrosModule.guardar(datos);
-            if (exito) {
-                guardarDatosLocal();
-                if (FormularioUI && FormularioUI.reset) FormularioUI.reset();
-                if (TablaUI) TablaUI.actualizar();
-            }
-        });
+        }, 100);
     }
     
-    const cancelEdit = document.getElementById('cancelEditBtn');
-    if (cancelEdit && FormularioUI && FormularioUI.reset) {
-        cancelEdit.addEventListener('click', () => FormularioUI.reset());
+    updateStats(stats) {
+        document.getElementById('totalCount').textContent = stats.total;
+        document.getElementById('matchCount').textContent = stats.matches;
+        document.getElementById('diffCountDisplay').textContent = stats.differences;
+        document.getElementById('missingCount').textContent = stats.missing;
+        document.getElementById('diffCount').textContent = stats.differences;
     }
     
-    const exportarDB = document.getElementById('exportarDBBtn');
-    if (exportarDB) {
-        exportarDB.addEventListener('click', () => {
-            const dataToExport = {
-                sistema: "ALPHA DB",
-                version: "9.0",
-                registros: AppState.registros,
-                historial: AppState.historialEdiciones
-            };
-            const blob = new Blob([JSON.stringify(dataToExport, null, 2)], {type:'application/json'});
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `ALPHA_DB_${new Date().toISOString().split('T')[0]}.adb`;
-            a.click();
-            URL.revokeObjectURL(a.href);
-            Notifications.success('💾 Backup guardado');
-        });
+    updateStatsBar(stats) {
+        const container = document.getElementById('statsBarContainer');
+        const fill = document.getElementById('statsBarFill');
+        const matchPercent = document.getElementById('matchPercent');
+        const diffPercent = document.getElementById('diffPercent');
+        const missingPercent = document.getElementById('missingPercent');
+        
+        if (stats.total > 0) {
+            container.style.display = 'block';
+            const matchPct = (stats.matches / stats.total * 100).toFixed(0);
+            const diffPct = (stats.differences / stats.total * 100).toFixed(0);
+            const missingPct = (stats.missing / stats.total * 100).toFixed(0);
+            
+            matchPercent.textContent = matchPct;
+            diffPercent.textContent = diffPct;
+            missingPercent.textContent = missingPct;
+            fill.style.width = `${matchPct}%`;
+        } else {
+            container.style.display = 'none';
+        }
     }
     
-    const importarDB = document.getElementById('importarDB');
-    if (importarDB) {
-        importarDB.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (!file) return;
-            if (!file.name.endsWith('.adb')) { Notifications.error('Debe ser archivo .adb'); return; }
-            const reader = new FileReader();
-            reader.onload = async (e) => {
+    filterResults() {
+        let filtered = [...this.comparisonResults];
+        if (this.currentFilter !== 'all') {
+            filtered = filtered.filter(item => item.status === this.currentFilter);
+        }
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        if (searchTerm) {
+            filtered = filtered.filter(item => {
+                return item.name.toLowerCase().includes(searchTerm) ||
+                       item.id.includes(searchTerm) ||
+                       (item.cmykPrimary && item.cmykPrimary.some(v => v.toString().includes(searchTerm))) ||
+                       (item.cmykSecondary && item.cmykSecondary.some(v => v.toString().includes(searchTerm)));
+            });
+        }
+        this.uiRenderer.renderComparisonTable(filtered, this);
+    }
+    
+    // ✅ NUEVO MÉTODO: Reemplazar todos los colores con diferencias
+    replaceAllColors() {
+        const diffColors = this.comparisonResults.filter(item => 
+            item.status === 'diff' && !item.actionTaken
+        );
+        
+        if (diffColors.length === 0) {
+            this.uiRenderer.showToast('⚠️ No hay colores con diferencias para reemplazar', 'warning');
+            return;
+        }
+        
+        const confirmMsg = `¿Reemplazar TODOS los ${diffColors.length} colores con diferencias por los valores del archivo secundario?\n\nEsta acción se aplicará a todos los colores que tienen diferencias.`;
+        
+        if (confirm(confirmMsg)) {
+            this.showLoading(true);
+            
+            setTimeout(() => {
                 try {
-                    const importedData = JSON.parse(e.target.result);
-                    if (!importedData.registros) throw new Error('Estructura inválida');
-                    if (confirm(`¿Cargar ${importedData.registros.length} registros?`)) {
-                        AppState.setRegistros(importedData.registros);
-                        AppState.historialEdiciones = importedData.historial || {};
-                        guardarDatosLocal();
-                        if(window.SupabaseClient && window.SupabaseClient.client) {
-                            for(const reg of AppState.registros) {
-                                await window.SupabaseClient.guardarRegistro(reg);
-                            }
+                    let replacedCount = 0;
+                    
+                    for (const color of diffColors) {
+                        const index = this.primaryData.findIndex(p => 
+                            p.id === color.id || 
+                            this.colorMatcher.normalizeName(p.name) === this.colorMatcher.normalizeName(color.name)
+                        );
+                        
+                        if (index !== -1) {
+                            const previousState = {
+                                id: color.id,
+                                name: color.name,
+                                cmyk: [...this.primaryData[index].cmyk],
+                                lab: [...this.primaryData[index].lab]
+                            };
+                            
+                            const actionId = `action_${this.actionCounter++}`;
+                            this.actionHistory.push({
+                                id: actionId,
+                                type: 'replace',
+                                colorId: color.id,
+                                colorName: color.name,
+                                timestamp: new Date().toISOString(),
+                                previousState: previousState,
+                                reason: 'Reemplazo masivo de todos los colores'
+                            });
+                            
+                            this.primaryData[index] = {
+                                id: color.id,
+                                name: color.name,
+                                cmyk: [...color.cmykSecondary],
+                                lab: color.labSecondary ? [...color.labSecondary] : (color.labPrimary || [0, 0, 0])
+                            };
+                            
+                            const resultItem = this.comparisonResults.find(r => r.id === color.id);
+                            if (resultItem) resultItem.actionTaken = 'replace';
+                            
+                            replacedCount++;
                         }
-                        if (FormularioUI && FormularioUI.reset) FormularioUI.reset();
-                        if (TablaUI) TablaUI.actualizar();
-                        Notifications.success(`📂 Cargados ${AppState.registros.length} registros`);
                     }
-                } catch(error) { Notifications.error('Archivo inválido'); }
+                    
+                    this.saveActionToHistory('replace_all', 'all', `${replacedCount} colores`, `Reemplazo masivo de ${replacedCount} colores con diferencias`);
+                    this.compareFiles();
+                    
+                    this.uiRenderer.showToast(`⚡ Se reemplazaron ${replacedCount} colores con valores del secundario`, 'success');
+                } finally {
+                    this.showLoading(false);
+                }
+            }, 100);
+        }
+    }
+    
+    showReplaceConfirm(colorId) {
+        const color = this.comparisonResults.find(c => c.id === colorId);
+        if (!color) return;
+        this.uiRenderer.showReplaceConfirm(colorId, (reason) => {
+            this.replaceColor(color, reason);
+        });
+    }
+    
+    showKeepConfirm(colorId) {
+        const color = this.comparisonResults.find(c => c.id === colorId);
+        if (!color) return;
+        this.uiRenderer.showKeepConfirm(colorId, (reason) => {
+            this.keepColor(color, reason);
+        });
+    }
+    
+    showAddConfirm(colorId) {
+        const color = this.comparisonResults.find(c => c.id === colorId);
+        if (!color) return;
+        this.uiRenderer.showAddConfirm(colorId, color.name, (reason) => {
+            this.addMissingColor(color, reason);
+        });
+    }
+    
+    showUndoDialog(colorId, actionType) {
+        this.uiRenderer.showUndoModal(colorId, actionType, (reason) => {
+            this.undoAction(colorId, actionType, reason);
+        });
+    }
+    
+    replaceColor(item, reason = '') {
+        const index = this.primaryData.findIndex(p => 
+            p.id === item.id || 
+            this.colorMatcher.normalizeName(p.name) === this.colorMatcher.normalizeName(item.name)
+        );
+        if (index !== -1) {
+            const previousState = {
+                id: item.id,
+                name: item.name,
+                cmyk: [...this.primaryData[index].cmyk],
+                lab: [...this.primaryData[index].lab]
             };
-            reader.readAsText(file);
-            event.target.value = '';
+            const actionId = `action_${this.actionCounter++}`;
+            this.actionHistory.push({
+                id: actionId,
+                type: 'replace',
+                colorId: item.id,
+                colorName: item.name,
+                timestamp: new Date().toISOString(),
+                previousState: previousState,
+                reason: reason
+            });
+            this.primaryData[index] = {
+                id: item.id,
+                name: item.name,
+                cmyk: [...item.cmykSecondary],
+                lab: item.labSecondary ? [...item.labSecondary] : (item.labPrimary || [0, 0, 0])
+            };
+            const resultItem = this.comparisonResults.find(r => r.id === item.id);
+            if (resultItem) resultItem.actionTaken = 'replace';
+            this.compareFiles();
+            this.saveActionToHistory('replace', item.id, item.name, reason);
+            this.uiRenderer.showToast(`🔄 Color "${item.name}" reemplazado con valores del secundario`, 'success');
+        }
+    }
+    
+    keepColor(item, reason = '') {
+        const actionId = `action_${this.actionCounter++}`;
+        this.actionHistory.push({
+            id: actionId,
+            type: 'keep',
+            colorId: item.id,
+            colorName: item.name,
+            timestamp: new Date().toISOString(),
+            previousState: null,
+            reason: reason
         });
+        const resultItem = this.comparisonResults.find(r => r.id === item.id);
+        if (resultItem) resultItem.actionTaken = 'keep';
+        this.filterResults();
+        this.saveActionToHistory('keep', item.id, item.name, reason);
+        this.uiRenderer.showToast(`💾 Valor principal mantenido para "${item.name}". Puedes deshacer si fue un error.`, 'undo');
     }
     
-    const exportarExcel = document.getElementById('exportarExcelBtn');
-    if (exportarExcel && ExcelModule && ExcelModule.exportar) {
-        exportarExcel.addEventListener('click', () => ExcelModule.exportar());
-    }
-    
-    const imprimirReportes = document.getElementById('imprimirReportesBtn');
-    if (imprimirReportes && ImpresionModule && ImpresionModule.imprimirReporte) {
-        imprimirReportes.addEventListener('click', () => ImpresionModule.imprimirReporte());
-    }
-    
-    const imprimirIndividual = document.getElementById('imprimirIndividualBtn');
-    const imprimirIndividualAction = document.getElementById('imprimirIndividualBtnAction');
-    if (imprimirIndividual) {
-        imprimirIndividual.addEventListener('click', () => {
-            const select = document.getElementById('selectRegistroImprimir');
-            const modal = document.getElementById('modalImpresion');
-            if(select) select.innerHTML = '<option value="">Seleccionar</option>' + AppState.registros.map(r => `<option value="${r.id}">${r.po} v${r.version}</option>`).join('');
-            if(modal) modal.classList.add('show');
+    addMissingColor(item, reason = '') {
+        const newColor = {
+            id: item.id,
+            name: item.name,
+            cmyk: [...item.cmykSecondary],
+            lab: item.labSecondary ? [...item.labSecondary] : [0, 0, 0]
+        };
+        const actionId = `action_${this.actionCounter++}`;
+        this.actionHistory.push({
+            id: actionId,
+            type: 'add',
+            colorId: item.id,
+            colorName: item.name,
+            timestamp: new Date().toISOString(),
+            previousState: null,
+            newColor: {...newColor},
+            reason: reason
         });
+        this.primaryData.push(newColor);
+        const resultItem = this.comparisonResults.find(r => r.id === item.id);
+        if (resultItem) resultItem.actionTaken = 'add';
+        this.compareFiles();
+        this.saveActionToHistory('add', item.id, item.name, reason);
+        this.uiRenderer.showToast(`✅ Color "${item.name}" agregado a la referencia principal`, 'success');
     }
-    if (imprimirIndividualAction) {
-        imprimirIndividualAction.addEventListener('click', () => {
-            const select = document.getElementById('selectRegistroImprimir');
-            const id = select ? select.value : null;
-            if (id) {
-                document.getElementById('modalImpresion').classList.remove('show');
-                window.imprimirEtiqueta(id);
-            } else {
-                Notifications.error('❌ Selecciona un registro');
+    
+    undoAction(colorId, actionType, reason = '') {
+        const action = this.actionHistory.find(a => a.colorId === colorId && a.type === actionType);
+        if (!action) {
+            this.uiRenderer.showToast('❌ No se pudo deshacer la acción', 'error');
+            return;
+        }
+        if (action.type === 'replace' && action.previousState) {
+            const index = this.primaryData.findIndex(p => p.id === colorId);
+            if (index !== -1) {
+                this.primaryData[index] = {
+                    id: action.previousState.id,
+                    name: action.previousState.name,
+                    cmyk: [...action.previousState.cmyk],
+                    lab: [...action.previousState.lab]
+                };
             }
-        });
+        } else if (action.type === 'keep') {
+            const resultItem = this.comparisonResults.find(r => r.id === colorId);
+            if (resultItem) delete resultItem.actionTaken;
+        } else if (action.type === 'add') {
+            const index = this.primaryData.findIndex(p => p.id === colorId);
+            if (index !== -1) this.primaryData.splice(index, 1);
+            const resultItem = this.comparisonResults.find(r => r.id === colorId);
+            if (resultItem) delete resultItem.actionTaken;
+        }
+        const actionIndex = this.actionHistory.findIndex(a => a.id === action.id);
+        if (actionIndex !== -1) this.actionHistory.splice(actionIndex, 1);
+        this.saveActionToHistory('undo', colorId, action.colorName, `Se deshizo acción de ${actionType}. Motivo: ${reason}`);
+        this.compareFiles();
+        this.uiRenderer.showToast(`↩️ Se ha deshecho la acción de ${actionType === 'keep' ? 'mantener' : actionType === 'replace' ? 'reemplazar' : 'agregar'} para "${action.colorName}"`, 'success');
     }
     
-    // ==================== BOTÓN DE SALIR - AGREGADO ====================
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', function() {
-            if (confirm('¿Cerrar sesión?')) {
-                localStorage.removeItem('alpha_db_session');
-                window.location.href = 'login.html';
-            }
+    saveActionToHistory(actionType, colorId, colorName, reason) {
+        const history = this.dataManager.getHistory();
+        if (history.length > 0) {
+            const lastHistory = history[0];
+            if (!lastHistory.actionsLog) lastHistory.actionsLog = [];
+            lastHistory.actionsLog.push({
+                type: actionType,
+                colorId: colorId,
+                colorName: colorName,
+                reason: reason,
+                timestamp: new Date().toISOString()
+            });
+            this.dataManager.saveToHistory(lastHistory);
+        }
+    }
+    
+    exportResults() {
+        if (this.comparisonResults.length === 0) {
+            this.uiRenderer.showToast('No hay resultados para exportar', 'warning');
+            return;
+        }
+        const content = this.fileHandler.generateExportContent(this.comparisonResults);
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `alpha_comparison_${new Date().toISOString().slice(0,19)}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.uiRenderer.showToast('📥 Resultados exportados exitosamente', 'success');
+    }
+    
+    saveToHistory(stats) {
+        const historyItem = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            primaryFile: document.getElementById('primaryFileInfo').querySelector('.filename').textContent,
+            secondaryFile: document.getElementById('secondaryFileInfo').querySelector('.filename').textContent,
+            stats: { ...stats },
+            actionsLog: [],
+            results: this.comparisonResults.slice(0, 10)
+        };
+        this.dataManager.saveToHistory(historyItem);
+        this.loadHistory();
+    }
+    
+    loadHistory() {
+        const history = this.dataManager.getHistory();
+        this.uiRenderer.renderHistory(history);
+    }
+    
+    clearHistory() {
+        if (confirm('¿Eliminar todo el historial de comparaciones?')) {
+            this.dataManager.clearHistory();
+            this.loadHistory();
+            this.uiRenderer.showToast('Historial limpiado', 'success');
+        }
+    }
+    
+    clearAll() {
+        if (confirm('¿Limpiar todos los datos cargados?')) {
+            this.primaryData = [];
+            this.secondaryData = [];
+            this.comparisonResults = [];
+            this.currentFilter = 'all';
+            this.actionHistory = [];
+            document.getElementById('primaryFileInput').value = '';
+            document.getElementById('secondaryFileInput').value = '';
+            document.getElementById('primaryFileInfo').querySelector('.filename').textContent = 'Ningún archivo cargado';
+            document.getElementById('secondaryFileInfo').querySelector('.filename').textContent = 'Ningún archivo cargado';
+            document.getElementById('primaryCount').textContent = '0';
+            document.getElementById('secondaryCount').textContent = '0';
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statsBarContainer').style.display = 'none';
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                if (tab.dataset.filter === 'all') tab.classList.add('active');
+                else tab.classList.remove('active');
+            });
+            this.currentFilter = 'all';
+            this.filterResults();
+            this.uiRenderer.showToast('Todos los datos han sido limpiados', 'info');
+        }
+    }
+    
+    downloadCreatorFile() {
+        const creatorData = this.uiRenderer.getCreatorData();
+        if (creatorData.length === 0) {
+            this.uiRenderer.showToast('No hay datos para exportar', 'warning');
+            return;
+        }
+        const content = this.fileHandler.generateTxtFromData(creatorData);
+        const blob = new Blob([content], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `alpha_color_data_${new Date().toISOString().slice(0,19)}.txt`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.uiRenderer.showToast('✨ Archivo TXT generado exitosamente', 'success');
+    }
+    
+    switchView(view) {
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.view === view) btn.classList.add('active');
         });
+        document.querySelectorAll('.view-panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(`${view}View`).classList.add('active');
+        if (view === 'history') this.loadHistory();
+        else if (view === 'creator') this.uiRenderer.initCreatorTable();
     }
 }
 
-window.editarRegistro = (id) => {
-    console.log('✏️ Editando registro:', id);
-    if (FormularioUI && FormularioUI.cargarParaEdicion) {
-        FormularioUI.cargarParaEdicion(id);
-    } else {
-        console.error('FormularioUI no disponible');
-        Notifications.error('Error al editar');
-    }
-};
-
-window.eliminarRegistro = async (id) => {
-    console.log('🗑️ Eliminando registro:', id);
-    if (await RegistrosModule.eliminar(id)) {
-        guardarDatosLocal();
-        if (TablaUI) TablaUI.actualizar();
-    }
-};
-
-window.verHistorial = (id) => {
-    console.log('📋 Ver historial:', id);
-    const reg = AppState.registros.find(r => r.id === id);
-    if (!reg) {
-        Notifications.error('Registro no encontrado');
-        return;
-    }
-    
-    const hist = AppState.historialEdiciones[id] || [];
-    const modal = document.getElementById('modalHistorial');
-    const container = document.getElementById('historialContainer');
-    
-    if (!modal || !container) return;
-    
-    let html = '';
-    if (hist.length === 0) {
-        html = '<p class="no-data" style="text-align:center; padding:20px;">📭 No hay historial de ediciones</p>';
-    } else {
-        html = hist.map((e, i) => `
-            <div class="historial-item" style="background:#2a2a2a; border-radius:12px; padding:12px; margin-bottom:12px;">
-                <div style="color:#ffd93d; margin-bottom:8px;">📅 ${new Date(e.fecha).toLocaleString()}</div>
-                <div style="margin-bottom:8px;">📝 ${e.descripcion || 'Sin descripción'}</div>
-                <div style="display:flex; gap:16px; flex-wrap:wrap;">
-                    <div style="border-left:3px solid #ff6b6b; padding-left:8px;">
-                        <div style="font-size:11px; color:#ff6b6b;">ANTERIOR</div>
-                        <div>PO: ${e.anterior.po}</div>
-                        <div>Proceso: ${e.anterior.proceso}</div>
-                        <div>v${e.anterior.version}</div>
-                    </div>
-                    <div style="border-left:3px solid #4caf50; padding-left:8px;">
-                        <div style="font-size:11px; color:#4caf50;">NUEVO</div>
-                        <div>PO: ${e.nuevo.po}</div>
-                        <div>Proceso: ${e.nuevo.proceso}</div>
-                        <div>v${e.nuevo.version}</div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    html += `
-        <div class="historial-item" style="background:#2a2a2a; border-radius:12px; padding:12px; border-left:4px solid #ffd93d;">
-            <div style="color:#ffd93d;">⚡ VERSIÓN ACTUAL v${reg.version}</div>
-            <div>PO: ${reg.po}</div>
-            <div>Proceso: ${reg.proceso}</div>
-            ${reg.observacion ? `<div>📝 ${reg.observacion}</div>` : ''}
-        </div>
-    `;
-    
-    container.innerHTML = html;
-    modal.classList.add('show');
-};
-
-window.imprimirEtiqueta = (id) => {
-    console.log('🖨️ Imprimiendo etiqueta para ID:', id);
-    if (window.ImpresionModule && window.ImpresionModule.imprimirEtiqueta) {
-        window.ImpresionModule.imprimirEtiqueta(id);
-    } else {
-        Notifications.error('Módulo de impresión no disponible');
-    }
-};
-
-window.filtrarPorSemana = (semana) => {
-    if (AppState.currentSemana == semana) {
-        AppState.setFiltros(AppState.currentSearch, '');
-        Notifications.info('📅 Filtro de semana eliminado');
-    } else {
-        AppState.setFiltros(AppState.currentSearch, semana);
-        Notifications.success(`📅 Semana ${semana} seleccionada`);
-    }
-    if (TablaUI) TablaUI.actualizar();
-};
-
-document.querySelectorAll('.modal-close, .close-btn, .cancel-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
-    });
-});
-
-window.addEventListener('click', (e) => {
-    document.querySelectorAll('.modal').forEach(modal => {
-        if (e.target === modal) modal.classList.remove('show');
-    });
-});
+const app = new AlphaColorMatch();
