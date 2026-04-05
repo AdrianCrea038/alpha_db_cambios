@@ -4,11 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alpha DB - Login</title>
-    <link rel="stylesheet" href="login.css">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
-        /* Estilos de respaldo por si login.css no carga */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             min-height: 100vh;
@@ -17,6 +20,7 @@
             align-items: center;
             background: #0D1117;
         }
+
         .login-container {
             width: 400px;
             padding: 50px 40px;
@@ -25,17 +29,20 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
             border: 1px solid rgba(0, 212, 255, 0.25);
         }
+
         .user-icon-section {
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 50px;
         }
+
         .line {
             flex: 1;
             height: 1px;
             background: rgba(0, 212, 255, 0.4);
         }
+
         .user-icon {
             width: 80px;
             height: 80px;
@@ -47,11 +54,13 @@
             color: #00D4FF;
             margin: 0 15px;
         }
+
         .login-form {
             display: flex;
             flex-direction: column;
             gap: 15px;
         }
+
         .input-group {
             display: flex;
             align-items: center;
@@ -61,10 +70,12 @@
             overflow: hidden;
             transition: all 0.3s;
         }
+
         .input-group:focus-within {
             border-color: #00D4FF;
             box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.15);
         }
+
         .input-icon {
             padding: 12px 15px;
             color: #00D4FF;
@@ -73,6 +84,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .input-field {
             flex: 1;
             padding: 14px 15px;
@@ -84,11 +96,13 @@
             letter-spacing: 1px;
             font-weight: 500;
         }
+
         .input-field::placeholder {
             color: #8B949E;
             letter-spacing: 2px;
             font-weight: 400;
         }
+
         .login-btn {
             margin-top: 10px;
             padding: 14px;
@@ -102,17 +116,20 @@
             cursor: pointer;
             transition: all 0.3s ease;
         }
+
         .login-btn:hover {
             background: linear-gradient(90deg, #33DDFF 0%, #00AADD 100%);
             transform: translateY(-2px);
             box-shadow: 0 5px 20px rgba(0, 212, 255, 0.4);
         }
+
         .options {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-top: 10px;
         }
+
         .remember-me {
             display: flex;
             align-items: center;
@@ -124,11 +141,13 @@
             padding-left: 25px;
             font-weight: 500;
         }
+
         .remember-me input {
             position: absolute;
             opacity: 0;
             cursor: pointer;
         }
+
         .checkmark {
             position: absolute;
             left: 0;
@@ -139,10 +158,12 @@
             background: transparent;
             transition: all 0.2s;
         }
+
         .remember-me input:checked ~ .checkmark {
             background: #00D4FF;
             border-color: #00D4FF;
         }
+
         .checkmark:after {
             content: "";
             position: absolute;
@@ -155,9 +176,11 @@
             border-width: 0 2px 2px 0;
             transform: rotate(45deg);
         }
+
         .remember-me input:checked ~ .checkmark:after {
             display: block;
         }
+
         .forgot-password {
             color: #8B949E;
             font-size: 12px;
@@ -165,24 +188,29 @@
             transition: color 0.3s ease;
             font-weight: 500;
         }
+
         .forgot-password:hover {
             color: #00D4FF;
         }
+
         .divider {
             margin: 40px 0 20px;
             height: 1px;
             background: rgba(0, 212, 255, 0.3);
         }
+
         .footer {
             text-align: center;
             color: #8B949E;
             font-size: 12px;
             font-weight: 400;
         }
+
         .footer span {
             color: #00D4FF;
             font-weight: 700;
         }
+
         .error-message {
             background: rgba(255, 68, 68, 0.1);
             border-left: 3px solid #FF4444;
@@ -194,9 +222,16 @@
             font-size: 12px;
             font-weight: 600;
         }
+
         @media (max-width: 480px) {
-            .login-container { width: 90%; padding: 40px 25px; }
-            .options { flex-direction: column; gap: 15px; }
+            .login-container {
+                width: 90%;
+                padding: 40px 25px;
+            }
+            .options {
+                flex-direction: column;
+                gap: 15px;
+            }
         }
     </style>
 </head>
