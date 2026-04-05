@@ -1,6 +1,6 @@
 // ============================================================
 // js/admin.js - Administración de usuarios y roles
-// Versión: GUARDA EN SUPABASE (nube)
+// Versión: CON SUPABASE FUNCIONAL
 // ============================================================
 
 const AdminModule = {
@@ -8,10 +8,14 @@ const AdminModule = {
     procesosDisponibles: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'],
     metasProduccion: {},
     avanceProduccion: {},
-    sincronizando: false,
     
     init: async function() {
         console.log('🚀 Iniciando AdminModule...');
+        
+        // Inicializar Supabase primero
+        if (window.SupabaseClient) {
+            window.SupabaseClient.init();
+        }
         
         const usuarioActual = this.getUsuarioActual();
         console.log('Usuario actual:', usuarioActual);
@@ -34,7 +38,6 @@ const AdminModule = {
     togglePassword: function(inputId) {
         const input = document.getElementById(inputId);
         if (!input) return;
-        
         const button = input.nextElementSibling;
         if (input.type === 'password') {
             input.type = 'text';
@@ -63,12 +66,10 @@ const AdminModule = {
         this.mostrarLoader(true);
         
         try {
-            // Intentar cargar desde Supabase
-            if (window.SupabaseClient && window.SupabaseClient.init()) {
+            if (window.SupabaseClient && window.SupabaseClient.client) {
                 const usuariosDB = await window.SupabaseClient.getUsuarios();
                 if (usuariosDB && usuariosDB.length > 0) {
                     this.usuarios = usuariosDB;
-                    // Guardar copia local para respaldo
                     localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDB));
                     console.log('📦 Usuarios cargados desde Supabase:', this.usuarios.length);
                     this.mostrarLoader(false);
@@ -76,10 +77,9 @@ const AdminModule = {
                 }
             }
         } catch (error) {
-            console.error('Error cargando usuarios desde Supabase:', error);
+            console.error('Error cargando usuarios:', error);
         }
         
-        // Fallback a localStorage
         const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
         if (usuariosGuardados) {
             this.usuarios = JSON.parse(usuariosGuardados);
@@ -91,14 +91,16 @@ const AdminModule = {
         this.mostrarLoader(false);
     },
     
-    // ============================================================
-    // GUARDAR USUARIO EN SUPABASE
-    // ============================================================
-    
     guardarUsuarioEnSupabase: async function(usuario) {
-        if (!window.SupabaseClient || !window.SupabaseClient.init()) {
-            console.warn('⚠️ Supabase no disponible, guardando solo local');
-            return false;
+        if (!window.SupabaseClient || !window.SupabaseClient.client) {
+            console.warn('⚠️ Supabase no disponible, inicializando...');
+            if (window.SupabaseClient) {
+                window.SupabaseClient.init();
+            }
+            if (!window.SupabaseClient || !window.SupabaseClient.client) {
+                console.warn('⚠️ Supabase no disponible, guardando solo local');
+                return false;
+            }
         }
         
         try {
@@ -106,23 +108,23 @@ const AdminModule = {
             console.log('✅ Usuario guardado en Supabase:', usuario.username);
             return true;
         } catch (error) {
-            console.error('❌ Error guardando usuario en Supabase:', error);
+            console.error('❌ Error guardando en Supabase:', error);
             return false;
         }
     },
     
     eliminarUsuarioEnSupabase: async function(id) {
-        if (!window.SupabaseClient || !window.SupabaseClient.init()) {
-            console.warn('⚠️ Supabase no disponible');
-            return false;
+        if (!window.SupabaseClient || !window.SupabaseClient.client) {
+            if (window.SupabaseClient) window.SupabaseClient.init();
+            if (!window.SupabaseClient || !window.SupabaseClient.client) return false;
         }
         
         try {
-            const resultado = await window.SupabaseClient.eliminarUsuario(id);
+            await window.SupabaseClient.eliminarUsuario(id);
             console.log('✅ Usuario eliminado de Supabase:', id);
             return true;
         } catch (error) {
-            console.error('❌ Error eliminando usuario de Supabase:', error);
+            console.error('❌ Error eliminando de Supabase:', error);
             return false;
         }
     },
@@ -134,7 +136,7 @@ const AdminModule = {
     mostrarLoader: function(mostrar) {
         const tbody = document.getElementById('tablaUsuariosBody');
         if (tbody && mostrar) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">🔄 Cargando usuarios desde la nube...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">🔄 Cargando usuarios desde la nube...</td</tr>';
         }
     },
     
@@ -225,7 +227,7 @@ const AdminModule = {
                         <input type="number" id="avance_${proceso}" value="${avance}" class="meta-avance-input" step="10" min="0">
                         <div style="margin-top:4px; font-size:0.65rem; color:${colorPorcentaje};">${porcentaje}% cumplimiento</div>
                     </td>
-                </tr>
+                </table>
             `;
         }
         tbody.innerHTML = html;
@@ -248,10 +250,6 @@ const AdminModule = {
         return iconos[proceso] || '⚙️';
     },
     
-    // ============================================================
-    // CONFIGURACIÓN DE PESTAÑAS
-    // ============================================================
-    
     configurarPestanas: function() {
         const tabBtns = document.querySelectorAll('.tab-btn');
         const tabPanes = document.querySelectorAll('.tab-pane');
@@ -271,10 +269,6 @@ const AdminModule = {
             });
         });
     },
-    
-    // ============================================================
-    // RENDERIZAR TABLA DE USUARIOS
-    // ============================================================
     
     actualizarEstadisticas: function() {
         const total = this.usuarios.length;
@@ -301,7 +295,7 @@ const AdminModule = {
         if (!tbody) return;
         
         if (this.usuarios.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay usuarios registrados</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay usuarios registrados</td</tr>';
             return;
         }
         
@@ -332,7 +326,7 @@ const AdminModule = {
                         <button class="btn-editar" data-id="${user.id}">✏️ Editar</button>
                         <button class="btn-cambiar-pass" data-id="${user.id}">🔑 Cambiar Pass</button>
                         <button class="btn-eliminar" data-id="${user.id}">🗑️ Eliminar</button>
-                    </td>
+                     </td>
                 </tr>
             `;
         }
@@ -535,7 +529,6 @@ const AdminModule = {
             return;
         }
         
-        // Guardar en Supabase
         await this.guardarUsuarioEnSupabase(this.usuarios.find(u => u.id === userId));
         this.guardarUsuariosLocal();
         this.renderizarTabla();
@@ -586,7 +579,6 @@ const AdminModule = {
             return;
         }
         
-        // Verificar si ya existe
         let existe = false;
         for (let i = 0; i < this.usuarios.length; i++) {
             if (this.usuarios[i].username === nuevoNombre && this.usuarios[i].id !== editId) {
@@ -601,7 +593,6 @@ const AdminModule = {
         }
         
         if (editId) {
-            // EDITAR usuario existente
             let encontrado = false;
             for (let i = 0; i < this.usuarios.length; i++) {
                 if (this.usuarios[i].id === editId) {
@@ -621,14 +612,11 @@ const AdminModule = {
                 return;
             }
             
-            // Guardar en Supabase
             const usuarioEditado = this.usuarios.find(u => u.id === editId);
             await this.guardarUsuarioEnSupabase(usuarioEditado);
             this.guardarUsuariosLocal();
             alert(`✅ Usuario editado correctamente. Nuevo nombre: ${nuevoNombre}`);
-            
         } else {
-            // CREAR nuevo usuario
             if (!nuevaPassword) {
                 alert('⚠️ La contraseña es obligatoria para nuevos usuarios');
                 return;
@@ -649,7 +637,6 @@ const AdminModule = {
             };
             this.usuarios.push(nuevoUsuario);
             
-            // Guardar en Supabase
             await this.guardarUsuarioEnSupabase(nuevoUsuario);
             this.guardarUsuariosLocal();
             alert(`✅ Usuario "${nuevoNombre}" creado correctamente`);
@@ -702,10 +689,7 @@ const AdminModule = {
         }
         
         if (confirm(`¿Eliminar al usuario "${usuario.username}"?`)) {
-            // Eliminar de Supabase
             await this.eliminarUsuarioEnSupabase(id);
-            
-            // Eliminar localmente
             this.usuarios = this.usuarios.filter(u => u.id !== id);
             this.guardarUsuariosLocal();
             this.actualizarEstadisticas();
@@ -725,7 +709,6 @@ const AdminModule = {
     }
 };
 
-// Inicializar
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM cargado, inicializando AdminModule...');
     AdminModule.init();
