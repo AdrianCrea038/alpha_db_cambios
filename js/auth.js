@@ -1,5 +1,5 @@
 // ============================================================
-// js/auth.js - Autenticación que busca en Supabase PRIMERO
+// js/auth.js - Autenticación: SUPABASE primero, LOCAL después
 // ============================================================
 
 const AUTH_CONFIG = {
@@ -9,35 +9,23 @@ const AUTH_CONFIG = {
     }
 };
 
-// Cliente Supabase
 let supabaseClient = null;
 
 function initSupabase() {
     if (supabaseClient) return supabaseClient;
-    
-    if (!window.supabase || !window.SUPABASE_CONFIG) {
-        console.warn('⚠️ Supabase no disponible');
-        return null;
-    }
-    
+    if (!window.supabase || !window.SUPABASE_CONFIG) return null;
     supabaseClient = window.supabase.createClient(
         window.SUPABASE_CONFIG.url,
         window.SUPABASE_CONFIG.anonKey
     );
-    
-    console.log('✅ Supabase inicializado');
     return supabaseClient;
 }
-
-// ============================================================
-// VALIDAR CREDENCIALES - PRIMERO EN SUPABASE, LUEGO LOCAL
-// ============================================================
 
 async function validarCredenciales(username, password) {
     const supabase = initSupabase();
     const usernameUpper = username.toUpperCase();
     
-    // 1. INTENTAR EN SUPABASE
+    // 1. BUSCAR EN SUPABASE
     if (supabase) {
         try {
             const { data, error } = await supabase
@@ -45,32 +33,22 @@ async function validarCredenciales(username, password) {
                 .select('*')
                 .eq('username', usernameUpper);
             
-            if (!error && data && data.length > 0) {
-                const usuario = data[0];
-                if (usuario.password === password) {
-                    console.log('✅ Usuario validado en Supabase:', usuario.username);
-                    // Sincronizar con localStorage
-                    const usuariosLocal = JSON.parse(localStorage.getItem('alpha_db_usuarios') || '[]');
-                    const exists = usuariosLocal.some(u => u.id === usuario.id);
-                    if (!exists) {
-                        usuariosLocal.push(usuario);
-                        localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosLocal));
-                    }
-                    return usuario;
-                }
+            if (!error && data && data.length > 0 && data[0].password === password) {
+                console.log('✅ Login con Supabase:', data[0].username);
+                return data[0];
             }
-        } catch (error) {
-            console.error('Error consultando Supabase:', error);
+        } catch(e) {
+            console.error('Error en Supabase:', e);
         }
     }
     
-    // 2. FALLBACK: BUSCAR EN LOCALSTORAGE
-    const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
-    if (usuariosGuardados) {
-        const usuarios = JSON.parse(usuariosGuardados);
+    // 2. BUSCAR EN LOCALSTORAGE
+    const usuariosLocal = localStorage.getItem('alpha_db_usuarios');
+    if (usuariosLocal) {
+        const usuarios = JSON.parse(usuariosLocal);
         const usuario = usuarios.find(u => u.username === usernameUpper && u.password === password);
         if (usuario) {
-            console.log('✅ Usuario validado en localStorage:', usuario.username);
+            console.log('✅ Login con localStorage:', usuario.username);
             return usuario;
         }
     }
@@ -78,37 +56,6 @@ async function validarCredenciales(username, password) {
     console.log('❌ Usuario no encontrado:', usernameUpper);
     return null;
 }
-
-// ============================================================
-// CARGAR TODOS LOS USUARIOS DESDE SUPABASE
-// ============================================================
-
-async function cargarUsuariosDesdeSupabase() {
-    const supabase = initSupabase();
-    if (!supabase) return [];
-    
-    try {
-        const { data, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .order('creado', { ascending: true });
-        
-        if (!error && data) {
-            localStorage.setItem('alpha_db_usuarios', JSON.stringify(data));
-            console.log('📦 Usuarios sincronizados desde Supabase:', data.length);
-            return data;
-        }
-    } catch (error) {
-        console.error('Error cargando usuarios:', error);
-    }
-    
-    const usuariosLocal = localStorage.getItem('alpha_db_usuarios');
-    return usuariosLocal ? JSON.parse(usuariosLocal) : [];
-}
-
-// ============================================================
-// SESIÓN
-// ============================================================
 
 function verificarSesion() {
     const session = localStorage.getItem('alpha_db_session');
@@ -124,16 +71,16 @@ function verificarSesion() {
 }
 
 function guardarSesion(usuario, recordar) {
-    const duracionMs = recordar ? AUTH_CONFIG.sessionDuration.recordar : AUTH_CONFIG.sessionDuration.normal;
-    const sessionData = {
+    const duracion = recordar ? 30 : 1;
+    const expiracion = new Date();
+    expiracion.setDate(expiracion.getDate() + duracion);
+    localStorage.setItem('alpha_db_session', JSON.stringify({
         id: usuario.id,
         username: usuario.username,
         rol: usuario.rol,
         procesosAsignados: usuario.procesos_asignados || [],
-        fecha: new Date().toISOString(),
-        expiracion: new Date(Date.now() + duracionMs).toISOString()
-    };
-    localStorage.setItem('alpha_db_session', JSON.stringify(sessionData));
+        expiracion: expiracion.toISOString()
+    }));
 }
 
 function cerrarSesion() {
@@ -144,10 +91,6 @@ function cerrarSesion() {
 function getUsuarioActual() {
     return verificarSesion();
 }
-
-// ============================================================
-// PERMISOS
-// ============================================================
 
 function esAdmin() { const u = getUsuarioActual(); return u && u.rol === 'admin'; }
 function esOperador() { const u = getUsuarioActual(); return u && u.rol === 'operador'; }
@@ -164,12 +107,7 @@ function puedeAccederAprobaciones() { const u = getUsuarioActual(); return u && 
 function puedeAccederBandeja() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador' || u.rol === 'usuario_tracking'); }
 function getNombreRol() { const u = getUsuarioActual(); if (!u) return ''; const roles = { 'admin': '👑 Administrador', 'operador': '👤 Operador', 'usuario_tracking': '📍 Usuario Tracking', 'consultor': '👁️ Consultor' }; return roles[u.rol] || '👤 Usuario'; }
 
-// ============================================================
-// EXPORTAR
-// ============================================================
-
 window.cerrarSesion = cerrarSesion;
-window.verificarSesion = verificarSesion;
 window.getUsuarioActual = getUsuarioActual;
 window.esAdmin = esAdmin;
 window.esOperador = esOperador;
@@ -185,15 +123,9 @@ window.puedeAccederTracking = puedeAccederTracking;
 window.puedeAccederAprobaciones = puedeAccederAprobaciones;
 window.puedeAccederBandeja = puedeAccederBandeja;
 window.getNombreRol = getNombreRol;
-window.cargarUsuariosDesdeSupabase = cargarUsuariosDesdeSupabase;
-
-// ============================================================
-// INICIALIZAR LOGIN
-// ============================================================
 
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('login.html')) {
-        console.log('🔐 Login iniciado');
         initSupabase();
         
         if (verificarSesion()) {
@@ -208,20 +140,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value;
-            
-            // Mostrar loading
-            const submitBtn = loginForm.querySelector('button[type="submit"]');
-            const originalText = submitBtn.textContent;
-            submitBtn.textContent = '🔄 Verificando...';
-            submitBtn.disabled = true;
-            
-            const usuario = await validarCredenciales(username, password);
-            
-            submitBtn.textContent = originalText;
-            submitBtn.disabled = false;
+            const usuario = await validarCredenciales(
+                usernameInput.value.trim(),
+                passwordInput.value
+            );
             
             if (usuario) {
                 guardarSesion(usuario, rememberMeCheck.checked);
@@ -234,4 +156,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-console.log('✅ auth.js cargado - Busca en Supabase PRIMERO');
+console.log('✅ auth.js cargado - Login con Supabase primero');
