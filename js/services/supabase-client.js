@@ -154,4 +154,4 @@ const SupabaseClient = {
 };
 
 window.SupabaseClient = SupabaseClient;
-console.log('✅ SupabaseClient cargado - Con funciones de usuarios');
+console.log('✅ SupabaseClient cargado');
