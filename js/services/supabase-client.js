@@ -28,6 +28,61 @@ const SupabaseClient = {
         }
     },
     
+    // ========== USUARIOS ==========
+    
+    getUsuarios: async function() {
+        if (!this.init()) return null;
+        
+        try {
+            const { data, error } = await this.client
+                .from('usuarios')
+                .select('*')
+                .order('creado', { ascending: true });
+            
+            if (error) throw error;
+            return data;
+        } catch (error) {
+            console.error('Error cargando usuarios:', error);
+            return null;
+        }
+    },
+    
+    guardarUsuario: async function(usuario) {
+        if (!this.init()) return null;
+        
+        try {
+            const { data, error } = await this.client
+                .from('usuarios')
+                .upsert(usuario)
+                .select();
+            
+            if (error) throw error;
+            console.log('✅ Usuario guardado en Supabase:', usuario.username);
+            return data;
+        } catch (error) {
+            console.error('Error guardando usuario:', error);
+            return null;
+        }
+    },
+    
+    eliminarUsuario: async function(id) {
+        if (!this.init()) return false;
+        
+        try {
+            const { error } = await this.client
+                .from('usuarios')
+                .delete()
+                .eq('id', id);
+            
+            if (error) throw error;
+            console.log('✅ Usuario eliminado de Supabase:', id);
+            return true;
+        } catch (error) {
+            console.error('Error eliminando usuario:', error);
+            return false;
+        }
+    },
+    
     // ========== REGISTROS ==========
     
     getRegistros: async function() {
@@ -35,7 +90,7 @@ const SupabaseClient = {
         
         try {
             const { data, error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.registros)
+                .from('registros')
                 .select('*')
                 .order('creado', { ascending: false });
             
@@ -52,7 +107,7 @@ const SupabaseClient = {
         
         try {
             const { data, error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.registros)
+                .from('registros')
                 .upsert(registro)
                 .select();
             
@@ -69,7 +124,7 @@ const SupabaseClient = {
         
         try {
             const { error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.registros)
+                .from('registros')
                 .delete()
                 .eq('id', id);
             
@@ -81,14 +136,12 @@ const SupabaseClient = {
         }
     },
     
-    // ========== HISTORIAL ==========
-    
     guardarHistorial: async function(historialData) {
         if (!this.init()) return false;
         
         try {
             const { error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.historial)
+                .from('historial')
                 .insert(historialData);
             
             if (error) throw error;
@@ -97,61 +150,8 @@ const SupabaseClient = {
             console.error('Error guardando historial:', error);
             return false;
         }
-    },
-    
-    // ========== APROBACIONES ==========
-    
-    getAprobaciones: async function() {
-        if (!this.init()) return null;
-        
-        try {
-            const { data, error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.aprobaciones)
-                .select('*')
-                .order('fecha', { ascending: false });
-            
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error cargando aprobaciones:', error);
-            return null;
-        }
-    },
-    
-    guardarAprobacion: async function(aprobacion) {
-        if (!this.init()) return null;
-        
-        try {
-            const { data, error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.aprobaciones)
-                .upsert(aprobacion)
-                .select();
-            
-            if (error) throw error;
-            return data;
-        } catch (error) {
-            console.error('Error guardando aprobación:', error);
-            return null;
-        }
-    },
-    
-    eliminarAprobacion: async function(id) {
-        if (!this.init()) return false;
-        
-        try {
-            const { error } = await this.client
-                .from(window.SUPABASE_CONFIG.tablas.aprobaciones)
-                .delete()
-                .eq('id', id);
-            
-            if (error) throw error;
-            return true;
-        } catch (error) {
-            console.error('Error eliminando aprobación:', error);
-            return false;
-        }
     }
 };
 
 window.SupabaseClient = SupabaseClient;
-console.log('✅ SupabaseClient cargado');
+console.log('✅ SupabaseClient cargado - Con funciones de usuarios');
