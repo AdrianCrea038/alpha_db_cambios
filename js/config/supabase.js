@@ -9,3 +9,4 @@ const SUPABASE_CONFIG = {
 };
 
 window.SUPABASE_CONFIG = SUPABASE_CONFIG;
+console.log('✅ Supabase configurado correctamente');
