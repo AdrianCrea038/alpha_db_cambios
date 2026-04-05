@@ -1,5 +1,5 @@
 // ============================================================
-// js/auth.js - Autenticación SIMPLE con Supabase
+// js/auth.js - AUTENTICACIÓN ORIGINAL (FUNCIONAL)
 // ============================================================
 
 const AUTH_CONFIG = {
@@ -9,108 +9,180 @@ const AUTH_CONFIG = {
     }
 };
 
-// Cliente Supabase
-let supabaseClient = null;
-
-function initSupabase() {
-    if (supabaseClient) return supabaseClient;
-    
-    if (!window.supabase || !window.SUPABASE_CONFIG) {
-        console.error('❌ Supabase no disponible');
-        return null;
+// Obtener usuarios del localStorage
+function getUsuarios() {
+    const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
+    if (usuariosGuardados) {
+        return JSON.parse(usuariosGuardados);
     }
-    
-    supabaseClient = window.supabase.createClient(
-        window.SUPABASE_CONFIG.url,
-        window.SUPABASE_CONFIG.anonKey
-    );
-    
-    console.log('✅ Supabase inicializado');
-    return supabaseClient;
+    // Usuarios por defecto
+    const usuariosDefault = [
+        { id: '1', username: 'ADMIN', password: 'admin123', rol: 'admin', procesosAsignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() },
+        { id: '2', username: 'OPERADOR', password: 'operador123', rol: 'operador', procesosAsignados: ['DISEÑO'], creado: new Date().toISOString() },
+        { id: '3', username: 'CONSULTOR', password: 'consultor123', rol: 'consultor', procesosAsignados: [], creado: new Date().toISOString() },
+        { id: '4', username: 'TRACKING', password: 'tracking123', rol: 'usuario_tracking', procesosAsignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() }
+    ];
+    localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDefault));
+    return usuariosDefault;
 }
 
-async function validarCredenciales(username, password) {
-    const supabase = initSupabase();
-    if (!supabase) return null;
-    
-    try {
-        const { data, error } = await supabase
-            .from('usuarios')
-            .select('*')
-            .eq('username', username.toUpperCase());
-        
-        if (error) {
-            console.error('Error en consulta:', error);
-            return null;
-        }
-        
-        if (data && data.length > 0 && data[0].password === password) {
-            console.log('✅ Usuario válido:', data[0].username);
-            return data[0];
-        }
-        
-        console.log('❌ Usuario o contraseña incorrectos');
-        return null;
-    } catch (error) {
-        console.error('Error:', error);
-        return null;
-    }
-}
-
+// Verificar sesión activa
 function verificarSesion() {
     const session = localStorage.getItem('alpha_db_session');
     if (session) {
         try {
             const data = JSON.parse(session);
-            if (new Date(data.expiracion) > new Date()) {
+            const expiracion = new Date(data.expiracion);
+            if (expiracion > new Date()) {
                 return data;
+            } else {
+                localStorage.removeItem('alpha_db_session');
             }
-        } catch(e) {}
+        } catch(e) {
+            localStorage.removeItem('alpha_db_session');
+        }
     }
     return null;
 }
 
+// Guardar sesión
 function guardarSesion(usuario, recordar) {
-    const duracion = recordar ? 30 : 1;
-    const expiracion = new Date();
-    expiracion.setDate(expiracion.getDate() + duracion);
-    
     const sessionData = {
         id: usuario.id,
         username: usuario.username,
         rol: usuario.rol,
-        procesosAsignados: usuario.procesos_asignados || [],
-        expiracion: expiracion.toISOString()
+        procesosAsignados: usuario.procesosAsignados || [],
+        fecha: new Date().toISOString(),
+        expiracion: new Date(Date.now() + (recordar ? AUTH_CONFIG.sessionDuration.recordar : AUTH_CONFIG.sessionDuration.normal)).toISOString()
     };
     localStorage.setItem('alpha_db_session', JSON.stringify(sessionData));
 }
 
+// Cerrar sesión
 function cerrarSesion() {
     localStorage.removeItem('alpha_db_session');
     window.location.href = 'login.html';
 }
 
-function getUsuarioActual() {
-    return verificarSesion();
+// Validar credenciales
+function validarCredenciales(username, password) {
+    const usuarios = getUsuarios();
+    const usuario = usuarios.find(u => u.username === username.toUpperCase() && u.password === password);
+    return usuario || null;
 }
 
-// Permisos
-function esAdmin() { const u = getUsuarioActual(); return u && u.rol === 'admin'; }
-function esOperador() { const u = getUsuarioActual(); return u && u.rol === 'operador'; }
-function esUsuarioTracking() { const u = getUsuarioActual(); return u && u.rol === 'usuario_tracking'; }
-function esConsultor() { const u = getUsuarioActual(); return u && u.rol === 'consultor'; }
-function puedeEditar() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador'); }
-function puedeEliminar() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador'); }
-function puedeAccederConfiguracion() { const u = getUsuarioActual(); return u && u.rol === 'admin'; }
-function puedeVerFormulario() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador'); }
-function puedeAccederBaseDatos() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador'); }
-function puedeAccederConsultas() { return getUsuarioActual() !== null; }
-function puedeAccederTracking() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador' || u.rol === 'usuario_tracking'); }
-function puedeAccederAprobaciones() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador'); }
-function puedeAccederBandeja() { const u = getUsuarioActual(); return u && (u.rol === 'admin' || u.rol === 'operador' || u.rol === 'usuario_tracking'); }
-function getNombreRol() { const u = getUsuarioActual(); if (!u) return ''; const roles = { 'admin': '👑 Administrador', 'operador': '👤 Operador', 'usuario_tracking': '📍 Usuario Tracking', 'consultor': '👁️ Consultor' }; return roles[u.rol] || '👤 Usuario'; }
+// Obtener usuario actual
+function getUsuarioActual() {
+    const session = verificarSesion();
+    if (session) {
+        return session;
+    }
+    return null;
+}
 
+// Funciones de permisos
+function esAdmin() {
+    const usuario = getUsuarioActual();
+    return usuario && usuario.rol === 'admin';
+}
+
+function esOperador() {
+    const usuario = getUsuarioActual();
+    return usuario && usuario.rol === 'operador';
+}
+
+function esUsuarioTracking() {
+    const usuario = getUsuarioActual();
+    return usuario && usuario.rol === 'usuario_tracking';
+}
+
+function esConsultor() {
+    const usuario = getUsuarioActual();
+    return usuario && usuario.rol === 'consultor';
+}
+
+function puedeEditar() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+}
+
+function puedeEliminar() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+}
+
+function puedeAccederConfiguracion() {
+    const usuario = getUsuarioActual();
+    return usuario && usuario.rol === 'admin';
+}
+
+function puedeVerFormulario() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+}
+
+function puedeAccederBaseDatos() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+}
+
+function puedeAccederConsultas() {
+    const usuario = getUsuarioActual();
+    return usuario !== null;
+}
+
+function puedeAccederTracking() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador' || usuario.rol === 'usuario_tracking');
+}
+
+function puedeAvanzarProceso(proceso) {
+    const usuario = getUsuarioActual();
+    if (!usuario) return false;
+    if (usuario.rol === 'admin' || usuario.rol === 'usuario_tracking') return true;
+    if (usuario.rol === 'operador') {
+        return (usuario.procesosAsignados || []).includes(proceso);
+    }
+    return false;
+}
+
+function getProcesosPermitidos() {
+    const usuario = getUsuarioActual();
+    if (!usuario) return [];
+    if (usuario.rol === 'admin' || usuario.rol === 'usuario_tracking') {
+        return ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'];
+    }
+    if (usuario.rol === 'operador') {
+        return usuario.procesosAsignados || [];
+    }
+    return [];
+}
+
+function puedeAccederAprobaciones() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+}
+
+function puedeAccederBandeja() {
+    const usuario = getUsuarioActual();
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador' || usuario.rol === 'usuario_tracking');
+}
+
+function getNombreRol() {
+    const usuario = getUsuarioActual();
+    if (!usuario) return '';
+    switch(usuario.rol) {
+        case 'admin': return '👑 Administrador';
+        case 'operador': return '👤 Operador';
+        case 'usuario_tracking': return '📍 Usuario Tracking';
+        case 'consultor': return '👁️ Consultor';
+        default: return '👤 Usuario';
+    }
+}
+
+// Exportar a window
 window.cerrarSesion = cerrarSesion;
+window.verificarSesion = verificarSesion;
 window.getUsuarioActual = getUsuarioActual;
 window.esAdmin = esAdmin;
 window.esOperador = esOperador;
@@ -123,6 +195,8 @@ window.puedeVerFormulario = puedeVerFormulario;
 window.puedeAccederBaseDatos = puedeAccederBaseDatos;
 window.puedeAccederConsultas = puedeAccederConsultas;
 window.puedeAccederTracking = puedeAccederTracking;
+window.puedeAvanzarProceso = puedeAvanzarProceso;
+window.getProcesosPermitidos = getProcesosPermitidos;
 window.puedeAccederAprobaciones = puedeAccederAprobaciones;
 window.puedeAccederBandeja = puedeAccederBandeja;
 window.getNombreRol = getNombreRol;
@@ -130,10 +204,10 @@ window.getNombreRol = getNombreRol;
 // Inicializar login
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('login.html')) {
-        console.log('🔐 Login iniciado');
-        initSupabase();
+        console.log('🔐 Página de login cargada');
         
-        if (verificarSesion()) {
+        const session = verificarSesion();
+        if (session) {
             window.location.href = 'index.html';
             return;
         }
@@ -142,23 +216,52 @@ document.addEventListener('DOMContentLoaded', function() {
         const usernameInput = document.getElementById('username');
         const passwordInput = document.getElementById('password');
         const rememberMeCheck = document.getElementById('rememberMe');
+        const forgotPasswordLink = document.getElementById('forgotPassword');
         
-        loginForm.addEventListener('submit', async function(e) {
+        const rememberedUser = localStorage.getItem('alpha_db_remembered_user');
+        if (rememberedUser) {
+            usernameInput.value = rememberedUser;
+            rememberMeCheck.checked = true;
+        }
+        
+        loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
             
-            const usuario = await validarCredenciales(username, password);
+            const usuario = validarCredenciales(username, password);
             
             if (usuario) {
+                if (rememberMeCheck.checked) {
+                    localStorage.setItem('alpha_db_remembered_user', username);
+                } else {
+                    localStorage.removeItem('alpha_db_remembered_user');
+                }
                 guardarSesion(usuario, rememberMeCheck.checked);
                 window.location.href = 'index.html';
             } else {
-                alert('❌ Usuario o contraseña incorrectos');
+                mostrarError('Usuario o contraseña incorrectos');
                 passwordInput.value = '';
             }
         });
+        
+        forgotPasswordLink.addEventListener('click', function(e) {
+            e.preventDefault();
+            mostrarError('Credenciales: Usuario: ALPHA / Contraseña: DB2024');
+        });
+        
+        function mostrarError(mensaje) {
+            const errorExistente = document.querySelector('.error-message');
+            if (errorExistente) errorExistente.remove();
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = mensaje;
+            loginForm.insertAdjacentElement('afterend', errorDiv);
+            
+            setTimeout(() => errorDiv.remove(), 3000);
+        }
     }
 });
 
-console.log('✅ auth.js cargado');
+console.log('✅ auth.js cargado - Versión ORIGINAL FUNCIONAL');
