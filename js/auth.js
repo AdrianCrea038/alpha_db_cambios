@@ -1,33 +1,69 @@
 // ============================================================
 // js/auth.js - Módulo de Autenticación con Roles
-// Roles: admin, operador, usuario_tracking, consultor
 // ============================================================
 
 const AUTH_CONFIG = {
     sessionDuration: {
-        recordar: 30 * 24 * 60 * 60 * 1000,  // 30 días
-        normal: 24 * 60 * 60 * 1000          // 24 horas
+        recordar: 30 * 24 * 60 * 60 * 1000,
+        normal: 24 * 60 * 60 * 1000
     }
 };
 
-// Obtener usuarios del localStorage
-function getUsuarios() {
+// Cache de usuarios
+let usuariosCache = null;
+
+async function cargarUsuarios() {
+    if (window.SupabaseClient && window.SupabaseClient.init()) {
+        try {
+            const usuariosDB = await window.SupabaseClient.getUsuarios();
+            if (usuariosDB && usuariosDB.length > 0) {
+                usuariosCache = usuariosDB;
+                localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDB));
+                console.log('📦 Usuarios cargados desde Supabase:', usuariosDB.length);
+                return usuariosDB;
+            }
+        } catch (error) {
+            console.error('Error cargando usuarios desde Supabase:', error);
+        }
+    }
+    
     const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
     if (usuariosGuardados) {
-        return JSON.parse(usuariosGuardados);
+        usuariosCache = JSON.parse(usuariosGuardados);
+        console.log('📦 Usuarios cargados desde localStorage:', usuariosCache.length);
+        return usuariosCache;
     }
-    // Usuarios por defecto con los cuatro roles
+    
     const usuariosDefault = [
-        { id: '1', username: 'ADMIN', password: 'admin123', rol: 'admin', procesosAsignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() },
-        { id: '2', username: 'OPERADOR', password: 'operador123', rol: 'operador', procesosAsignados: ['DISEÑO'], creado: new Date().toISOString() },
-        { id: '3', username: 'CONSULTOR', password: 'consultor123', rol: 'consultor', procesosAsignados: [], creado: new Date().toISOString() },
-        { id: '4', username: 'TRACKING', password: 'tracking123', rol: 'usuario_tracking', procesosAsignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() }
+        { id: '1', username: 'ADMIN', password: 'admin123', rol: 'admin', procesos_asignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() },
+        { id: '2', username: 'OPERADOR', password: 'operador123', rol: 'operador', procesos_asignados: ['DISEÑO'], creado: new Date().toISOString() },
+        { id: '3', username: 'CONSULTOR', password: 'consultor123', rol: 'consultor', procesos_asignados: [], creado: new Date().toISOString() },
+        { id: '4', username: 'TRACKING', password: 'tracking123', rol: 'usuario_tracking', procesos_asignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() }
     ];
+    
+    usuariosCache = usuariosDefault;
     localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDefault));
+    
+    if (window.SupabaseClient && window.SupabaseClient.init()) {
+        for (const u of usuariosDefault) {
+            await window.SupabaseClient.guardarUsuario(u);
+        }
+    }
+    
+    console.log('📦 Usuarios por defecto creados');
     return usuariosDefault;
 }
 
-// Verificar sesión activa
+function getUsuariosSync() {
+    if (usuariosCache) return usuariosCache;
+    const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
+    if (usuariosGuardados) {
+        usuariosCache = JSON.parse(usuariosGuardados);
+        return usuariosCache;
+    }
+    return [];
+}
+
 function verificarSesion() {
     const session = localStorage.getItem('alpha_db_session');
     if (session) {
@@ -46,33 +82,29 @@ function verificarSesion() {
     return null;
 }
 
-// Guardar sesión
 function guardarSesion(usuario, recordar) {
     const sessionData = {
         id: usuario.id,
         username: usuario.username,
         rol: usuario.rol,
-        procesosAsignados: usuario.procesosAsignados || [],
+        procesosAsignados: usuario.procesos_asignados || [],
         fecha: new Date().toISOString(),
         expiracion: new Date(Date.now() + (recordar ? AUTH_CONFIG.sessionDuration.recordar : AUTH_CONFIG.sessionDuration.normal)).toISOString()
     };
     localStorage.setItem('alpha_db_session', JSON.stringify(sessionData));
 }
 
-// Cerrar sesión
 function cerrarSesion() {
     localStorage.removeItem('alpha_db_session');
     window.location.href = 'login.html';
 }
 
-// Validar credenciales
-function validarCredenciales(username, password) {
-    const usuarios = getUsuarios();
+async function validarCredenciales(username, password) {
+    const usuarios = await cargarUsuarios();
     const usuario = usuarios.find(u => u.username === username.toUpperCase() && u.password === password);
     return usuario || null;
 }
 
-// Obtener usuario actual
 function getUsuarioActual() {
     const session = verificarSesion();
     if (session) {
@@ -80,10 +112,6 @@ function getUsuarioActual() {
     }
     return null;
 }
-
-// ============================================================
-// FUNCIONES DE PERMISOS POR ROL
-// ============================================================
 
 function esAdmin() {
     const usuario = getUsuarioActual();
@@ -140,42 +168,25 @@ function puedeAccederTracking() {
     return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador' || usuario.rol === 'usuario_tracking');
 }
 
-// ============================================================
-// FUNCIONES PARA AVANCE DE PROCESOS EN TRACKING
-// ============================================================
-
-// Verificar si el usuario puede avanzar un proceso específico
 function puedeAvanzarProceso(proceso) {
     const usuario = getUsuarioActual();
     if (!usuario) return false;
-    
-    // Admin y usuario_tracking pueden avanzar cualquier proceso
-    if (usuario.rol === 'admin' || usuario.rol === 'usuario_tracking') {
-        return true;
-    }
-    
-    // Operador normal solo puede avanzar sus procesos asignados
+    if (usuario.rol === 'admin' || usuario.rol === 'usuario_tracking') return true;
     if (usuario.rol === 'operador') {
-        const procesosAsignados = usuario.procesosAsignados || [];
-        return procesosAsignados.includes(proceso);
+        return (usuario.procesosAsignados || []).includes(proceso);
     }
-    
     return false;
 }
 
-// Obtener procesos que el usuario puede avanzar
 function getProcesosPermitidos() {
     const usuario = getUsuarioActual();
     if (!usuario) return [];
-    
     if (usuario.rol === 'admin' || usuario.rol === 'usuario_tracking') {
         return ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'];
     }
-    
     if (usuario.rol === 'operador') {
         return usuario.procesosAsignados || [];
     }
-    
     return [];
 }
 
@@ -186,7 +197,7 @@ function puedeAccederAprobaciones() {
 
 function puedeAccederBandeja() {
     const usuario = getUsuarioActual();
-    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
+    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador' || usuario.rol === 'usuario_tracking');
 }
 
 function getNombreRol() {
@@ -201,7 +212,6 @@ function getNombreRol() {
     }
 }
 
-// Exportar a window
 window.cerrarSesion = cerrarSesion;
 window.verificarSesion = verificarSesion;
 window.getUsuarioActual = getUsuarioActual;
@@ -221,8 +231,9 @@ window.getProcesosPermitidos = getProcesosPermitidos;
 window.puedeAccederAprobaciones = puedeAccederAprobaciones;
 window.puedeAccederBandeja = puedeAccederBandeja;
 window.getNombreRol = getNombreRol;
+window.cargarUsuarios = cargarUsuarios;
+window.getUsuariosSync = getUsuariosSync;
 
-// Inicializar login si estamos en login.html
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('login.html')) {
         console.log('🔐 Página de login cargada');
@@ -245,12 +256,12 @@ document.addEventListener('DOMContentLoaded', function() {
             rememberMeCheck.checked = true;
         }
         
-        loginForm.addEventListener('submit', function(e) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
             
-            const usuario = validarCredenciales(username, password);
+            const usuario = await validarCredenciales(username, password);
             
             if (usuario) {
                 if (rememberMeCheck.checked) {
@@ -274,15 +285,13 @@ document.addEventListener('DOMContentLoaded', function() {
         function mostrarError(mensaje) {
             const errorExistente = document.querySelector('.error-message');
             if (errorExistente) errorExistente.remove();
-            
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = mensaje;
             loginForm.insertAdjacentElement('afterend', errorDiv);
-            
             setTimeout(() => errorDiv.remove(), 3000);
         }
     }
 });
 
-console.log('✅ auth.js cargado - Roles: admin, operador, usuario_tracking, consultor');
+console.log('✅ auth.js cargado');
