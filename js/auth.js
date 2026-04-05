@@ -1,5 +1,6 @@
 // ============================================================
-// js/auth.js - Módulo de Autenticación con Roles
+// js/auth.js - Módulo de Autenticación con Supabase
+// Versión: Valida usuarios DIRECTAMENTE desde Supabase
 // ============================================================
 
 const AUTH_CONFIG = {
@@ -9,60 +10,93 @@ const AUTH_CONFIG = {
     }
 };
 
-// Cache de usuarios
-let usuariosCache = null;
+// ============================================================
+// VALIDAR USUARIO DIRECTAMENTE EN SUPABASE
+// ============================================================
+
+async function validarCredenciales(username, password) {
+    // Inicializar Supabase si es necesario
+    if (window.SupabaseClient && !window.SupabaseClient.client) {
+        window.SupabaseClient.init();
+    }
+    
+    if (!window.SupabaseClient || !window.SupabaseClient.client) {
+        console.error('❌ Supabase no disponible');
+        return null;
+    }
+    
+    try {
+        // Buscar usuario por username en Supabase
+        const { data, error } = await window.SupabaseClient.client
+            .from('usuarios')
+            .select('*')
+            .eq('username', username.toUpperCase());
+        
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+            const usuario = data[0];
+            // Verificar contraseña
+            if (usuario.password === password) {
+                console.log('✅ Usuario validado en Supabase:', usuario.username);
+                return usuario;
+            }
+        }
+        
+        console.log('❌ Usuario no encontrado en Supabase');
+        return null;
+    } catch (error) {
+        console.error('Error validando credenciales:', error);
+        return null;
+    }
+}
+
+// ============================================================
+// CARGAR USUARIOS DESDE SUPABASE (para admin)
+// ============================================================
 
 async function cargarUsuarios() {
-    if (window.SupabaseClient && window.SupabaseClient.init()) {
+    if (window.SupabaseClient && window.SupabaseClient.client) {
         try {
-            const usuariosDB = await window.SupabaseClient.getUsuarios();
-            if (usuariosDB && usuariosDB.length > 0) {
-                usuariosCache = usuariosDB;
-                localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDB));
-                console.log('📦 Usuarios cargados desde Supabase:', usuariosDB.length);
-                return usuariosDB;
+            const { data, error } = await window.SupabaseClient.client
+                .from('usuarios')
+                .select('*')
+                .order('creado', { ascending: true });
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+                // Guardar copia local para respaldo
+                localStorage.setItem('alpha_db_usuarios', JSON.stringify(data));
+                console.log('📦 Usuarios cargados desde Supabase:', data.length);
+                return data;
             }
         } catch (error) {
             console.error('Error cargando usuarios desde Supabase:', error);
         }
     }
     
+    // Fallback a localStorage
     const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
     if (usuariosGuardados) {
-        usuariosCache = JSON.parse(usuariosGuardados);
-        console.log('📦 Usuarios cargados desde localStorage:', usuariosCache.length);
-        return usuariosCache;
+        console.log('📦 Usuarios cargados desde localStorage');
+        return JSON.parse(usuariosGuardados);
     }
     
-    const usuariosDefault = [
-        { id: '1', username: 'ADMIN', password: 'admin123', rol: 'admin', procesos_asignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() },
-        { id: '2', username: 'OPERADOR', password: 'operador123', rol: 'operador', procesos_asignados: ['DISEÑO'], creado: new Date().toISOString() },
-        { id: '3', username: 'CONSULTOR', password: 'consultor123', rol: 'consultor', procesos_asignados: [], creado: new Date().toISOString() },
-        { id: '4', username: 'TRACKING', password: 'tracking123', rol: 'usuario_tracking', procesos_asignados: ['DISEÑO', 'PLOTTER', 'SUBLIMADO', 'FLAT', 'LASER', 'BORDADO'], creado: new Date().toISOString() }
-    ];
-    
-    usuariosCache = usuariosDefault;
-    localStorage.setItem('alpha_db_usuarios', JSON.stringify(usuariosDefault));
-    
-    if (window.SupabaseClient && window.SupabaseClient.init()) {
-        for (const u of usuariosDefault) {
-            await window.SupabaseClient.guardarUsuario(u);
-        }
-    }
-    
-    console.log('📦 Usuarios por defecto creados');
-    return usuariosDefault;
+    return [];
 }
 
 function getUsuariosSync() {
-    if (usuariosCache) return usuariosCache;
     const usuariosGuardados = localStorage.getItem('alpha_db_usuarios');
     if (usuariosGuardados) {
-        usuariosCache = JSON.parse(usuariosGuardados);
-        return usuariosCache;
+        return JSON.parse(usuariosGuardados);
     }
     return [];
 }
+
+// ============================================================
+// SESIÓN
+// ============================================================
 
 function verificarSesion() {
     const session = localStorage.getItem('alpha_db_session');
@@ -99,12 +133,6 @@ function cerrarSesion() {
     window.location.href = 'login.html';
 }
 
-async function validarCredenciales(username, password) {
-    const usuarios = await cargarUsuarios();
-    const usuario = usuarios.find(u => u.username === username.toUpperCase() && u.password === password);
-    return usuario || null;
-}
-
 function getUsuarioActual() {
     const session = verificarSesion();
     if (session) {
@@ -112,6 +140,10 @@ function getUsuarioActual() {
     }
     return null;
 }
+
+// ============================================================
+// PERMISOS POR ROL
+// ============================================================
 
 function esAdmin() {
     const usuario = getUsuarioActual();
@@ -212,6 +244,10 @@ function getNombreRol() {
     }
 }
 
+// ============================================================
+// EXPORTAR
+// ============================================================
+
 window.cerrarSesion = cerrarSesion;
 window.verificarSesion = verificarSesion;
 window.getUsuarioActual = getUsuarioActual;
@@ -234,9 +270,18 @@ window.getNombreRol = getNombreRol;
 window.cargarUsuarios = cargarUsuarios;
 window.getUsuariosSync = getUsuariosSync;
 
+// ============================================================
+// INICIALIZAR LOGIN
+// ============================================================
+
 document.addEventListener('DOMContentLoaded', function() {
     if (window.location.pathname.includes('login.html')) {
         console.log('🔐 Página de login cargada');
+        
+        // Inicializar Supabase
+        if (window.SupabaseClient) {
+            window.SupabaseClient.init();
+        }
         
         const session = verificarSesion();
         if (session) {
@@ -258,10 +303,21 @@ document.addEventListener('DOMContentLoaded', function() {
         
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
+            
             const username = usernameInput.value.trim();
             const password = passwordInput.value;
             
+            // Mostrar loading
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = '🔄 VERIFICANDO...';
+            submitBtn.disabled = true;
+            
+            // Validar contra Supabase
             const usuario = await validarCredenciales(username, password);
+            
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
             
             if (usuario) {
                 if (rememberMeCheck.checked) {
@@ -285,13 +341,15 @@ document.addEventListener('DOMContentLoaded', function() {
         function mostrarError(mensaje) {
             const errorExistente = document.querySelector('.error-message');
             if (errorExistente) errorExistente.remove();
+            
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = mensaje;
             loginForm.insertAdjacentElement('afterend', errorDiv);
+            
             setTimeout(() => errorDiv.remove(), 3000);
         }
     }
 });
 
-console.log('✅ auth.js cargado');
+console.log('✅ auth.js cargado - Validación directa contra Supabase');
