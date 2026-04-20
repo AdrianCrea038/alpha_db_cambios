@@ -131,10 +131,36 @@ function configurarEventosUI() {
             const editId = document.getElementById('editId').value;
             
             if (editId) {
-                datos.descripcionEdicion = prompt('📝 Describe los cambios realizados:', '');
-                if (!datos.descripcionEdicion) {
-                    Notifications.warning('⚠️ Es necesario describir los cambios');
+                const regActual = AppState.getRegistroById(editId);
+                
+                // Preguntar tipo de edición
+                const tipoEdicion = prompt('Elija el tipo de edición:\n1 - ORDEN NUEVA (No genera historial ni marca de edición)\n2 - REEMPLAZO (Guarda historial y descripción)', '2');
+                
+                if (tipoEdicion === '1') {
+                    // Orden Nueva: No pedimos descripción y marcamos como limpia
+                    datos.esOrdenNueva = true;
+                    datos.descripcionEdicion = 'Orden Nueva (Corrección)';
+                } else if (tipoEdicion === '2') {
+                    // Reemplazo: Lógica normal de descripción obligatoria
+                    const msg = regActual && regActual.en_produccion ? 
+                        '⚠️ ESTA ORDEN ESTÁ EN PRODUCCIÓN. Describe obligatoriamente los cambios realizados:' : 
+                        '📝 Describe los cambios realizados:';
+                    
+                    datos.descripcionEdicion = prompt(msg, '');
+                    
+                    if (!datos.descripcionEdicion || datos.descripcionEdicion.trim() === '') {
+                        if (window.Notifications) Notifications.warning('⚠️ Es necesario describir los cambios para guardar un REEMPLAZO');
+                        return;
+                    }
+                    datos.esOrdenNueva = false;
+                } else {
+                    if (window.Notifications) Notifications.info('🚫 Edición cancelada');
                     return;
+                }
+                
+                // Si estaba en producción, mantenemos ese estado al guardar la edición
+                if (regActual && regActual.en_produccion) {
+                    datos.en_produccion = true;
                 }
             }
             
@@ -211,7 +237,18 @@ function configurarEventosUI() {
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
-            if (confirm('¿Cerrar sesión?')) window.cerrarSesion();
+            if (confirm('¿Cerrar sesión?')) {
+                localStorage.removeItem('alpha_db_session');
+                window.location.href = 'login.html';
+            }
+        });
+    }
+
+    const reformulacionEstado = document.getElementById('reformulacionEstado');
+    const reformulacionTiempoRow = document.getElementById('reformulacionTiempoRow');
+    if (reformulacionEstado && reformulacionTiempoRow) {
+        reformulacionEstado.addEventListener('change', (e) => {
+            reformulacionTiempoRow.style.display = (e.target.value === 'reformulado') ? 'block' : 'none';
         });
     }
 }
@@ -359,24 +396,14 @@ function importarBaseDatos(event) {
 }
 
 window.editarRegistro = (id) => {
-    console.log('✏️ editarRegistro llamado con ID:', id);
-    
-    if (!window.puedeEditar || !window.puedeEditar()) {
-        if (window.Notifications) Notifications.error('❌ No tiene permisos para editar registros');
-        return;
-    }
-    
-    if (!id) {
-        console.error('ID de registro no proporcionado');
-        Notifications.error('Error: ID de registro no válido');
-        return;
-    }
-    
     if (window.FormUI && window.FormUI.cargarParaEdicion) {
-        window.FormUI.cargarParaEdicion(id);
-    } else {
-        console.error('FormUI.cargarParaEdicion no disponible');
-        Notifications.error('Error al cargar el formulario de edición');
+        window.FormUI.cargarParaEdicion(id, 'general');
+    }
+};
+
+window.reformularRegistro = (id) => {
+    if (window.FormUI && window.FormUI.cargarParaEdicion) {
+        window.FormUI.cargarParaEdicion(id, 'reform');
     }
 };
 
@@ -474,4 +501,63 @@ window.addEventListener('click', (e) => {
     });
 });
 
-console.log('✅ main.js cargado - Con detección de reemplazo pendiente');
+window.mandarAProduccion = async (event, id) => {
+    const btn = event.currentTarget;
+    if (!confirm('¿Desea marcar este registro como EN PRODUCCIÓN?')) return;
+    
+    // Feedback visual inmediato
+    const originalContent = btn.innerHTML;
+    btn.innerHTML = '⌛';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+
+    if (window.Notifications) Notifications.info('🚀 Iniciando producción...');
+    
+    try {
+        if (window.SupabaseClient && window.SupabaseClient.client) {
+            const { error } = await window.SupabaseClient.client
+                .from('registros')
+                .update({ 
+                    en_produccion: true, 
+                    actualizado: new Date().toISOString()
+                })
+                .eq('id', id);
+            
+            if (error) throw error;
+            
+            // Actualizar estado local
+            if (window.AppState) {
+                const reg = AppState.registros.find(r => r.id === id);
+                if (reg) {
+                    reg.en_produccion = true;
+                    reg.actualizado = new Date().toISOString();
+                }
+                if (window.onStateChange) window.onStateChange();
+            }
+
+            // Notificación de éxito
+            Notifications.success('✅ Registro enviado a Producción');
+
+            // Sincronizar automáticamente con el panel de producción si está visible
+            if (window.ProductionModule && window.ProductionModule.cargarProduccion) {
+                window.ProductionModule.cargarProduccion();
+            }
+
+            // Preguntar por impresión inmediata
+            setTimeout(() => {
+                if (confirm('🚀 ¿Deseas imprimir la etiqueta QR para esta orden ahora mismo?')) {
+                    window.imprimirEtiqueta(id);
+                }
+            }, 500);
+
+        }
+    } catch (error) {
+        console.error('Error al mandar a producción:', error);
+        Notifications.error('Error al actualizar estado');
+        btn.innerHTML = originalContent;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+    }
+};
+
+console.log('✅ main.js cargado - Con botón de Producción unificado');

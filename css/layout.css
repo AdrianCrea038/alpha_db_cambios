@@ -1,0 +1,201 @@
+/* ============================================================
+   layout.css - Estructura General
+   ============================================================ */
+
+.container {
+    max-width: calc(100% - 80px);
+    margin-left: 80px;
+    padding: 1.5rem;
+    background: transparent;
+    transition: margin-left 0.2s ease;
+}
+
+/* ========== HEADER ========== */
+.header {
+    background: #161B22;
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    position: relative;
+    overflow: hidden;
+}
+
+.header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00D4FF, #00FF88, #00D4FF);
+}
+
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 0.3rem;
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.logo-container h1 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #00D4FF, #00FF88);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: 2px;
+}
+
+.logo-img {
+    height: 36px;
+    width: auto;
+    border-radius: 6px;
+    box-shadow: 0 4px 10px rgba(0, 212, 255, 0.3);
+    transition: all 0.3s;
+}
+
+.version {
+    background: rgba(0, 212, 255, 0.12);
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #00D4FF;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    font-weight: 600;
+}
+
+.subtitle {
+    color: #8B949E;
+    font-size: 0.8rem;
+    position: relative;
+    padding-left: 0.8rem;
+    font-weight: 400;
+}
+
+.subtitle::before {
+    content: '▶';
+    color: #00D4FF;
+    position: absolute;
+    left: 0;
+    font-size: 0.7rem;
+}
+
+/* ========== MENÚ LATERAL FIJO ========== */
+.menu-lateral {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 80px;
+    height: 100vh;
+    background: #161B22;
+    border-right: 2px solid rgba(0, 212, 255, 0.4);
+    box-shadow: 5px 0 25px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.menu-lateral::-webkit-scrollbar { width: 4px; }
+.menu-lateral::-webkit-scrollbar-track { background: #0D1117; }
+.menu-lateral::-webkit-scrollbar-thumb { background: #00D4FF; border-radius: 4px; }
+
+.menu-header {
+    padding: 20px 0 10px 0;
+    text-align: center;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+    margin-top: 20px;
+}
+
+.menu-header h3 {
+    color: #00D4FF;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+.menu-botones {
+    flex: 1;
+    padding: 15px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.menu-btn {
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 12px 5px;
+    color: #8B949E;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    text-align: center;
+    width: 100%;
+}
+
+.menu-btn:hover { background: rgba(0, 212, 255, 0.1); color: #00D4FF; }
+.menu-btn.active {
+    background: rgba(0, 212, 255, 0.15);
+    color: #00D4FF;
+    border-left: 3px solid #00D4FF;
+}
+
+.menu-icon {
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.menu-icon svg {
+    width: 22px;
+    height: 22px;
+    stroke: #8B949E;
+    stroke-width: 1.5;
+    fill: none;
+    transition: stroke 0.2s ease;
+}
+
+.menu-btn:hover .menu-icon svg,
+.menu-btn.active .menu-icon svg { stroke: #00D4FF; }
+
+.menu-text { font-size: 0.6rem; font-weight: 600; line-height: 1.2; }
+
+.menu-badge {
+    font-size: 0.5rem;
+    background: rgba(0, 212, 255, 0.2);
+    padding: 2px 5px;
+    border-radius: 10px;
+    color: #00D4FF;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
+.menu-footer {
+    padding: 15px 5px;
+    border-top: 1px solid rgba(0, 212, 255, 0.3);
+    text-align: center;
+}
+
+.menu-version { font-size: 0.55rem; color: #8B949E; font-weight: 400; }

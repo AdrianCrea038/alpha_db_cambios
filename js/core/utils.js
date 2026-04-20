@@ -39,6 +39,23 @@ const Utils = {
             'BORDADO': '#EC4899'
         };
         return colores[proceso] || '#8B949E';
+    },
+
+    tiempoTranscurrido: function(fechaStr) {
+        if (!fechaStr) return '';
+        const ahora = new Date();
+        const pasado = new Date(fechaStr);
+        const diffMs = ahora - pasado;
+        const diffMins = Math.floor(diffMs / 60000);
+        
+        if (diffMins < 1) return 'HACE UN MOMENTO';
+        if (diffMins < 60) return `HACE ${diffMins} MIN`;
+        
+        const diffHoras = Math.floor(diffMins / 60);
+        if (diffHoras < 24) return `HACE ${diffHoras} HORAS`;
+        
+        const diffDias = Math.floor(diffHoras / 24);
+        return `HACE ${diffDias} DÍAS`;
     }
 };
 

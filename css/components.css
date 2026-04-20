@@ -1,0 +1,148 @@
+/* ============================================================
+   components.css - Botones, Modales y Componentes Reutilizables
+   ============================================================ */
+
+/* ========== BOTONES GENERALES ========== */
+.btn-secondary {
+    padding: 0.5rem 1rem;
+    background: #21262D;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    color: #FFFFFF;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.btn-secondary:hover {
+    background: #30363D;
+    border-color: #00D4FF;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+    color: #00D4FF;
+}
+
+.btn-icon {
+    padding: 0.3rem 0.5rem;
+    background: #21262D;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+    color: #FFFFFF;
+    font-weight: 500;
+}
+
+.btn-icon:hover { transform: translateY(-2px); }
+
+.btn-icon.edit { border: 1px solid #00D4FF; color: #00D4FF; }
+.btn-icon.edit:hover { background: #00D4FF; color: #0D1117; }
+.btn-icon.delete:hover { background: #FF4444; color: #FFFFFF; border-color: #FF4444; }
+.btn-icon.history { border: 1px solid #00FF88; color: #00FF88; }
+.btn-icon.history:hover { background: #00FF88; color: #0D1117; }
+
+/* ========== MODALES ========== */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.9);
+    backdrop-filter: blur(8px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show { display: flex; }
+
+.modal-content {
+    background: #161B22;
+    border: 2px solid rgba(0, 212, 255, 0.5);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 650px;
+}
+
+.modal-header {
+    padding: 1rem 1.2rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 { color: #00D4FF; font-size: 1rem; font-weight: 700; }
+
+.modal-close {
+    background: #21262D;
+    border: 2px solid rgba(0, 212, 255, 0.4);
+    color: #00D4FF;
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.modal-close:hover {
+    background: #FF4444;
+    color: #FFFFFF;
+    border-color: #FF4444;
+    transform: rotate(90deg);
+}
+
+.modal-body { padding: 1.2rem; }
+.modal-footer { padding: 1rem 1.2rem 1.2rem; display: flex; justify-content: flex-end; }
+
+.modal-btn {
+    padding: 0.5rem 1.2rem;
+    background: #21262D;
+    border: 1px solid rgba(0, 212, 255, 0.4);
+    color: #00D4FF;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn:hover { background: #00D4FF; color: #0D1117; }
+
+/* ========== HISTORIAL ========== */
+.historial-container {
+    max-height: 450px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.historial-item {
+    background: #0D1117;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 0.8rem;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.historial-fecha { color: #00D4FF; font-size: 0.75rem; margin-bottom: 0.5rem; font-weight: 600; }
+.historial-version {
+    background: #00D4FF;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    display: inline-block;
+    font-weight: 700;
+    color: #0D1117;
+}

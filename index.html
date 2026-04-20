@@ -12,6 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     
     <!-- Configuración -->
     <script src="js/config/supabase.js"></script>
@@ -33,6 +34,9 @@
     <script src="js/modules/approvals.js"></script>
     <script src="js/modules/inbox.js"></script>
     <script src="js/modules/solicitudes.js"></script>
+    <script src="js/modules/production.js"></script>
+    <script src="js/modules/order-import.js"></script>
+    <script src="js/modules/calendar.js"></script>
     
     <!-- UI -->
     <script src="js/ui/table.js"></script>
@@ -89,30 +93,10 @@
             <p class="subtitle">Alpha Data Base - Trazabilidad Textil en Tiempo Real</p>
         </header>
 
-        <!-- PANEL DE CONSULTAS -->
-        <div id="consultasPanel" class="consultas-panel" style="background:#161B22; border-radius:12px; padding:1.2rem; margin-bottom:1.5rem; border:1px solid rgba(0,212,255,0.25); display:none;">
-            <div class="consultas-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.8rem;">
-                <h3 style="color:#00D4FF; margin:0;">🔍 CONSULTAS Y FILTROS</h3>
-                <div id="infoSemanaActual" style="color:#8B949E; font-size:0.7rem;"></div>
-            </div>
-            <div class="consultas-filtros" style="display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1rem;">
-                <div style="display: flex; gap: 0.5rem; flex: 2;">
-                    <input type="text" id="consultaSearchInput" placeholder="🔍 Buscar por PO, estilo, NK, color..." style="flex:1; padding:0.7rem; background:#0D1117; border:1px solid #00D4FF; border-radius:8px; color:white;">
-                    <button id="consultaEscanearBtn" class="btn-secondary" style="background: #A855F7; white-space: nowrap; border: none; color:white;">📷 ESCANEAR QR</button>
-                </div>
-                <select id="consultaSemanaSelect" style="padding:0.7rem; background:#0D1117; border:1px solid #00D4FF; border-radius:8px; color:white;">
-                    <option value="">📅 Todas las semanas</option>
-                </select>
-                <button id="consultaFiltrarBtn" class="btn-filtrar" style="background:#00D4FF; border:none; padding:0.7rem 1.5rem; border-radius:8px; color:#0D1117; font-weight:700; cursor:pointer;">🔍 BUSCAR</button>
-                <button id="consultaLimpiarBtn" class="btn-limpiar" style="background:#21262D; border:1px solid #00D4FF; padding:0.7rem 1.5rem; border-radius:8px; color:#00D4FF; cursor:pointer;">✕ LIMPIAR</button>
-            </div>
-            <div id="consultaScannerContainer" class="scanner-container" style="display: none; margin-top:1rem; padding:1rem; background:rgba(0,0,0,0.5); border-radius:8px; text-align:center;">
-                <video id="consultaVideo" autoplay playsinline style="width:100%; max-width:400px; border-radius:8px; border:2px solid #00D4FF;"></video>
-                <canvas id="consultaCanvas" style="display: none;"></canvas>
-                <button id="consultaCerrarScanner" class="btn-secondary" style="margin-top:0.5rem; background:#21262D; border:1px solid #FF4444; color:#FF4444;">✕ CERRAR ESCÁNER</button>
-            </div>
-            <div id="infoFiltroActivo" style="background:#0D1117; padding:0.5rem; border-radius:8px; font-size:0.7rem; color:#00D4FF; text-align:center; margin-top:1rem;"></div>
-        </div>
+        <!-- CONTENEDOR PARA MÓDULO DE ÓRDENES -->
+        <div id="ordenesImportPanel"></div>
+
+
 
         <section class="form-section">
             <h2 id="formTitle">➕ NUEVO REGISTRO</h2>
@@ -127,14 +111,12 @@
                         <label for="po"><span>📦</span> PO</label>
                         <input type="text" id="po" placeholder="Número de PO" required class="input-bonito">
                     </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group card-group full-width">
+                    <div class="form-group card-group">
                         <label for="estilo"><span>🎯</span> ESTILO / DEPORTE</label>
                         <input type="text" id="estilo" required placeholder="Nombre del estilo/deporte" class="input-bonito">
                     </div>
                 </div>
-                <div class="form-row three-col">
+                <div class="form-row">
                     <div class="form-group card-group">
                         <label for="proceso"><span>⚙️</span> PROCESO</label>
                         <select id="proceso" class="select-bonito" required>
@@ -148,11 +130,19 @@
                         </select>
                     </div>
                     <div class="form-group card-group">
-                        <label for="esReemplazo"><span>🔄</span> REEMPLAZO</label>
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="esReemplazo">
-                            <span>Es reemplazo</span>
-                        </label>
+                        <label for="reformulacionEstado"><span>🧪</span> REFORMULACIÓN</label>
+                        <select id="reformulacionEstado" class="select-bonito">
+                            <option value="no_requiere">No requiere</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="reformulado">✅ Reformulado</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" id="reformulacionTiempoRow" style="display: none;">
+                    <div class="form-group card-group" style="flex: 1;">
+                        <label for="reformulacionTiempo"><span>⏱️</span> TIEMPO DE REFORMULACIÓN (MINUTOS)</label>
+                        <input type="number" id="reformulacionTiempo" placeholder="Ej: 30" class="input-bonito">
                     </div>
                 </div>
 
@@ -214,11 +204,15 @@
             <div class="filters-header"><h2>🔍 BÚSQUEDA Y FILTROS</h2></div>
             <div class="filters-grid">
                 <div class="calendario-mensual">
-                    <div class="calendario-header">
-                        <h3>📅 CALENDARIO DE SEMANAS</h3>
-                        <button id="limpiarFiltroBtn" class="btn-clear-filters">✕ LIMPIAR</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
+                        <h3 style="color:#00D4FF; font-size:0.85rem; font-weight:800; margin:0;">📅 CALENDARIO DE SEMANAS</h3>
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <span style="font-size:0.7rem; color:#8B949E;">Sem. actual:</span>
+                            <span id="semanaActualBadge" style="background: rgba(0,212,255,0.2); color:#00D4FF; padding:0.15rem 0.5rem; border-radius:20px; font-size:0.7rem; font-weight:700; border:1px solid rgba(0,212,255,0.4);">–</span>
+                            <button id="limpiarFiltroBtn" style="background:#21262D; border:1px solid rgba(255,68,68,0.5); color:#FF4444; padding:0.2rem 0.6rem; border-radius:6px; font-size:0.7rem; cursor:pointer;">✕ Limpiar</button>
+                        </div>
                     </div>
-                    <div id="calendarioMensualContainer" class="meses-grid"></div>
+                    <div id="mesesGrid" class="meses-grid"></div>
                 </div>
                 <div class="filters-right-panel">
                     <div class="search-box-container">
@@ -230,24 +224,11 @@
                             </div>
                             <button id="baseDatosEscanearBtn" class="btn-secondary" style="background: #A855F7; white-space: nowrap; border: none; color:white; padding: 0.7rem 1rem; border-radius: 8px; cursor: pointer;">📷 ESCANEAR QR</button>
                         </div>
-                        <div class="search-hint">
-                            <span class="hint-chip">📦 PO</span>
-                            <span class="hint-chip">🎯 Estilo</span>
-                            <span class="hint-chip">⚙️ Proceso</span>
-                            <span class="hint-chip">🧵 NK</span>
-                            <span class="hint-chip">🎨 Color</span>
-                            <span class="hint-chip">🔄 Reemplazo</span>
-                        </div>
                     </div>
                     <div id="baseDatosScannerContainer" class="scanner-container" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.5); border-radius: 8px; text-align: center;">
                         <video id="baseDatosVideo" autoplay playsinline style="width: 100%; max-width: 400px; border-radius: 8px; border: 2px solid #00D4FF;"></video>
                         <canvas id="baseDatosCanvas" style="display: none;"></canvas>
                         <button id="baseDatosCerrarScanner" class="btn-secondary" style="margin-top: 0.5rem; background: #21262D; border: 1px solid #FF4444; color: #FF4444; cursor: pointer;">✕ CERRAR ESCÁNER</button>
-                    </div>
-                    <div class="filter-buttons three-buttons">
-                        <button id="imprimirReportesBtn" class="filter-btn print">🖨️ REPORTE</button>
-                        <button id="exportarExcelBtn" class="filter-btn excel">📊 EXCEL</button>
-                        <button id="imprimirIndividualBtn" class="filter-btn qr">📱 QR</button>
                     </div>
                 </div>
             </div>
@@ -264,9 +245,9 @@
             <div class="table-container">
                 <table id="registrosTable">
                     <thead>
-                        <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th colspan="2">NK Y COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>ACCIONES</th></tr>
+                        <tr><th>PO</th><th>VER</th><th>PROCESO</th><th>REEMP</th><th>SEM</th><th>FECHA</th><th>ESTILO</th><th colspan="2">NK Y COLORES</th><th>PLOTTER</th><th>ADH</th><th>T°M</th><th>VEL</th><th>T°F</th><th>T/F</th><th>REFORM.</th><th>ESTADO</th><th>ACCIONES</th></tr>
                     </thead>
-                    <tbody id="tableBody"><tr><td colspan="18" class="loading">Cargando registros...</td></tr>
+                    <tbody id="tableBody"><tr><td colspan="18" class="loading">Cargando registros......</td</tr>
                 </tbody>
             </table>
             </div>

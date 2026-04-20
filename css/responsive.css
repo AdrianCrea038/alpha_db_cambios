@@ -1,0 +1,33 @@
+/* ============================================================
+   responsive.css - Adaptabilidad y Media Queries
+   ============================================================ */
+
+@media (max-width: 1024px) {
+    .form-row, .three-col, .cuatro-col, .flat-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 0.6rem;
+        margin-left: 70px;
+        max-width: calc(100% - 70px);
+    }
+    
+    .menu-lateral {
+        width: 70px;
+    }
+    
+    .form-row, .three-col, .cuatro-col, .flat-row {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .filters-grid, .filter-buttons.three-buttons, .consultas-filtros, .bandeja-filtros {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+    }
+    
+    .dashboard-cards { grid-template-columns: repeat(2, 1fr); }
+    .procesos-cards, .indicadores-grid { grid-template-columns: 1fr; }
+}

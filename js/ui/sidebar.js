@@ -1,6 +1,6 @@
 // ============================================================
 // js/ui/sidebar.js - Menú lateral según rol del usuario
-// Versión con botón de Solicitudes funcional
+// Versión con botón de Solicitudes y ÓRDENES funcional
 // ============================================================
 
 const Sidebar = {
@@ -31,11 +31,11 @@ const Sidebar = {
                     </button>
                     <button id="btnConsultas" class="menu-btn">
                         <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><circle cx="11" cy="11" r="8" fill="none"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-                        <span class="menu-text">CONSULTAS</span>
+                        <span class="menu-text">CONSULTA</span>
                     </button>
-                    <button id="btnTracking" class="menu-btn">
-                        <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M12 2 L12 6 M12 18 L12 22 M4 12 L8 12 M16 12 L20 12" stroke="currentColor"/><circle cx="12" cy="12" r="3" fill="none"/><circle cx="12" cy="12" r="8" fill="none"/></svg></span>
-                        <span class="menu-text">TRACKING</span>
+                    <button id="btnProduccion" class="menu-btn">
+                        <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M22 12L12 17L2 12M22 7L12 12L2 7M12 2L2 7L12 12L22 7L12 2Z" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                        <span class="menu-text">PRODUCCIÓN</span>
                     </button>
                     <button id="btnSolicitudes" class="menu-btn">
                         <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M22 6.5L12 13L2 6.5M22 6.5L12 13L2 6.5M2 6.5L12 13L2 6.5Z" fill="none"/><path d="M12 13V21M2 6.5V17.5C2 18.3 2.5 19 3.2 19.4L12 22L20.8 19.4C21.5 19 22 18.3 22 17.5V6.5" fill="none"/></svg></span>
@@ -48,6 +48,10 @@ const Sidebar = {
                     <button id="btnBandejaEntrada" class="menu-btn">
                         <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M22 6.5L12 13L2 6.5M22 6.5L12 13L2 6.5M2 6.5L12 13L2 6.5Z" fill="none"/><path d="M12 13V21M2 6.5V17.5C2 18.3 2.5 19 3.2 19.4L12 22L20.8 19.4C21.5 19 22 18.3 22 17.5V6.5" fill="none"/></svg></span>
                         <span class="menu-text">BANDEJA</span>
+                    </button>
+                    <button id="btnOrdenes" class="menu-btn">
+                        <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><path d="M4 4h16v16H4zM8 8h8M8 12h6M8 16h4" stroke="currentColor" fill="none"/><path d="M16 4v16" stroke="currentColor"/></svg></span>
+                        <span class="menu-text">ÓRDENES</span>
                     </button>
                     <button id="btnConfiguracion" class="menu-btn" style="display: none;">
                         <span class="menu-icon"><svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5" width="22" height="22"><circle cx="12" cy="12" r="3" fill="none"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
@@ -67,25 +71,35 @@ const Sidebar = {
         const puedeAccederBaseDatos = window.puedeAccederBaseDatos && window.puedeAccederBaseDatos();
         const puedeAccederConsultas = window.puedeAccederConsultas && window.puedeAccederConsultas();
         const puedeAccederTracking = window.puedeAccederTracking && window.puedeAccederTracking();
-        const puedeAccederSolicitudes = window.puedeAccederConsultas && window.puedeAccederConsultas(); // Todos los usuarios pueden ver solicitudes
+        const puedeAccederSolicitudes = window.puedeAccederConsultas && window.puedeAccederConsultas();
         const puedeAccederAprobaciones = window.puedeAccederAprobaciones && window.puedeAccederAprobaciones();
         const puedeAccederBandeja = window.puedeAccederBandeja && window.puedeAccederBandeja();
         const puedeAccederConfiguracion = window.puedeAccederConfiguracion && window.puedeAccederConfiguracion();
+        const puedeEditar = window.puedeEditar && window.puedeEditar();
         
         const btnBaseDatos = document.getElementById('btnBaseDatos');
         const btnConsultas = document.getElementById('btnConsultas');
-        const btnTracking = document.getElementById('btnTracking');
+        const btnProduccion = document.getElementById('btnProduccion');
         const btnSolicitudes = document.getElementById('btnSolicitudes');
         const btnAprobaciones = document.getElementById('btnAprobaciones');
         const btnBandeja = document.getElementById('btnBandejaEntrada');
+        const btnOrdenes = document.getElementById('btnOrdenes');
         const btnConfig = document.getElementById('btnConfiguracion');
         
         if (btnBaseDatos) btnBaseDatos.style.display = puedeAccederBaseDatos ? 'flex' : 'none';
-        if (btnConsultas) btnConsultas.style.display = puedeAccederConsultas ? 'flex' : 'none';
-        if (btnTracking) btnTracking.style.display = puedeAccederTracking ? 'flex' : 'none';
-        if (btnSolicitudes) btnSolicitudes.style.display = puedeAccederSolicitudes ? 'flex' : 'none';
+        if (btnConsultas) btnConsultas.style.display = (puedeAccederConsultas || puedeAccederTracking) ? 'flex' : 'none';
+        
+        const canProduccion = window.puedeAccederProduccion && window.puedeAccederProduccion();
+        if (btnProduccion) btnProduccion.style.display = canProduccion ? 'flex' : 'none';
+        
+        // Nuevos permisos específicos
+        const canSolicitudes = window.puedeAccederSolicitudes && window.puedeAccederSolicitudes();
+        const canOrdenes = window.puedeAccederOrdenes && window.puedeAccederOrdenes();
+        
+        if (btnSolicitudes) btnSolicitudes.style.display = canSolicitudes ? 'flex' : 'none';
         if (btnAprobaciones) btnAprobaciones.style.display = puedeAccederAprobaciones ? 'flex' : 'none';
         if (btnBandeja) btnBandeja.style.display = puedeAccederBandeja ? 'flex' : 'none';
+        if (btnOrdenes) btnOrdenes.style.display = canOrdenes ? 'flex' : 'none';
         if (btnConfig) btnConfig.style.display = puedeAccederConfiguracion ? 'flex' : 'none';
         
         const usuario = window.getUsuarioActual && window.getUsuarioActual();
@@ -505,11 +519,15 @@ const Sidebar = {
     
     configurarEventos: function() {
         document.getElementById('btnBaseDatos')?.addEventListener('click', () => this.mostrarBaseDatos());
-        document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsultas());
-        document.getElementById('btnTracking')?.addEventListener('click', () => this.mostrarTracking());
+        document.getElementById('btnConsultas')?.addEventListener('click', () => this.mostrarConsulta());
+        document.getElementById('btnProduccion')?.addEventListener('click', () => this.mostrarProduccion());
         document.getElementById('btnSolicitudes')?.addEventListener('click', () => this.mostrarSolicitudes());
         document.getElementById('btnAprobaciones')?.addEventListener('click', () => this.mostrarAprobaciones());
-        document.getElementById('btnBandejaEntrada')?.addEventListener('click', () => this.mostrarBandejaEntrada());
+        const btnBandeja = document.getElementById('btnBandejaEntrada');
+        if (btnBandeja) btnBandeja.onclick = () => this.mostrarBandejaEntrada();
+
+        const btnOrdenes = document.getElementById('btnOrdenes');
+        if (btnOrdenes) btnOrdenes.onclick = () => this.mostrarOrdenes();
         
         const btnConfig = document.getElementById('btnConfiguracion');
         if (btnConfig) {
@@ -554,9 +572,15 @@ const Sidebar = {
         if (window.Notifications) Notifications.info('🗄️ Vista de Base de Datos');
     },
     
-    mostrarConsultas: function() {
-        if (!window.puedeAccederConsultas || !window.puedeAccederConsultas()) {
-            if (window.Notifications) Notifications.error('❌ No tiene permisos para acceder a Consultas');
+    mostrarConsultas: function() { this.mostrarConsulta(); },
+
+    mostrarTracking: function() { this.mostrarConsulta(); },
+
+    mostrarConsulta: function() {
+        const tieneAcceso = (window.puedeAccederConsultas && window.puedeAccederConsultas()) ||
+                            (window.puedeAccederTracking && window.puedeAccederTracking());
+        if (!tieneAcceso) {
+            if (window.Notifications) Notifications.error('❌ No tiene permisos para acceder a Consulta');
             return;
         }
         
@@ -564,43 +588,41 @@ const Sidebar = {
         document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById('btnConsultas')?.classList.add('active');
         
-        const formSection = document.querySelector('.form-section');
+        const formSection    = document.querySelector('.form-section');
         const filtersSection = document.querySelector('.filters-section');
-        const tableSection = document.querySelector('.table-section');
-        const consultasPanel = document.getElementById('consultasPanel');
+        const tableSection   = document.querySelector('.table-section');
         
-        if (formSection) formSection.style.display = 'none';
-        if (filtersSection) filtersSection.style.display = 'none';
-        if (tableSection) tableSection.style.display = 'block';
-        if (consultasPanel) consultasPanel.style.display = 'block';
+        if (formSection)    formSection.style.display    = 'none';
+        if (filtersSection) filtersSection.style.display = 'block';
+        if (tableSection)   tableSection.style.display   = 'block';
         
-        const esConsultor = window.esConsultor && window.esConsultor();
-        if (window.TableUI && TableUI.setModo) {
-            TableUI.setModo(esConsultor ? 'solo-lectura' : 'solo-lectura');
-        }
+        if (window.TableUI && TableUI.setModo) TableUI.setModo('solo-lectura');
         
-        this.cargarOpcionesSemanas();
-        this.actualizarInfoSemanaActual();
+        // Inicializar también el tracking dentro de la misma vista
+        if (window.TrackingModule && TrackingModule.init) TrackingModule.init();
         
-        if (window.Notifications) Notifications.info('🔍 Vista de Consultas - Solo lectura');
+        if (window.CalendarUI && CalendarUI.actualizar) CalendarUI.actualizar();
+        if (window.TableUI && TableUI.actualizar) TableUI.actualizar();
+        
+        if (window.Notifications) Notifications.info('🔍 Vista de Consulta');
     },
     
-    mostrarTracking: function() {
-        if (!window.puedeAccederTracking || !window.puedeAccederTracking()) {
-            if (window.Notifications) Notifications.error('❌ No tiene permisos para acceder a Tracking');
-            return;
-        }
-        
+    mostrarProduccion: function() {
         this.ocultarTodosLosPaneles();
         document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
-        document.getElementById('btnTracking')?.classList.add('active');
+        document.getElementById('btnProduccion')?.classList.add('active');
         
         const tableSection = document.querySelector('.table-section');
-        if (tableSection) tableSection.style.display = 'block';
+        if (tableSection) tableSection.style.display = 'none';
         
-        if (window.TableUI && TableUI.setModo) TableUI.setModo('tracking');
-        if (window.TrackingModule && TrackingModule.init) TrackingModule.init();
-        if (window.Notifications) Notifications.info('📍 Módulo de Tracking');
+        if (window.ProductionModule && typeof ProductionModule.init === 'function') {
+            ProductionModule.init();
+        } else {
+            console.error('Módulo de Producción no cargado');
+            if (window.Notifications) Notifications.error('Error al cargar módulo de Producción');
+        }
+        
+        if (window.Notifications) Notifications.info('🏭 Panel de Producción Activa');
     },
     
     mostrarSolicitudes: function() {
@@ -614,11 +636,11 @@ const Sidebar = {
         if (window.SolicitudesModule && typeof SolicitudesModule.init === 'function') {
             SolicitudesModule.init();
         } else {
-            console.error('SolicitudesModule no cargado');
+            console.error('Módulo de Solicitudes no cargado');
             if (window.Notifications) Notifications.error('Error al cargar módulo de Solicitudes');
         }
         
-        if (window.Notifications) Notifications.info('📋 Módulo de Solicitudes');
+        if (window.Notifications) Notifications.info('📋 Gestión de Solicitudes');
     },
     
     mostrarAprobaciones: function() {
@@ -659,6 +681,34 @@ const Sidebar = {
         if (window.Notifications) Notifications.info('📥 Bandeja de Entrada');
     },
     
+    mostrarOrdenes: function() {
+        this.ocultarTodosLosPaneles();
+        document.querySelectorAll('.menu-btn').forEach(btn => btn.classList.remove('active'));
+        document.getElementById('btnOrdenes')?.classList.add('active');
+        
+        const tableSection = document.querySelector('.table-section');
+        if (tableSection) tableSection.style.display = 'none';
+        
+        // Crear contenedor si no existe
+        let ordenesPanel = document.getElementById('ordenesImportPanel');
+        if (!ordenesPanel) {
+            const container = document.querySelector('.container');
+            if (container) {
+                container.insertAdjacentHTML('afterbegin', '<div id="ordenesImportPanel" class="ordenes-import-panel"></div>');
+                ordenesPanel = document.getElementById('ordenesImportPanel');
+            }
+        }
+        
+        if (window.OrderImportModule && typeof OrderImportModule.init === 'function') {
+            OrderImportModule.init();
+        } else {
+            console.error('OrderImportModule no cargado');
+            if (window.Notifications) Notifications.error('Error al cargar módulo de Órdenes');
+        }
+        
+        if (window.Notifications) Notifications.info('📂 Módulo de Carga de Órdenes');
+    },
+    
     ocultarTodosLosPaneles: function() {
         const formSection = document.querySelector('.form-section');
         if (formSection) formSection.style.display = 'none';
@@ -678,8 +728,14 @@ const Sidebar = {
         const aprobacionesPanel = document.getElementById('aprobacionesPanel');
         if (aprobacionesPanel) aprobacionesPanel.remove();
         
-        const bandejaPanel = document.getElementById('bandejaEntradaPanel');
-        if (bandejaPanel) bandejaPanel.remove();
+        const inboxPanel = document.getElementById('inboxPanel');
+        if (inboxPanel) inboxPanel.remove();
+        
+        const productionPanel = document.getElementById('productionPanel');
+        if (productionPanel) productionPanel.remove();
+
+        const ordenesPanel = document.getElementById('ordenesImportPanel');
+        if (ordenesPanel) ordenesPanel.remove();
         
         const proximamentePanel = document.getElementById('proximamentePanel');
         if (proximamentePanel) proximamentePanel.remove();
@@ -704,11 +760,9 @@ const Sidebar = {
     },
     
     aplicarVistaInicial: function() {
-        if (window.puedeAccederBaseDatos && window.puedeAccederBaseDatos()) {
-            this.mostrarBaseDatos();
-        } else if (window.puedeAccederConsultas && window.puedeAccederConsultas()) {
-            this.mostrarConsultas();
-        }
+        const vista = AppState.currentView || 'base-datos';
+        if (vista === 'base-datos') this.mostrarBaseDatos();
+        else if (vista === 'consultas') this.mostrarConsulta();
     }
 };
 
@@ -723,4 +777,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 window.Sidebar = Sidebar;
-console.log('✅ Sidebar cargado - Menú según rol de usuario con Solicitudes');
+console.log('✅ Sidebar cargado - Menú según rol de usuario con Solicitudes y ÓRDENES');

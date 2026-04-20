@@ -1,0 +1,85 @@
+/* ============================================================
+   tables.css - Estilos de Tablas y Datos
+   ============================================================ */
+
+.table-section {
+    background: #161B22;
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px solid rgba(0, 212, 255, 0.25);
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.table-header h2 { font-size: 0.9rem; color: #00D4FF; font-weight: 700; }
+
+.table-stats { display: flex; gap: 0.5rem; }
+
+.stats-number {
+    background: #21262D;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #00D4FF;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    font-weight: 600;
+}
+
+.filtro-badge {
+    background: #00D4FF;
+    color: #0D1117;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+.table-container { overflow-x: auto; }
+
+table { width: 100%; border-collapse: collapse; }
+thead { background: #0D1117; }
+
+th {
+    padding: 0.6rem 0.4rem;
+    text-align: left;
+    color: #00D4FF;
+    border-bottom: 2px solid rgba(0, 212, 255, 0.4);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+td {
+    padding: 0.5rem 0.4rem;
+    border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+    font-size: 0.75rem;
+}
+
+tbody tr:hover { background: rgba(0, 212, 255, 0.05); }
+
+.po-badge {
+    background: #21262D;
+    color: #00D4FF;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    display: inline-block;
+    font-weight: 700;
+    border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.color-tag {
+    background: #21262D;
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.65rem;
+    border-left: 2px solid #00D4FF;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.action-buttons { display: flex; gap: 0.3rem; flex-wrap: wrap; }

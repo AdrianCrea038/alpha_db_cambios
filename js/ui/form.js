@@ -34,12 +34,16 @@ const FormUI = {
             if (submitBtn) submitBtn.innerHTML = '<span>💾</span> GUARDAR';
             const cancelEditBtn = document.getElementById('cancelEditBtn');
             if (cancelEditBtn) cancelEditBtn.style.display = 'none';
+            
+            const tiempoRow = document.getElementById('reformulacionTiempoRow');
+            if (tiempoRow) tiempoRow.style.display = 'none';
+            
             const formSection = document.querySelector('.form-section');
             if (formSection) formSection.classList.remove('edit-mode');
         } catch(e) { console.error('Error en reset:', e); }
     },
     
-    cargarParaEdicion: function(id) {
+    cargarParaEdicion: function(id, modo = 'general') {
         // Verificar permisos para editar
         if (!window.puedeEditar || !window.puedeEditar()) {
             if (window.Notifications) Notifications.error('❌ No tiene permisos para editar registros');
@@ -83,6 +87,15 @@ const FormUI = {
             
             const cancelEditBtn = document.getElementById('cancelEditBtn');
             if (cancelEditBtn) cancelEditBtn.style.display = 'block';
+
+            if (modo === 'reform') {
+                if (formTitle) formTitle.innerHTML = '🧪 REFORMULANDO REGISTRO';
+                const refEstado = document.getElementById('reformulacionEstado');
+                if (refEstado) refEstado.value = 'reformulado';
+                const refTimeRow = document.getElementById('reformulacionTiempoRow');
+                if (refTimeRow) refTimeRow.style.display = 'block';
+                if (window.Notifications) Notifications.warning('🧪 Modo Reformulación: Ingrese el tiempo y guarde.');
+            }
             
             const formSection = document.querySelector('.form-section');
             if (formSection) {

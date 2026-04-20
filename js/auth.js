@@ -174,16 +174,6 @@ function esConsultor() {
     return usuario && usuario.rol === 'consultor';
 }
 
-function puedeEditar() {
-    const usuario = getUsuarioActual();
-    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
-}
-
-function puedeEliminar() {
-    const usuario = getUsuarioActual();
-    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
-}
-
 function puedeAccederConfiguracion() {
     const usuario = getUsuarioActual();
     return usuario && usuario.rol === 'admin';
@@ -230,15 +220,62 @@ function getProcesosPermitidos() {
     return [];
 }
 
-function puedeAccederAprobaciones() {
-    const usuario = getUsuarioActual();
-    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador');
-}
+window.puedeAccederBaseDatos = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_data);
+};
 
-function puedeAccederBandeja() {
-    const usuario = getUsuarioActual();
-    return usuario && (usuario.rol === 'admin' || usuario.rol === 'operador' || usuario.rol === 'usuario_tracking');
-}
+window.puedeAccederProduccion = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_produccion);
+};
+
+window.puedeAccederBandeja = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_bandeja);
+};
+
+window.puedeAccederSolicitudes = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_solicitudes);
+};
+
+window.puedeAccederOrdenes = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_ordenes);
+};
+
+window.puedeAccederAprobaciones = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_aprobaciones);
+};
+
+window.puedeAccederConsultas = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_consultas);
+};
+
+window.puedeAccederTracking = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.permiso_consultas);
+};
+
+window.puedeEditar = () => {
+    const u = window.getUsuarioActual();
+    return u && (u.rol === 'admin' || u.rol === 'operador');
+};
+
+window.puedeEliminar = () => {
+    const u = window.getUsuarioActual();
+    return u && u.rol === 'admin';
+};
+
+window.puedeVerFormulario = () => {
+    const u = window.getUsuarioActual();
+    if (!u) return false;
+    // Solo Admins y Operadores ven el formulario de entrada
+    return ['admin', 'operador'].includes(u.rol);
+};
 
 function getNombreRol() {
     const usuario = getUsuarioActual();

@@ -1,6 +1,6 @@
 // ============================================================
-// js/modules/records.js - CRUD de registros con estructura NK → COLORES
-// Versión: Recibe datos pre-llenados desde la bandeja
+// js/modules/records.js - CRUD de registros
+// Versión: SIN usuarioModifico (compatible con tabla actual)
 // ============================================================
 
 const RecordsModule = {
@@ -15,145 +15,114 @@ const RecordsModule = {
     guardar: async function(datos) {
         const editId = document.getElementById('editId').value;
         const ahora = new Date().toISOString();
-        const usuarioActual = window.getUsuarioActual();
-        const nombreUsuario = usuarioActual ? usuarioActual.username : 'Desconocido';
         
-        if (editId && !datos.id) {
-            datos.id = editId;
+        // Generar ID si es nuevo
+        let idGenerado = editId;
+        if (!idGenerado) {
+            idGenerado = Utils.generarIdUnico();
+            console.log('🆕 Nuevo ID generado:', idGenerado);
         }
         
-        const registroData = { ...datos, actualizado: ahora, version: 1, usuarioModifico: nombreUsuario };
+        // Construir objeto SIN usuarioModifico
+        const registroData = {
+            id: idGenerado,
+            po: datos.po || '',
+            proceso: datos.proceso || '',
+            es_reemplazo: datos.es_reemplazo || false,
+            semana: datos.semana,
+            fecha: datos.fecha,
+            estilo: datos.estilo || '',
+            tela: datos.tela || '',
+            nks: datos.nks || [],
+            numero_plotter: datos.numero_plotter || 0,
+            plotter_temp: datos.plotter_temp || 0,
+            plotter_humedad: datos.plotter_humedad || 0,
+            plotter_perfil: datos.plotter_perfil || '',
+            monti_numero: datos.monti_numero || 0,
+            temperatura_monti: datos.temperatura_monti || 0,
+            velocidad_monti: datos.velocidad_monti || 0,
+            monti_presion: datos.monti_presion || 0,
+            temperatura_flat: datos.temperatura_flat || 0,
+            tiempo_flat: datos.tiempo_flat || 0,
+            adhesivo: datos.adhesivo || '',
+            version: editId ? (datos.esOrdenNueva ? 1 : 2) : 1, // Si es orden nueva, vuelve a versión 1
+            editado: editId ? !datos.esOrdenNueva : false, // Solo marcado como editado si NO es orden nueva
+            descripcion_edicion: datos.esOrdenNueva ? null : datos.descripcionEdicion,
+            observacion: datos.observacion || null,
+            reformulacion_estado: datos.reformulacion_estado || 'no_requiere',
+            reformulacion_tiempo: datos.reformulacion_tiempo || 0,
+            en_produccion: datos.en_produccion || false,
+            creado: editId ? null : ahora,
+            actualizado: ahora
+        };
         
-        if (editId) {
-            registroData.id = editId;
-            const original = AppState.getRegistroById(editId);
-            if (original) {
-                AppState.addHistorialEntry(editId, {
-                    fecha: ahora, 
-                    descripcion: datos.descripcionEdicion || 'Edición',
-                    usuario: nombreUsuario,
-                    anterior: { po: original.po, proceso: original.proceso, version: original.version, nks: original.nks },
-                    nuevo: { po: registroData.po, proceso: registroData.proceso, version: registroData.version, nks: registroData.nks }
-                });
-                registroData.creado = original.creado;
-                registroData.version = (original.version || 1) + 1;
-                AppState.updateRegistro(editId, registroData);
+        // Eliminar campos undefined
+        Object.keys(registroData).forEach(key => {
+            if (registroData[key] === undefined) {
+                delete registroData[key];
+            }
+        });
+        
+        console.log('📦 Datos a guardar:', registroData);
+        
+        // Guardar en Supabase
+        if (window.SupabaseClient && window.SupabaseClient.client) {
+            try {
+                const { error } = await window.SupabaseClient.client
+                    .from('registros')
+                    .upsert(registroData);
                 
-                if (window.SupabaseClient && window.SupabaseClient.client) {
-                    await window.SupabaseClient.guardarRegistro(registroData);
-                    await window.SupabaseClient.guardarHistorial({
-                        registro_id: editId,
-                        descripcion: datos.descripcionEdicion || 'Edición',
-                        usuario: nombreUsuario,
-                        anterior_po: original.po,
-                        anterior_proceso: original.proceso,
-                        anterior_version: original.version,
-                        nuevo_po: registroData.po,
-                        nuevo_proceso: registroData.proceso,
-                        nuevo_version: registroData.version
-                    });
+                if (error) {
+                    console.error('❌ Error de Supabase:', error);
+                    Notifications.error('Error: ' + (error.message || error.details));
+                    return false;
                 }
                 
-                // Buscar solicitud pendiente en bandeja para este NK + Color
-                await this.buscarYAprobarSolicitudEnBandeja(original, registroData);
+                console.log('✅ Guardado en Supabase con ID:', idGenerado);
                 
-                Notifications.success(`✅ Editado v${registroData.version}`);
+                // Actualizar AppState
+                if (editId) {
+                    AppState.updateRegistro(editId, registroData);
+                } else {
+                    AppState.addRegistro(registroData);
+                }
+                
+                Notifications.success('✅ Registro guardado en la nube');
                 return true;
+                
+            } catch (error) {
+                console.error('❌ Excepción:', error);
+                Notifications.error('Error de conexión: ' + error.message);
+                return false;
             }
         } else {
-            registroData.id = Utils.generarIdUnico();
-            registroData.creado = ahora;
-            AppState.addRegistro(registroData);
-            if (window.SupabaseClient && window.SupabaseClient.client) {
-                await window.SupabaseClient.guardarRegistro(registroData);
-            }
-            Notifications.success('✅ Registro guardado');
-            return true;
+            Notifications.error('❌ Supabase no disponible');
+            return false;
         }
-        return false;
-    },
-    
-    // ============================================================
-    // BUSCAR SOLICITUD EN BANDEJA POR NK + COLOR
-    // ============================================================
-    
-    buscarYAprobarSolicitudEnBandeja: async function(registroAnterior, registroNuevo) {
-        try {
-            let bandejaItems = localStorage.getItem('alpha_db_bandeja_entrada');
-            if (!bandejaItems) return;
-            bandejaItems = JSON.parse(bandejaItems);
-            
-            const nksNuevo = registroNuevo.nks || [];
-            const nksAnterior = registroAnterior.nks || [];
-            let solicitudCompletada = false;
-            
-            for (const nkNuevo of nksNuevo) {
-                const nkAnterior = nksAnterior.find(n => n.nk === nkNuevo.nk);
-                
-                if (nkAnterior) {
-                    for (const colorNuevo of nkNuevo.colores) {
-                        const colorAnterior = nkAnterior.colores.find(c => c.nombre === colorNuevo.nombre);
-                        
-                        if (!colorAnterior || JSON.stringify(colorNuevo) !== JSON.stringify(colorAnterior)) {
-                            const cambio = !colorAnterior ? 'agregado' : 'modificado';
-                            const resultado = await this.procesarSolicitudPorNkYColor(bandejaItems, nkNuevo.nk, colorNuevo.nombre, cambio, registroNuevo);
-                            if (resultado) solicitudCompletada = true;
-                        }
-                    }
-                } else {
-                    for (const colorNuevo of nkNuevo.colores) {
-                        const resultado = await this.procesarSolicitudPorNkYColor(bandejaItems, nkNuevo.nk, colorNuevo.nombre, 'agregado', registroNuevo);
-                        if (resultado) solicitudCompletada = true;
-                    }
-                }
-            }
-            
-            if (solicitudCompletada) {
-                if (window.Notifications) {
-                    Notifications.success('🎉 Una solicitud pendiente ha sido completada automáticamente');
-                }
-            }
-        } catch(error) {
-            console.error('Error buscando solicitud en bandeja:', error);
-        }
-    },
-    
-    procesarSolicitudPorNkYColor: async function(bandejaItems, nk, color, tipoCambio, registro) {
-        const usuarioActual = window.getUsuarioActual();
-        const nombreUsuario = usuarioActual ? usuarioActual.username : 'Desconocido';
-        
-        const solicitudPendiente = bandejaItems.find(item => 
-            item.tipo === 'solicitud' && 
-            item.estadoAsignacion !== 'completado' &&
-            item.datosCompletos && 
-            item.datosCompletos.nk === nk && 
-            item.datosCompletos.colorModificar === color
-        );
-        
-        if (solicitudPendiente) {
-            solicitudPendiente.estadoAsignacion = 'completado';
-            solicitudPendiente.fechaResolucion = new Date().toISOString();
-            solicitudPendiente.resueltoPor = nombreUsuario;
-            solicitudPendiente.cambiosRealizados = `${tipoCambio === 'agregado' ? 'Agregado' : 'Modificado'} color ${color} en NK ${nk}`;
-            solicitudPendiente.descripcion = (solicitudPendiente.descripcion || '') + `\n✅ Resuelto automáticamente por ${nombreUsuario} el ${new Date().toLocaleString()}. Cambio: ${tipoCambio === 'agregado' ? 'Agregó' : 'Modificó'} color ${color}.`;
-            
-            localStorage.setItem('alpha_db_bandeja_entrada', JSON.stringify(bandejaItems));
-            console.log(`✅ Solicitud ${solicitudPendiente.id} completada automáticamente`);
-            return true;
-        }
-        return false;
     },
     
     eliminar: async function(id) {
-        if (confirm('¿Eliminar este registro?')) {
-            AppState.deleteRegistro(id);
-            if (window.SupabaseClient && window.SupabaseClient.client) {
-                await window.SupabaseClient.eliminarRegistro(id);
+        if (!confirm('¿Eliminar este registro?')) return false;
+        
+        if (window.SupabaseClient && window.SupabaseClient.client) {
+            try {
+                const { error } = await window.SupabaseClient.client
+                    .from('registros')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                console.log('🗑️ Eliminado de Supabase');
+            } catch (error) {
+                console.error('Error eliminando:', error);
+                Notifications.error('Error al eliminar');
+                return false;
             }
-            Notifications.success('🗑️ Registro eliminado');
-            return true;
         }
-        return false;
+        
+        AppState.deleteRegistro(id);
+        Notifications.success('🗑️ Registro eliminado');
+        return true;
     },
     
     obtenerFormulario: function() {
@@ -180,9 +149,10 @@ const RecordsModule = {
         return {
             po: getValor('po', '').toUpperCase(),
             proceso: getValor('proceso', ''),
-            es_reemplazo: getCheck('esReemplazo', false),
+            es_reemplazo: false, // Ahora se maneja internamente al guardar
             fecha: fechaStr,
             estilo: getValor('estilo', '').toUpperCase(),
+            tela: getValor('tela', '').toUpperCase(),
             nks: window.ColorsModule ? window.ColorsModule.obtenerDelFormulario() : [],
             numero_plotter: getNumero('numero_plotter', 0),
             plotter_temp: getNumero('plotter_temp', 0),
@@ -196,6 +166,8 @@ const RecordsModule = {
             tiempo_flat: getNumero('tiempo_flat', 0),
             adhesivo: getValor('adhesivo', '').toUpperCase(),
             observacion: getValor('observacion', null),
+            reformulacion_estado: getValor('reformulacionEstado', 'no_requiere'),
+            reformulacion_tiempo: getNumero('reformulacionTiempo', 0),
             descripcionEdicion: null,
             semana: Utils.obtenerSemana(fecha)
         };
@@ -204,7 +176,7 @@ const RecordsModule = {
     cargarFormulario: function(reg) {
         const setValor = (id, valor) => {
             const el = document.getElementById(id);
-            if (el) el.value = valor !== undefined && valor !== null ? valor : '';
+            if (el) el.value = (valor !== undefined && valor !== null) ? valor : '';
         };
         
         const setCheck = (id, valor) => {
@@ -214,12 +186,16 @@ const RecordsModule = {
         
         setValor('po', reg.po);
         setValor('proceso', reg.proceso);
-        setCheck('esReemplazo', reg.es_reemplazo);
         setValor('fecha', reg.fecha);
         setValor('estilo', reg.estilo);
+        setValor('tela', reg.tela);
+        
         if (window.ColorsModule && window.ColorsModule.cargarEnFormulario) {
-            window.ColorsModule.cargarEnFormulario(reg.nks || []);
+            // Usar reg.nks (nueva estructura) o reg.colores (legacy)
+            const datosColores = reg.nks || (reg.colores ? [{ nk: reg.tela || 'SIN NK', colores: reg.colores }] : []);
+            window.ColorsModule.cargarEnFormulario(datosColores);
         }
+        
         setValor('numero_plotter', reg.numero_plotter);
         setValor('plotter_temp', reg.plotter_temp);
         setValor('plotter_humedad', reg.plotter_humedad);
@@ -231,72 +207,36 @@ const RecordsModule = {
         setValor('temp_flat', reg.temperatura_flat);
         setValor('tiempo_flat', reg.tiempo_flat);
         setValor('adhesivo', reg.adhesivo);
-        if(reg.observacion) setValor('observacion', reg.observacion);
+        setValor('reformulacionEstado', reg.reformulacion_estado || 'no_requiere');
+        setValor('reformulacionTiempo', reg.reformulacion_tiempo || 0);
+        
+        // Mostrar/ocultar tiempo según estado
+        const tiempoRow = document.getElementById('reformulacionTiempoRow');
+        if (tiempoRow) tiempoRow.style.display = (reg.reformulacion_estado === 'reformulado') ? 'block' : 'none';
+
+        if (reg.observacion) setValor('observacion', reg.observacion);
     },
     
-    // ============================================================
-    // CARGAR DATOS PRE-LLENADOS DESDE REEMPLAZO
-    // ============================================================
-    
     cargarDatosPrellenados: function(datos) {
-        console.log('Cargando datos pre-llenados para reemplazo:', datos);
+        console.log('Cargando datos pre-llenados:', datos);
         
         const setValor = (id, valor) => {
             const el = document.getElementById(id);
-            if (el) el.value = valor !== undefined && valor !== null ? valor : '';
-        };
-        
-        const setCheck = (id, valor) => {
-            const el = document.getElementById(id);
-            if (el) el.checked = valor || false;
+            if (el) el.value = (valor !== undefined && valor !== null) ? valor : '';
         };
         
         setValor('po', datos.po);
-        setValor('proceso', datos.proceso || '');
-        setCheck('esReemplazo', datos.es_reemplazo || false);
-        setValor('fecha', datos.fecha || new Date().toISOString().split('T')[0]);
         setValor('estilo', datos.estilo);
-        setValor('numero_plotter', datos.numero_plotter || '');
-        setValor('plotter_temp', datos.plotter_temp || '');
-        setValor('plotter_humedad', datos.plotter_humedad || '');
-        setValor('plotter_perfil', datos.plotter_perfil || '');
-        setValor('monti_numero', datos.monti_numero || '');
-        setValor('temp_monti', datos.temperatura_monti || '');
-        setValor('vel_monti', datos.velocidad_monti || '');
-        setValor('monti_presion', datos.monti_presion || '');
-        setValor('temp_flat', datos.temperatura_flat || '');
-        setValor('tiempo_flat', datos.tiempo_flat || '');
-        setValor('adhesivo', datos.adhesivo || '');
+        setValor('tela', datos.tela || '');
         
         if (window.ColorsModule && window.ColorsModule.cargarEnFormulario) {
-            window.ColorsModule.cargarEnFormulario(datos.nks || []);
+            window.ColorsModule.cargarEnFormulario(datos.colores || []);
         }
         
-        if (datos.editando && datos.id) {
-            document.getElementById('editId').value = datos.id;
-            const formTitle = document.getElementById('formTitle');
-            if (formTitle) formTitle.innerHTML = '✏️ REEMPLAZO DE COLOR - EDITANDO REGISTRO';
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) submitBtn.innerHTML = '<span>🔄</span> GUARDAR REEMPLAZO';
-            const cancelEditBtn = document.getElementById('cancelEditBtn');
-            if (cancelEditBtn) cancelEditBtn.style.display = 'block';
-            const formSection = document.querySelector('.form-section');
-            if (formSection) formSection.classList.add('edit-mode');
-        } else {
-            const formTitle = document.getElementById('formTitle');
-            if (formTitle) formTitle.innerHTML = '🔄 REEMPLAZO DE COLOR - NUEVO REGISTRO';
-            const submitBtn = document.getElementById('submitBtn');
-            if (submitBtn) submitBtn.innerHTML = '<span>🔄</span> GUARDAR REEMPLAZO';
-        }
-        
-        Notifications.info('📋 Formulario pre-llenado con los datos de la solicitud');
-        
-        const formSection = document.querySelector('.form-section');
-        if (formSection) {
-            formSection.scrollIntoView({ behavior: 'smooth' });
-        }
+        Notifications.info('📋 Formulario pre-llenado');
+        document.querySelector('.form-section')?.scrollIntoView({ behavior: 'smooth' });
     }
 };
 
 window.RecordsModule = RecordsModule;
-console.log('✅ RecordsModule actualizado - Soporte para datos pre-llenados desde reemplazo');
+console.log('✅ RecordsModule actualizado - SIN usuarioModifico');

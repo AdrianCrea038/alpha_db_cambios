@@ -368,20 +368,14 @@ const AdminModule = {
         const usernameInput = document.getElementById('usuarioUsername');
         const passwordInput = document.getElementById('usuarioPassword');
         const rolSelect = document.getElementById('usuarioRol');
-        
-        if (!modal) return;
-        
-        if (usernameInput) {
-            usernameInput.disabled = false;
-            usernameInput.readOnly = false;
-        }
-        
+
         if (passwordInput) {
+            passwordInput.value = '';
             passwordInput.type = 'password';
             const toggleBtn = passwordInput.nextElementSibling;
             if (toggleBtn) toggleBtn.textContent = '👁️';
         }
-        
+
         if (usuario) {
             console.log('✏️ Editando usuario:', usuario);
             titulo.textContent = '✏️ EDITAR USUARIO';
@@ -390,7 +384,6 @@ const AdminModule = {
             passwordInput.value = '';
             passwordInput.placeholder = 'Nueva contraseña (dejar en blanco para no cambiar)';
             rolSelect.value = usuario.rol;
-            this.cargarCheckboxesProcesos(usuario.procesos_asignados || []);
         } else {
             console.log('➕ Nuevo usuario');
             titulo.textContent = '➕ NUEVO USUARIO';
@@ -399,27 +392,60 @@ const AdminModule = {
             passwordInput.value = '';
             passwordInput.placeholder = 'Contraseña (obligatoria)';
             rolSelect.value = 'consultor';
-            this.cargarCheckboxesProcesos([]);
         }
+
+        // Cargar Checkpoints de Secciones (Módulos)
+        document.getElementById('check_bandeja').checked = usuario ? !!usuario.permiso_bandeja : false;
+        document.getElementById('check_data').checked = usuario ? !!usuario.permiso_data : false;
+        document.getElementById('check_produccion').checked = usuario ? !!usuario.permiso_produccion : false;
+        document.getElementById('check_consultas').checked = usuario ? !!usuario.permiso_consultas : false;
+        document.getElementById('check_solicitudes').checked = usuario ? !!usuario.permiso_solicitudes : false;
+        document.getElementById('check_ordenes').checked = usuario ? !!usuario.permiso_ordenes : false;
+        document.getElementById('check_aprobaciones').checked = usuario ? !!usuario.permiso_aprobaciones : false;
+        
+        // Cargar Checkpoints de Procesos de Producción
+        this.cargarCheckpointsProcesos(usuario ? (usuario.procesos_asignados || []) : []);
+        
+        // Helper: Al cambiar el rol, sugerir checkpoints recomendados
+        rolSelect.onchange = () => this.sugerirCheckpointsPorRol(rolSelect.value);
         
         modal.classList.add('show');
     },
-    
-    cargarCheckboxesProcesos: function(procesosSeleccionados) {
-        const container = document.getElementById('procesosAsignadosContainer');
+
+    sugerirCheckpointsPorRol: function(rol) {
+        // Solo sugerir si es un usuario nuevo (opcional, para ayudar al usuario)
+        if (document.getElementById('editUserId').value) return;
+        
+        const isSet = (b, d, p, c, s, o, a) => {
+            document.getElementById('check_bandeja').checked = b;
+            document.getElementById('check_data').checked = d;
+            document.getElementById('check_produccion').checked = p;
+            document.getElementById('check_consultas').checked = c;
+            document.getElementById('check_solicitudes').checked = s;
+            document.getElementById('check_ordenes').checked = o;
+            document.getElementById('check_aprobaciones').checked = a;
+        };
+
+        if (rol === 'admin') isSet(true, true, true, true, true, true, true);
+        else if (rol === 'operador') isSet(true, true, true, true, true, false, true);
+        else if (rol === 'usuario_tracking') isSet(true, false, false, true, false, false, false);
+        else if (rol === 'consultor') isSet(false, true, false, true, false, false, false);
+    },
+
+    cargarCheckpointsProcesos: function(procesosSeleccionados) {
+        const container = document.getElementById('checkpointsProcesosContainer');
         if (!container) return;
         
-        let html = '<div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">';
+        let html = '';
         for (const proceso of this.procesosDisponibles) {
             const checked = procesosSeleccionados.includes(proceso) ? 'checked' : '';
             html += `
-                <label style="display: flex; align-items: center; gap: 0.3rem; background: #21262D; padding: 0.3rem 0.6rem; border-radius: 20px; cursor: pointer;">
+                <label class="check-pill">
                     <input type="checkbox" value="${proceso}" ${checked} class="proceso-checkbox">
-                    <span style="font-size: 0.7rem;">${this.getIconoProceso(proceso)} ${proceso}</span>
+                    <span>${this.getIconoProceso(proceso)} ${proceso}</span>
                 </label>
             `;
         }
-        html += '</div>';
         container.innerHTML = html;
     },
     
@@ -602,6 +628,16 @@ const AdminModule = {
                     }
                     this.usuarios[i].rol = nuevoRol;
                     this.usuarios[i].procesos_asignados = procesosAsignados;
+                    
+                    // Guardar Checkpoints de Secciones
+                    this.usuarios[i].permiso_bandeja = document.getElementById('check_bandeja').checked;
+                    this.usuarios[i].permiso_data = document.getElementById('check_data').checked;
+                    this.usuarios[i].permiso_produccion = document.getElementById('check_produccion').checked;
+                    this.usuarios[i].permiso_consultas = document.getElementById('check_consultas').checked;
+                    this.usuarios[i].permiso_solicitudes = document.getElementById('check_solicitudes').checked;
+                    this.usuarios[i].permiso_ordenes = document.getElementById('check_ordenes').checked;
+                    this.usuarios[i].permiso_aprobaciones = document.getElementById('check_aprobaciones').checked;
+                    
                     this.usuarios[i].actualizado = new Date().toISOString();
                     encontrado = true;
                     break;
@@ -632,6 +668,13 @@ const AdminModule = {
                 password: nuevaPassword,
                 rol: nuevoRol,
                 procesos_asignados: procesosAsignados,
+                permiso_bandeja: document.getElementById('check_bandeja').checked,
+                permiso_data: document.getElementById('check_data').checked,
+                permiso_produccion: document.getElementById('check_produccion').checked,
+                permiso_consultas: document.getElementById('check_consultas').checked,
+                permiso_solicitudes: document.getElementById('check_solicitudes').checked,
+                permiso_ordenes: document.getElementById('check_ordenes').checked,
+                permiso_aprobaciones: document.getElementById('check_aprobaciones').checked,
                 creado: new Date().toISOString(),
                 actualizado: new Date().toISOString()
             };

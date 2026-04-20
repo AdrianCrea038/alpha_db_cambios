@@ -91,11 +91,11 @@ const TrackingModule = {
                     </div>
                 </div>
                 
-                <div class="tracking-buscador" style="margin-top: 1.5rem;">
-                    <div class="buscador-input-group">
-                        <input type="text" id="trackingPoInput" placeholder="Ingrese número de PO..." class="input-bonito">
-                        <button id="trackingBuscarBtn" class="btn-primary">🔍 BUSCAR</button>
-                        <button id="trackingEscanearBtn" class="btn-secondary" style="background: #A855F7;">📷 ESCANEAR QR</button>
+                <div class="tracking-buscador" style="margin-top: 1rem; margin-bottom: 1rem;">
+                    <div class="buscador-input-group" style="display: flex; gap: 0.5rem; max-width: 600px; margin: 0 auto;">
+                        <input type="text" id="trackingPoInput" placeholder="PO..." class="input-bonito" style="padding: 0.5rem 0.8rem; font-size: 0.85rem;">
+                        <button id="trackingBuscarBtn" class="btn-primary" style="padding: 0.5rem 1rem; font-size: 0.8rem;">🔍 BUSCAR</button>
+                        <button id="trackingEscanearBtn" class="btn-secondary" style="background: #A855F7; padding: 0.5rem 1rem; font-size: 0.8rem;">📷 QR</button>
                     </div>
                     <div id="trackingScannerContainer" class="scanner-container" style="display: none;">
                         <video id="trackingVideo" autoplay playsinline></video>
@@ -574,15 +574,34 @@ const TrackingModule = {
             if (registroEncontrado) {
                 this.datosPO = registroEncontrado;
                 this.poActual = po;
+                const indicadores = document.getElementById('indicadoresProceso');
+                if (indicadores) indicadores.style.display = 'none';
                 this.mostrarResultados();
             } else {
                 this.mostrarError('No se encontró la PO: ' + po);
                 document.getElementById('trackingResultados').style.display = 'none';
+                const indicadores = document.getElementById('indicadoresProceso');
+                if (indicadores) indicadores.style.display = 'block';
             }
             this.mostrarLoader(false);
         }, 500);
     },
     
+    cerrarTracking: function() {
+        this.poActual = null;
+        this.datosPO = null;
+        const resultadosDiv = document.getElementById('trackingResultados');
+        if (resultadosDiv) {
+            resultadosDiv.style.display = 'none';
+            resultadosDiv.innerHTML = '';
+        }
+        const indicadores = document.getElementById('indicadoresProceso');
+        if (indicadores) indicadores.style.display = 'block';
+        const poInput = document.getElementById('trackingPoInput');
+        if (poInput) poInput.value = '';
+        if (window.Notifications) Notifications.info('🔄 Tracking cerrado');
+    },
+
     iniciarScanner: function() {
         const scannerContainer = document.getElementById('trackingScannerContainer');
         const video = document.getElementById('trackingVideo');
@@ -762,6 +781,10 @@ const TrackingModule = {
         
         const html = `
             <div class="tracking-dashboard">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <h3 style="color: #00D4FF; margin: 0; font-size: 1rem;">📊 DASHBOARD DE PRODUCCIÓN</h3>
+                    <button onclick="TrackingModule.cerrarTracking()" class="btn-secondary" style="background: #21262D; border: 1px solid #FF4444; color: #FF4444; padding: 0.3rem 0.8rem; font-size: 0.7rem; border-radius: 6px; cursor: pointer;">✕ CERRAR VISTA</button>
+                </div>
                 <div class="dashboard-cards">
                     <div class="dashboard-card"><h4>PO</h4><div class="valor">${this.datosPO.po}</div></div>
                     <div class="dashboard-card"><h4>ESTILO</h4><div class="valor">${this.datosPO.estilo || '-'}</div></div>
